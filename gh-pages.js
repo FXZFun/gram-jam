@@ -3,7 +3,7 @@ var ghpages = require('gh-pages');
 ghpages.publish(
     'public', // path to public directory
     {
-        branch: 'main',
+        branch: 'gh-pages',
         repo: 'https://github.com/jessecoleman/word-crush.git',
         user: {
             name: 'Cole Chamberlin',
