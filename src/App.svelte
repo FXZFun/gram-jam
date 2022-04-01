@@ -4,7 +4,7 @@
 </script>
 
 <main>
-	<p>swap letters to make words</p>
+	<p>swap adjacent letters to make words</p>
 	<div class='container'>
 		<Game />
 	</div>

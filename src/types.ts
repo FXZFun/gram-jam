@@ -6,5 +6,6 @@ export type Match = {
   readonly word: string,
   readonly i: number,
   readonly j: number,
-  readonly axis: Axis
+  readonly axis: Axis,
+  readonly score: number,
 };

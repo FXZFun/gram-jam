@@ -1,4 +1,5 @@
 import Dictionary from "./dictionary"
+import { scoreWord } from "./letters";
 import type { Board, Match } from "./types";
 
 export const findWords = (board: Board) => {
@@ -11,7 +12,8 @@ export const findWords = (board: Board) => {
         validWords.push({
           word,
           i, j,
-          axis: 'col'
+          axis: 'col',
+          score: scoreWord(word),
         });
       }
       const word2 = findWordsRow(board, i, j);
@@ -20,12 +22,13 @@ export const findWords = (board: Board) => {
           word: word2,
           i, j,
           axis: 'row',
+          score: scoreWord(word2),
         });
       }
  
     }
   }
-  return validWords;
+  return validWords.sort((a, b) => b.score - a.score);
 }
 
 const findWordsCol = (board: Board, i: number, j: number) => {

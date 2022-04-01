@@ -73,3 +73,11 @@ export const sample = (): [string, number] => {
   idx++;
   return [l, idx];
 }
+
+export const scoreWord = (word: string) => {
+  let score = 0;
+  for (let i = 0; i < word.length; i++) {
+    score += points[word.charAt(i).toUpperCase()];
+  }
+  return score;
+}
