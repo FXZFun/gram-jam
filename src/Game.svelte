@@ -128,7 +128,7 @@ import Word from './Word.svelte';
     } else {
       selected = undefined;
     }
-    if (remainingSwaps === 0) {
+    if (remainingSwaps <= 0) {
       setTimeout(() => {
         lost = true;
       }, 505);

@@ -82531,7 +82531,7 @@ var app = (function () {
     	return child_ctx;
     }
 
-    // (10:2) {#each letters as letter}
+    // (13:2) {#each getLetters(word) as letter}
     function create_each_block$1(ctx) {
     	let tile;
     	let current;
@@ -82554,7 +82554,11 @@ var app = (function () {
     			mount_component(tile, target, anchor);
     			current = true;
     		},
-    		p: noop,
+    		p: function update(ctx, dirty) {
+    			const tile_changes = {};
+    			if (dirty & /*word*/ 1) tile_changes.letter = /*letter*/ ctx[2];
+    			tile.$set(tile_changes);
+    		},
     		i: function intro(local) {
     			if (current) return;
     			transition_in(tile.$$.fragment, local);
@@ -82573,7 +82577,7 @@ var app = (function () {
     		block,
     		id: create_each_block$1.name,
     		type: "each",
-    		source: "(10:2) {#each letters as letter}",
+    		source: "(13:2) {#each getLetters(word) as letter}",
     		ctx
     	});
 
@@ -82583,7 +82587,7 @@ var app = (function () {
     function create_fragment$4(ctx) {
     	let div;
     	let current;
-    	let each_value = /*letters*/ ctx[0];
+    	let each_value = /*getLetters*/ ctx[1](/*word*/ ctx[0]);
     	validate_each_argument(each_value);
     	let each_blocks = [];
 
@@ -82604,7 +82608,7 @@ var app = (function () {
     			}
 
     			attr_dev(div, "class", "container svelte-1feseeb");
-    			add_location(div, file$4, 8, 0, 190);
+    			add_location(div, file$4, 11, 0, 260);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -82619,8 +82623,8 @@ var app = (function () {
     			current = true;
     		},
     		p: function update(ctx, [dirty]) {
-    			if (dirty & /*letters*/ 1) {
-    				each_value = /*letters*/ ctx[0];
+    			if (dirty & /*getLetters, word*/ 3) {
+    				each_value = /*getLetters*/ ctx[1](/*word*/ ctx[0]);
     				validate_each_argument(each_value);
     				let i;
 
@@ -82686,11 +82690,16 @@ var app = (function () {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots('Word', slots, []);
     	let { word } = $$props;
-    	const letters = [];
 
-    	for (let i = 0; i < word.length; i++) {
-    		letters.push(word.charAt(i).toUpperCase());
-    	}
+    	const getLetters = word => {
+    		const letters = [];
+
+    		for (let i = 0; i < word.length; i++) {
+    			letters.push(word.charAt(i).toUpperCase());
+    		}
+
+    		return letters;
+    	};
 
     	const writable_props = ['word'];
 
@@ -82699,26 +82708,26 @@ var app = (function () {
     	});
 
     	$$self.$$set = $$props => {
-    		if ('word' in $$props) $$invalidate(1, word = $$props.word);
+    		if ('word' in $$props) $$invalidate(0, word = $$props.word);
     	};
 
-    	$$self.$capture_state = () => ({ Tile, word, letters });
+    	$$self.$capture_state = () => ({ Tile, word, getLetters });
 
     	$$self.$inject_state = $$props => {
-    		if ('word' in $$props) $$invalidate(1, word = $$props.word);
+    		if ('word' in $$props) $$invalidate(0, word = $$props.word);
     	};
 
     	if ($$props && "$$inject" in $$props) {
     		$$self.$inject_state($$props.$$inject);
     	}
 
-    	return [letters, word];
+    	return [word, getLetters];
     }
 
     class Word extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$4, create_fragment$4, safe_not_equal, { word: 1 });
+    		init(this, options, instance$4, create_fragment$4, safe_not_equal, { word: 0 });
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
@@ -82730,7 +82739,7 @@ var app = (function () {
     		const { ctx } = this.$$;
     		const props = options.props || {};
 
-    		if (/*word*/ ctx[1] === undefined && !('word' in props)) {
+    		if (/*word*/ ctx[0] === undefined && !('word' in props)) {
     			console.warn("<Word> was created without expected prop 'word'");
     		}
     	}
@@ -82784,9 +82793,9 @@ var app = (function () {
     			div0 = element("div");
     			t1 = text(/*totalScore*/ ctx[6]);
     			attr_dev(div0, "class", "svelte-1uimbyf");
-    			add_location(div0, file$3, 196, 6, 5547);
+    			add_location(div0, file$3, 196, 6, 5546);
     			attr_dev(div1, "class", "score-container svelte-1uimbyf");
-    			add_location(div1, file$3, 194, 4, 5498);
+    			add_location(div1, file$3, 194, 4, 5497);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div1, anchor);
@@ -82840,7 +82849,7 @@ var app = (function () {
     			div.textContent = "Latest Word:";
     			t1 = space();
     			create_component(word.$$.fragment);
-    			add_location(div, file$3, 200, 4, 5647);
+    			add_location(div, file$3, 200, 4, 5646);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -82911,7 +82920,7 @@ var app = (function () {
     		c: function create() {
     			div = element("div");
     			create_component(tile.$$.fragment);
-    			add_location(div, file$3, 212, 12, 5976);
+    			add_location(div, file$3, 212, 12, 5975);
     			this.first = div;
     		},
     		m: function mount(target, anchor) {
@@ -83014,7 +83023,7 @@ var app = (function () {
 
     			t = space();
     			attr_dev(div, "class", "row svelte-1uimbyf");
-    			add_location(div, file$3, 210, 8, 5899);
+    			add_location(div, file$3, 210, 8, 5898);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -83097,9 +83106,9 @@ var app = (function () {
     			td1 = element("td");
     			t3 = text(t3_value);
     			t4 = space();
-    			add_location(td0, file$3, 241, 8, 6947);
-    			add_location(td1, file$3, 242, 8, 6991);
-    			add_location(tr, file$3, 240, 6, 6934);
+    			add_location(td0, file$3, 241, 8, 6946);
+    			add_location(td1, file$3, 242, 8, 6990);
+    			add_location(tr, file$3, 240, 6, 6933);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, tr, anchor);
@@ -83188,16 +83197,16 @@ var app = (function () {
     			t12 = space();
     			button1 = element("button");
     			button1.textContent = "Reset Game";
-    			add_location(h1, file$3, 234, 4, 6723);
-    			add_location(h30, file$3, 235, 4, 6746);
-    			add_location(h31, file$3, 236, 4, 6785);
-    			add_location(h32, file$3, 237, 4, 6822);
+    			add_location(h1, file$3, 234, 4, 6722);
+    			add_location(h30, file$3, 235, 4, 6745);
+    			add_location(h31, file$3, 236, 4, 6784);
+    			add_location(h32, file$3, 237, 4, 6821);
     			attr_dev(table, "class", "svelte-1uimbyf");
-    			add_location(table, file$3, 238, 4, 6847);
+    			add_location(table, file$3, 238, 4, 6846);
     			attr_dev(button0, "class", "action svelte-1uimbyf");
-    			add_location(button0, file$3, 246, 4, 7054);
+    			add_location(button0, file$3, 246, 4, 7053);
     			attr_dev(button1, "class", "action svelte-1uimbyf");
-    			add_location(button1, file$3, 247, 4, 7127);
+    			add_location(button1, file$3, 247, 4, 7126);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, h1, anchor);
@@ -83377,13 +83386,13 @@ var app = (function () {
     			t7 = space();
     			create_component(modal.$$.fragment);
     			attr_dev(div0, "class", "multipliers svelte-1uimbyf");
-    			add_location(div0, file$3, 203, 2, 5712);
+    			add_location(div0, file$3, 203, 2, 5711);
     			attr_dev(div1, "class", "game svelte-1uimbyf");
-    			add_location(div1, file$3, 208, 2, 5844);
+    			add_location(div1, file$3, 208, 2, 5843);
     			attr_dev(button, "class", "action svelte-1uimbyf");
-    			add_location(button, file$3, 232, 2, 6609);
+    			add_location(button, file$3, 232, 2, 6608);
     			attr_dev(div2, "class", "container svelte-1uimbyf");
-    			add_location(div2, file$3, 192, 0, 5450);
+    			add_location(div2, file$3, 192, 0, 5449);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -83679,7 +83688,7 @@ var app = (function () {
     			$$invalidate(10, selected = undefined);
     		}
 
-    		if (remainingSwaps === 0) {
+    		if (remainingSwaps <= 0) {
     			setTimeout(
     				() => {
     					$$invalidate(5, lost = true);

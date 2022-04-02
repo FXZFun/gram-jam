@@ -2,14 +2,18 @@
 import Tile from "./Tile.svelte";
 
   export let word: string;
-  const letters = [];
-  for (let i = 0; i < word.length; i++) {
-    letters.push(word.charAt(i).toUpperCase());
+  
+  const getLetters = (word: string) => {
+    const letters = [];
+    for (let i = 0; i < word.length; i++) {
+      letters.push(word.charAt(i).toUpperCase());
+    }
+    return letters;
   }
 </script>
 
 <div class=container>
-  {#each letters as letter}
+  {#each getLetters(word) as letter}
     <Tile
       {letter}
       selected={false}
