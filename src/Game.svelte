@@ -48,6 +48,7 @@
     remainingSwaps = 10;
     newScore = undefined;
     latestWord = undefined;
+    words = [];
     for (let i = 0; i < COLS; i++) {
       board.push([]);
       for (let j = 0; j < ROWS; j++) {
@@ -205,21 +206,25 @@
         </div>
     {/each}
   </div>
-  <button on:click={handleReset}>Reset Game</button>
-  <dialog open={lost}>
-    <h1>Game Over</h1>
-    <h3>Best words:</h3>
-      <table>
-      {#each words.sort((a, b) => b.score - a.score).slice(0, 10) as word}
-        <tr>
-          <td>{word.word.toUpperCase()}:</td>
-          <td>{word.score}</td>
-        </tr>
-      {/each}
-      </table>
-    <button on:click={handleShare}>Share results</button>
-    <button on:click={handleReset}>Reset Game</button>
-  </dialog>
+  <button class='action' on:click={handleReset}>Reset Game</button>
+  {#if lost}
+    <div class='dialog-container'>
+      <div class='dialog'>
+        <h1>Game Over</h1>
+        <h3>Best words:</h3>
+          <table>
+          {#each words.sort((a, b) => b.score - a.score).slice(0, 10) as word}
+            <tr>
+              <td>{word.word.toUpperCase()}:</td>
+              <td>{word.score}</td>
+            </tr>
+          {/each}
+          </table>
+        <button class='action' on:click={handleShare}>Share results</button>
+        <button class='action' on:click={handleReset}>Reset Game</button>
+      </div>
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -262,13 +267,13 @@
     justify-content: center;
     font-size: 2em;
   }
+  .score-container div {
+    padding-left: 8px;
+  }
   .chain {
     position: absolute;
     top: 0;
     left: 0;
-  }
-  .score-container div {
-    padding-left: 8px;
   }
   .tile.selected {
     background-color: darkgreen;
@@ -279,15 +284,34 @@
   .range-selected {
     background-color: lightcoral !important;
   }
-  dialog {
+  .dialog-container {
     position: absolute;
-    top: calc(50% - 10em);
+    top: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+  }
+  .dialog {
     border: none;
     border-radius: 8px;
     box-shadow: 0 0 8px darkgray;
+    background-color: white;
+    padding: 16px;
+  }
+  .action {
+    background-color: green;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    text-transform: uppercase;
+    margin: 0;
   }
   table {
     width: 100%;
     text-align: start;
+    margin-bottom: 8px;
   }
 </style>

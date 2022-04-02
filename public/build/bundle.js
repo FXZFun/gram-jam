@@ -791,10 +791,6 @@ var app = (function () {
         else
             dispatch_dev('SvelteDOMSetAttribute', { node, attribute, value });
     }
-    function prop_dev(node, property, value) {
-        node[property] = value;
-        dispatch_dev('SvelteDOMSetProperty', { node, property, value });
-    }
     function set_data_dev(text, data) {
         data = '' + data;
         if (text.wholeText === data)
@@ -1092,8 +1088,8 @@ var app = (function () {
                 }
                 if (!child && remaining.length) {
                     child = new TrieNode();
-                    node.children.set(remaining, child);
-                    remaining = "";
+                    node.children.set(remaining[0], child);
+                    remaining = remaining.slice(1);
                 }
                 node = child;
             }
@@ -80798,12 +80794,12 @@ var app = (function () {
     console.log(Dictionary.get("apple"));
 
     const findWords = (board) => {
-        const validWords = [];
+        const words = [];
         for (let i = 0; i < board.length; i++) {
             for (let j = 0; j < board[0].length; j++) {
                 const word = findWordsCol(board, i, j);
                 if (word) {
-                    validWords.push({
+                    words.push({
                         word,
                         i, j,
                         axis: 'col',
@@ -80812,7 +80808,7 @@ var app = (function () {
                 }
                 const word2 = findWordsRow(board, i, j);
                 if (word2) {
-                    validWords.push({
+                    words.push({
                         word: word2,
                         i, j,
                         axis: 'row',
@@ -80821,15 +80817,24 @@ var app = (function () {
                 }
             }
         }
-        return validWords.sort((a, b) => b.score - a.score);
+        console.log(words);
+        return words.sort((a, b) => b.score - a.score);
     };
     const findWordsCol = (board, i, j) => {
         const firstLetter = board[i][j][0].toLowerCase();
         let longestWord = undefined;
+        let debug = false;
+        if (firstLetter === 'd') {
+            console.log('d');
+            debug = true;
+        }
         let node = Dictionary.getNode(firstLetter);
         // scan columns
         for (let j2 = j + 1; j2 < board[0].length && node; j2++) {
             const nextLetter = board[i][j2][0].toLowerCase();
+            if (debug) {
+                console.log(node);
+            }
             node = node.children.get(nextLetter);
             if (node === null || node === void 0 ? void 0 : node.terminal) {
                 longestWord = node.value;
@@ -80877,7 +80882,7 @@ var app = (function () {
     	return child_ctx;
     }
 
-    // (147:2) {#key totalScore}
+    // (148:2) {#key totalScore}
     function create_key_block_1(ctx) {
     	let div1;
     	let t0;
@@ -80891,10 +80896,10 @@ var app = (function () {
     			t0 = text("Score:\n      ");
     			div0 = element("div");
     			t1 = text(/*totalScore*/ ctx[4]);
-    			attr_dev(div0, "class", "svelte-2yhx8l");
-    			add_location(div0, file$1, 149, 6, 4090);
-    			attr_dev(div1, "class", "score-container svelte-2yhx8l");
-    			add_location(div1, file$1, 147, 4, 4041);
+    			attr_dev(div0, "class", "svelte-yi0exi");
+    			add_location(div0, file$1, 150, 6, 4106);
+    			attr_dev(div1, "class", "score-container svelte-yi0exi");
+    			add_location(div1, file$1, 148, 4, 4057);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div1, anchor);
@@ -80923,15 +80928,15 @@ var app = (function () {
     		block,
     		id: create_key_block_1.name,
     		type: "key",
-    		source: "(147:2) {#key totalScore}",
+    		source: "(148:2) {#key totalScore}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (153:2) {#if latestWord !== undefined}
-    function create_if_block_1(ctx) {
+    // (154:2) {#if latestWord !== undefined}
+    function create_if_block_2(ctx) {
     	let div;
     	let t0;
     	let t1;
@@ -80947,7 +80952,7 @@ var app = (function () {
     			t2 = text(" (");
     			t3 = text(/*newScore*/ ctx[6]);
     			t4 = text(" points)");
-    			add_location(div, file$1, 153, 4, 4190);
+    			add_location(div, file$1, 154, 4, 4206);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -80968,17 +80973,17 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_1.name,
+    		id: create_if_block_2.name,
     		type: "if",
-    		source: "(153:2) {#if latestWord !== undefined}",
+    		source: "(154:2) {#if latestWord !== undefined}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (156:2) {#if latestChain > 0}
-    function create_if_block(ctx) {
+    // (157:2) {#if latestChain > 0}
+    function create_if_block_1(ctx) {
     	let previous_key = /*latestChain*/ ctx[5];
     	let key_block_anchor;
     	let key_block = create_key_block(ctx);
@@ -81019,16 +81024,16 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block.name,
+    		id: create_if_block_1.name,
     		type: "if",
-    		source: "(156:2) {#if latestChain > 0}",
+    		source: "(157:2) {#if latestChain > 0}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (157:4) {#key latestChain}
+    // (158:4) {#key latestChain}
     function create_key_block(ctx) {
     	let div;
     	let t0;
@@ -81043,9 +81048,9 @@ var app = (function () {
     			t0 = text("word chain: ");
     			span = element("span");
     			t1 = text(t1_value);
-    			add_location(span, file$1, 157, 37, 4339);
-    			attr_dev(div, "class", "chain svelte-2yhx8l");
-    			add_location(div, file$1, 157, 6, 4308);
+    			add_location(span, file$1, 158, 37, 4355);
+    			attr_dev(div, "class", "chain svelte-yi0exi");
+    			add_location(div, file$1, 158, 6, 4324);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -81074,14 +81079,14 @@ var app = (function () {
     		block,
     		id: create_key_block.name,
     		type: "key",
-    		source: "(157:4) {#key latestChain}",
+    		source: "(158:4) {#key latestChain}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (165:10) {#each row as letter, j (letter[1])}
+    // (166:10) {#each row as letter, j (letter[1])}
     function create_each_block_2(key_1, ctx) {
     	let div;
     	let span0;
@@ -81114,9 +81119,9 @@ var app = (function () {
     			t1 = space();
     			span1 = element("span");
     			t2 = text(t2_value);
-    			add_location(span0, file$1, 183, 14, 5244);
-    			attr_dev(span1, "class", "score svelte-2yhx8l");
-    			add_location(span1, file$1, 184, 14, 5283);
+    			add_location(span0, file$1, 184, 14, 5260);
+    			attr_dev(span1, "class", "score svelte-yi0exi");
+    			add_location(span1, file$1, 185, 14, 5299);
 
     			attr_dev(div, "class", div_class_value = "" + (null_to_empty(`tile
                 ${/*selected*/ ctx[8] && /*i*/ ctx[26] === /*selected*/ ctx[8][0] && /*j*/ ctx[29] === /*selected*/ ctx[8][1]
@@ -81125,9 +81130,9 @@ var app = (function () {
                 ${/*rangeX*/ ctx[9] && /*rangeY*/ ctx[10] && /*rangeX*/ ctx[9][0] <= /*i*/ ctx[26] && /*i*/ ctx[26] <= /*rangeX*/ ctx[9][1] && /*rangeY*/ ctx[10][0] <= /*j*/ ctx[29] && /*j*/ ctx[29] <= /*rangeY*/ ctx[10][1]
 			? 'range-selected'
 			: ''}  
-                  `) + " svelte-2yhx8l"));
+                  `) + " svelte-yi0exi"));
 
-    			add_location(div, file$1, 165, 12, 4591);
+    			add_location(div, file$1, 166, 12, 4607);
     			this.first = div;
     		},
     		m: function mount(target, anchor) {
@@ -81160,7 +81165,7 @@ var app = (function () {
                 ${/*rangeX*/ ctx[9] && /*rangeY*/ ctx[10] && /*rangeX*/ ctx[9][0] <= /*i*/ ctx[26] && /*i*/ ctx[26] <= /*rangeX*/ ctx[9][1] && /*rangeY*/ ctx[10][0] <= /*j*/ ctx[29] && /*j*/ ctx[29] <= /*rangeY*/ ctx[10][1]
 			? 'range-selected'
 			: ''}  
-                  `) + " svelte-2yhx8l"))) {
+                  `) + " svelte-yi0exi"))) {
     				attr_dev(div, "class", div_class_value);
     			}
     		},
@@ -81204,14 +81209,14 @@ var app = (function () {
     		block,
     		id: create_each_block_2.name,
     		type: "each",
-    		source: "(165:10) {#each row as letter, j (letter[1])}",
+    		source: "(166:10) {#each row as letter, j (letter[1])}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (163:4) {#each board as row, i}
+    // (164:4) {#each board as row, i}
     function create_each_block_1(ctx) {
     	let div;
     	let each_blocks = [];
@@ -81238,8 +81243,8 @@ var app = (function () {
     			}
 
     			t = space();
-    			attr_dev(div, "class", "row svelte-2yhx8l");
-    			add_location(div, file$1, 163, 8, 4514);
+    			attr_dev(div, "class", "row svelte-yi0exi");
+    			add_location(div, file$1, 164, 8, 4530);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -81292,14 +81297,143 @@ var app = (function () {
     		block,
     		id: create_each_block_1.name,
     		type: "each",
-    		source: "(163:4) {#each board as row, i}",
+    		source: "(164:4) {#each board as row, i}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (196:6) {#each words.sort((a, b) => b.score - a.score).slice(0, 10) as word}
+    // (193:2) {#if lost}
+    function create_if_block(ctx) {
+    	let div1;
+    	let div0;
+    	let h1;
+    	let t1;
+    	let h3;
+    	let t3;
+    	let table;
+    	let t4;
+    	let button0;
+    	let t6;
+    	let button1;
+    	let mounted;
+    	let dispose;
+    	let each_value = /*words*/ ctx[1].sort(func).slice(0, 10);
+    	validate_each_argument(each_value);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value.length; i += 1) {
+    		each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
+    	}
+
+    	const block = {
+    		c: function create() {
+    			div1 = element("div");
+    			div0 = element("div");
+    			h1 = element("h1");
+    			h1.textContent = "Game Over";
+    			t1 = space();
+    			h3 = element("h3");
+    			h3.textContent = "Best words:";
+    			t3 = space();
+    			table = element("table");
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			t4 = space();
+    			button0 = element("button");
+    			button0.textContent = "Share results";
+    			t6 = space();
+    			button1 = element("button");
+    			button1.textContent = "Reset Game";
+    			add_location(h1, file$1, 195, 8, 5570);
+    			add_location(h3, file$1, 196, 8, 5597);
+    			attr_dev(table, "class", "svelte-yi0exi");
+    			add_location(table, file$1, 197, 10, 5628);
+    			attr_dev(button0, "class", "action svelte-yi0exi");
+    			add_location(button0, file$1, 205, 8, 5881);
+    			attr_dev(button1, "class", "action svelte-yi0exi");
+    			add_location(button1, file$1, 206, 8, 5958);
+    			attr_dev(div0, "class", "dialog svelte-yi0exi");
+    			add_location(div0, file$1, 194, 6, 5541);
+    			attr_dev(div1, "class", "dialog-container svelte-yi0exi");
+    			add_location(div1, file$1, 193, 4, 5504);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div1, anchor);
+    			append_dev(div1, div0);
+    			append_dev(div0, h1);
+    			append_dev(div0, t1);
+    			append_dev(div0, h3);
+    			append_dev(div0, t3);
+    			append_dev(div0, table);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(table, null);
+    			}
+
+    			append_dev(div0, t4);
+    			append_dev(div0, button0);
+    			append_dev(div0, t6);
+    			append_dev(div0, button1);
+
+    			if (!mounted) {
+    				dispose = [
+    					listen_dev(button0, "click", /*handleShare*/ ctx[16], false, false, false),
+    					listen_dev(button1, "click", /*handleReset*/ ctx[13], false, false, false)
+    				];
+
+    				mounted = true;
+    			}
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*words*/ 2) {
+    				each_value = /*words*/ ctx[1].sort(func).slice(0, 10);
+    				validate_each_argument(each_value);
+    				let i;
+
+    				for (i = 0; i < each_value.length; i += 1) {
+    					const child_ctx = get_each_context(ctx, each_value, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks[i] = create_each_block(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(table, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+
+    				each_blocks.length = each_value.length;
+    			}
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div1);
+    			destroy_each(each_blocks, detaching);
+    			mounted = false;
+    			run_all(dispose);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block.name,
+    		type: "if",
+    		source: "(193:2) {#if lost}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (199:10) {#each words.sort((a, b) => b.score - a.score).slice(0, 10) as word}
     function create_each_block(ctx) {
     	let tr;
     	let td0;
@@ -81322,9 +81456,9 @@ var app = (function () {
     			td1 = element("td");
     			t3 = text(t3_value);
     			t4 = space();
-    			add_location(td0, file$1, 197, 10, 5639);
-    			add_location(td1, file$1, 198, 10, 5685);
-    			add_location(tr, file$1, 196, 8, 5624);
+    			add_location(td0, file$1, 200, 14, 5746);
+    			add_location(td1, file$1, 201, 14, 5796);
+    			add_location(tr, file$1, 199, 12, 5727);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, tr, anchor);
@@ -81349,7 +81483,7 @@ var app = (function () {
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(196:6) {#each words.sort((a, b) => b.score - a.score).slice(0, 10) as word}",
+    		source: "(199:10) {#each words.sort((a, b) => b.score - a.score).slice(0, 10) as word}",
     		ctx
     	});
 
@@ -81368,43 +81502,27 @@ var app = (function () {
     	let t5;
     	let div1;
     	let t6;
-    	let button0;
+    	let button;
     	let t8;
-    	let dialog;
-    	let h1;
-    	let t10;
-    	let h3;
-    	let t12;
-    	let table;
-    	let t13;
-    	let button1;
-    	let t15;
-    	let button2;
     	let current;
     	let mounted;
     	let dispose;
     	let key_block = create_key_block_1(ctx);
-    	let if_block0 = /*latestWord*/ ctx[7] !== undefined && create_if_block_1(ctx);
-    	let if_block1 = /*latestChain*/ ctx[5] > 0 && create_if_block(ctx);
+    	let if_block0 = /*latestWord*/ ctx[7] !== undefined && create_if_block_2(ctx);
+    	let if_block1 = /*latestChain*/ ctx[5] > 0 && create_if_block_1(ctx);
     	let each_value_1 = /*board*/ ctx[0];
     	validate_each_argument(each_value_1);
-    	let each_blocks_1 = [];
-
-    	for (let i = 0; i < each_value_1.length; i += 1) {
-    		each_blocks_1[i] = create_each_block_1(get_each_context_1(ctx, each_value_1, i));
-    	}
-
-    	const out = i => transition_out(each_blocks_1[i], 1, 1, () => {
-    		each_blocks_1[i] = null;
-    	});
-
-    	let each_value = /*words*/ ctx[1].sort(func).slice(0, 10);
-    	validate_each_argument(each_value);
     	let each_blocks = [];
 
-    	for (let i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
+    	for (let i = 0; i < each_value_1.length; i += 1) {
+    		each_blocks[i] = create_each_block_1(get_each_context_1(ctx, each_value_1, i));
     	}
+
+    	const out = i => transition_out(each_blocks[i], 1, 1, () => {
+    		each_blocks[i] = null;
+    	});
+
+    	let if_block2 = /*lost*/ ctx[3] && create_if_block(ctx);
 
     	const block = {
     		c: function create() {
@@ -81421,48 +81539,22 @@ var app = (function () {
     			t5 = space();
     			div1 = element("div");
 
-    			for (let i = 0; i < each_blocks_1.length; i += 1) {
-    				each_blocks_1[i].c();
-    			}
-
-    			t6 = space();
-    			button0 = element("button");
-    			button0.textContent = "Reset Game";
-    			t8 = space();
-    			dialog = element("dialog");
-    			h1 = element("h1");
-    			h1.textContent = "Game Over";
-    			t10 = space();
-    			h3 = element("h3");
-    			h3.textContent = "Best words:";
-    			t12 = space();
-    			table = element("table");
-
     			for (let i = 0; i < each_blocks.length; i += 1) {
     				each_blocks[i].c();
     			}
 
-    			t13 = space();
-    			button1 = element("button");
-    			button1.textContent = "Share results";
-    			t15 = space();
-    			button2 = element("button");
-    			button2.textContent = "Reset Game";
-    			add_location(div0, file$1, 160, 2, 4417);
-    			attr_dev(div1, "class", "game svelte-2yhx8l");
-    			add_location(div1, file$1, 161, 2, 4459);
-    			add_location(button0, file$1, 190, 2, 5405);
-    			add_location(h1, file$1, 192, 4, 5483);
-    			add_location(h3, file$1, 193, 4, 5506);
-    			attr_dev(table, "class", "svelte-2yhx8l");
-    			add_location(table, file$1, 194, 6, 5533);
-    			add_location(button1, file$1, 202, 4, 5754);
-    			add_location(button2, file$1, 203, 4, 5812);
-    			dialog.open = /*lost*/ ctx[3];
-    			attr_dev(dialog, "class", "svelte-2yhx8l");
-    			add_location(dialog, file$1, 191, 2, 5458);
-    			attr_dev(div2, "class", "container svelte-2yhx8l");
-    			add_location(div2, file$1, 145, 0, 3993);
+    			t6 = space();
+    			button = element("button");
+    			button.textContent = "Reset Game";
+    			t8 = space();
+    			if (if_block2) if_block2.c();
+    			add_location(div0, file$1, 161, 2, 4433);
+    			attr_dev(div1, "class", "game svelte-yi0exi");
+    			add_location(div1, file$1, 162, 2, 4475);
+    			attr_dev(button, "class", "action svelte-yi0exi");
+    			add_location(button, file$1, 191, 2, 5421);
+    			attr_dev(div2, "class", "container svelte-yi0exi");
+    			add_location(div2, file$1, 146, 0, 4009);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -81481,37 +81573,18 @@ var app = (function () {
     			append_dev(div2, t5);
     			append_dev(div2, div1);
 
-    			for (let i = 0; i < each_blocks_1.length; i += 1) {
-    				each_blocks_1[i].m(div1, null);
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(div1, null);
     			}
 
     			append_dev(div2, t6);
-    			append_dev(div2, button0);
+    			append_dev(div2, button);
     			append_dev(div2, t8);
-    			append_dev(div2, dialog);
-    			append_dev(dialog, h1);
-    			append_dev(dialog, t10);
-    			append_dev(dialog, h3);
-    			append_dev(dialog, t12);
-    			append_dev(dialog, table);
-
-    			for (let i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].m(table, null);
-    			}
-
-    			append_dev(dialog, t13);
-    			append_dev(dialog, button1);
-    			append_dev(dialog, t15);
-    			append_dev(dialog, button2);
+    			if (if_block2) if_block2.m(div2, null);
     			current = true;
 
     			if (!mounted) {
-    				dispose = [
-    					listen_dev(button0, "click", /*handleReset*/ ctx[13], false, false, false),
-    					listen_dev(button1, "click", /*handleShare*/ ctx[16], false, false, false),
-    					listen_dev(button2, "click", /*handleReset*/ ctx[13], false, false, false)
-    				];
-
+    				dispose = listen_dev(button, "click", /*handleReset*/ ctx[13], false, false, false);
     				mounted = true;
     			}
     		},
@@ -81532,7 +81605,7 @@ var app = (function () {
     				if (if_block0) {
     					if_block0.p(ctx, dirty);
     				} else {
-    					if_block0 = create_if_block_1(ctx);
+    					if_block0 = create_if_block_2(ctx);
     					if_block0.c();
     					if_block0.m(div2, t1);
     				}
@@ -81549,7 +81622,7 @@ var app = (function () {
     						transition_in(if_block1, 1);
     					}
     				} else {
-    					if_block1 = create_if_block(ctx);
+    					if_block1 = create_if_block_1(ctx);
     					if_block1.c();
     					transition_in(if_block1, 1);
     					if_block1.m(div2, t2);
@@ -81569,52 +81642,37 @@ var app = (function () {
     				for (i = 0; i < each_value_1.length; i += 1) {
     					const child_ctx = get_each_context_1(ctx, each_value_1, i);
 
-    					if (each_blocks_1[i]) {
-    						each_blocks_1[i].p(child_ctx, dirty);
-    						transition_in(each_blocks_1[i], 1);
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    						transition_in(each_blocks[i], 1);
     					} else {
-    						each_blocks_1[i] = create_each_block_1(child_ctx);
-    						each_blocks_1[i].c();
-    						transition_in(each_blocks_1[i], 1);
-    						each_blocks_1[i].m(div1, null);
+    						each_blocks[i] = create_each_block_1(child_ctx);
+    						each_blocks[i].c();
+    						transition_in(each_blocks[i], 1);
+    						each_blocks[i].m(div1, null);
     					}
     				}
 
     				group_outros();
 
-    				for (i = each_value_1.length; i < each_blocks_1.length; i += 1) {
+    				for (i = each_value_1.length; i < each_blocks.length; i += 1) {
     					out(i);
     				}
 
     				check_outros();
     			}
 
-    			if (dirty & /*words*/ 2) {
-    				each_value = /*words*/ ctx[1].sort(func).slice(0, 10);
-    				validate_each_argument(each_value);
-    				let i;
-
-    				for (i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context(ctx, each_value, i);
-
-    					if (each_blocks[i]) {
-    						each_blocks[i].p(child_ctx, dirty);
-    					} else {
-    						each_blocks[i] = create_each_block(child_ctx);
-    						each_blocks[i].c();
-    						each_blocks[i].m(table, null);
-    					}
+    			if (/*lost*/ ctx[3]) {
+    				if (if_block2) {
+    					if_block2.p(ctx, dirty);
+    				} else {
+    					if_block2 = create_if_block(ctx);
+    					if_block2.c();
+    					if_block2.m(div2, null);
     				}
-
-    				for (; i < each_blocks.length; i += 1) {
-    					each_blocks[i].d(1);
-    				}
-
-    				each_blocks.length = each_value.length;
-    			}
-
-    			if (!current || dirty & /*lost*/ 8) {
-    				prop_dev(dialog, "open", /*lost*/ ctx[3]);
+    			} else if (if_block2) {
+    				if_block2.d(1);
+    				if_block2 = null;
     			}
     		},
     		i: function intro(local) {
@@ -81623,17 +81681,17 @@ var app = (function () {
     			transition_in(if_block1);
 
     			for (let i = 0; i < each_value_1.length; i += 1) {
-    				transition_in(each_blocks_1[i]);
+    				transition_in(each_blocks[i]);
     			}
 
     			current = true;
     		},
     		o: function outro(local) {
     			transition_out(key_block);
-    			each_blocks_1 = each_blocks_1.filter(Boolean);
+    			each_blocks = each_blocks.filter(Boolean);
 
-    			for (let i = 0; i < each_blocks_1.length; i += 1) {
-    				transition_out(each_blocks_1[i]);
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				transition_out(each_blocks[i]);
     			}
 
     			current = false;
@@ -81643,10 +81701,10 @@ var app = (function () {
     			key_block.d(detaching);
     			if (if_block0) if_block0.d();
     			if (if_block1) if_block1.d();
-    			destroy_each(each_blocks_1, detaching);
     			destroy_each(each_blocks, detaching);
+    			if (if_block2) if_block2.d();
     			mounted = false;
-    			run_all(dispose);
+    			dispose();
     		}
     	};
 
@@ -81702,6 +81760,7 @@ var app = (function () {
     		$$invalidate(2, remainingSwaps = 10);
     		$$invalidate(6, newScore = undefined);
     		$$invalidate(7, latestWord = undefined);
+    		$$invalidate(1, words = []);
 
     		for (let i = 0; i < COLS; i++) {
     			board.push([]);

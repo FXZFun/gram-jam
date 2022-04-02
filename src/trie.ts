@@ -66,8 +66,8 @@ export class Trie<T> {
       }
       if (!child && remaining.length) {
         child = new TrieNode<T>();
-        node.children.set(remaining, child);
-        remaining = "";
+        node.children.set(remaining[0], child);
+        remaining = remaining.slice(1);
       }
       node = child;
     }

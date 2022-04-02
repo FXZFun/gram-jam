@@ -3,13 +3,13 @@ import { scoreWord } from "./letters";
 import type { Board, Match } from "./types";
 
 export const findWords = (board: Board) => {
-  const validWords: Match[] = [];
+  const words: Match[] = [];
   for (let i = 0; i < board.length; i++) {
     for (let j = 0; j < board[0].length; j++) {
 
       const word = findWordsCol(board, i, j);
       if (word) {
-        validWords.push({
+        words.push({
           word,
           i, j,
           axis: 'col',
@@ -18,7 +18,7 @@ export const findWords = (board: Board) => {
       }
       const word2 = findWordsRow(board, i, j);
       if (word2) {
-        validWords.push({
+        words.push({
           word: word2,
           i, j,
           axis: 'row',
@@ -28,16 +28,25 @@ export const findWords = (board: Board) => {
  
     }
   }
-  return validWords.sort((a, b) => b.score - a.score);
+  console.log(words);
+  return words.sort((a, b) => b.score - a.score);
 }
 
 const findWordsCol = (board: Board, i: number, j: number) => {
   const firstLetter = board[i][j][0].toLowerCase();
   let longestWord = undefined;
+  let debug = false;
+  if (firstLetter === 'd') {
+    console.log('d');
+    debug = true;
+  }
   let node = Dictionary.getNode(firstLetter);
   // scan columns
   for (let j2 = j + 1; j2 < board[0].length && node; j2++) {
     const nextLetter = board[i][j2][0].toLowerCase();
+    if (debug) {
+      console.log(node);
+    }
     node = node.children.get(nextLetter);
     if (node?.terminal) {
       longestWord = node.value;
