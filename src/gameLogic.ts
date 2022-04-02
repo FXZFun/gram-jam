@@ -28,25 +28,16 @@ export const findWords = (board: Board) => {
  
     }
   }
-  console.log(words);
   return words.sort((a, b) => b.score - a.score);
 }
 
 const findWordsCol = (board: Board, i: number, j: number) => {
   const firstLetter = board[i][j][0].toLowerCase();
   let longestWord = undefined;
-  let debug = false;
-  if (firstLetter === 'd') {
-    console.log('d');
-    debug = true;
-  }
   let node = Dictionary.getNode(firstLetter);
   // scan columns
   for (let j2 = j + 1; j2 < board[0].length && node; j2++) {
     const nextLetter = board[i][j2][0].toLowerCase();
-    if (debug) {
-      console.log(node);
-    }
     node = node.children.get(nextLetter);
     if (node?.terminal) {
       longestWord = node.value;

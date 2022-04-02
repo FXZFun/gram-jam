@@ -10,6 +10,12 @@
   
   import { findWords } from './gameLogic';
   import type { Board, Match } from './types';
+  import WordChain from './WordChain.svelte';
+  import Modal from './Modal.svelte';
+  import Swaps from './Swaps.svelte';
+  import Tile from './Tile.svelte';
+  import Streak from './Streak.svelte';
+import Word from './Word.svelte';
 
 	const [send, receive] = crossfade({
 		duration: d => 200,
@@ -29,20 +35,23 @@
 		}
 	});
 
-  const ROWS = 10;
+  const ROWS = 8;
   const COLS = 6;
 
 	let board: Board = [];
   let words: Match[] = [];
   let remainingSwaps = 10;
+  let streak = 0;
+  let bestStreak = 0;
   let lost = false;
   let totalScore = 0;
   let latestChain = 0;
+  let bestChain = 0;
   let newScore: number = undefined;
   let latestWord: string = undefined;
   
   const handleReset = () => {
-    board = [];
+    const tempBoard = [];
     lost = false;
     totalScore = 0;
     remainingSwaps = 10;
@@ -50,13 +59,29 @@
     latestWord = undefined;
     words = [];
     for (let i = 0; i < COLS; i++) {
-      board.push([]);
+      tempBoard.push([]);
       for (let j = 0; j < ROWS; j++) {
-        board[i].push(sample());
+        tempBoard[i].push(sample([]));
       }
     }
-    // TODO clear these out ahead of time
-    // const matches = findWords(board);
+
+    let matches = findWords(tempBoard);
+    while (matches.length) {
+      for (const match of matches) {
+        console.log('scrambling', match.word);
+        const tempTile = tempBoard[match.i][match.j];
+        // TODO more sophisticated scramble
+        if (match.axis === 'row') {
+          tempBoard[match.i][match.j] = tempBoard[match.i + 1][match.j];
+          tempBoard[match.i + 1][match.j] = tempTile;
+        } else {
+          tempBoard[match.i][match.j] = tempBoard[match.i][match.j + 1];
+          tempBoard[match.i][match.j + 1] = tempTile;
+        }
+      }
+      matches = findWords(tempBoard);
+    }
+    board = tempBoard;
     // handleScore(matches, 0);
   }
   
@@ -78,8 +103,27 @@
       board[i][j] = board[i2][j2];
       board[i2][j2] = first;
       selected = undefined;
-      remainingSwaps--;
+
+      const distanceX = Math.abs(i - i2);
+      const distanceY = Math.abs(j - j2);
+      let penalty = 0;
+      if (Math.max(distanceX, distanceY) === 1) {
+        penalty = 1;
+      } else {
+        penalty = 2;
+      }
+      if (streak > 0) {
+        penalty--;
+      }
+      remainingSwaps -= penalty;
+      
       const matches = findWords(board);
+      if (matches.length > 0) {
+        streak++;
+        if (streak > bestStreak) bestStreak = streak;
+      } else {
+        streak = 0;
+      }
       handleScore(matches);
     } else {
       selected = undefined;
@@ -114,10 +158,10 @@
      
       remainingSwaps += match.word.length - 4 + chain;
       latestChain = chain;
+      if (latestChain > bestChain) bestChain = latestChain;
       setTimeout(() => {
         handleRemoveLetters();
         handleClearSelection();
-        // remainingSwaps += match.word.length - 4;
         matches = findWords(board);
         handleScore(matches, chain + 1);
       }, timeout)
@@ -134,7 +178,7 @@
         if (newLetter) {
           board[i][j] = newLetter;
         } else {
-          board[i][j] = sample();
+          board[i][j] = sample(board);
         }
       }
     // clear row
@@ -145,7 +189,7 @@
           if (newLetter) {
             board[i][j] = newLetter;
           } else {
-            board[i][j] = sample();
+            board[i][j] = sample(board);
           }
         }
       }
@@ -169,14 +213,14 @@
     </div>
   {/key}
   {#if latestWord !== undefined}
-    <div>Latest Word: {latestWord} ({newScore} points)</div>
+    <div>Latest Word:</div>
+    <Word word={latestWord} />
   {/if}
-  {#if latestChain > 0}
-    {#key latestChain}
-      <div class='chain'>word chain: <span in:fly={{ y: -20 }}>{latestChain + 1}</span></div>
-    {/key}
-  {/if}
-  <div>Swaps left: {remainingSwaps}</div>
+  <div class=multipliers>
+    <Streak {streak} />
+    <WordChain chain={latestChain} />
+  </div>
+  <Swaps swaps={remainingSwaps} />
   <div class='game'>
     {#each board as row, i}
         <div class='row'>
@@ -187,44 +231,37 @@
               out:send="{{key: letter[1]}}"
               on:drag={handleDrag}
               on:click={() => handleClick(i, j)}
-              class={`tile
-                ${selected && i === selected[0] && j === selected[1]
-                  ? 'selected'
-                  : ''}
-                ${rangeX && rangeY &&
+            >
+              <Tile
+                letter={letter[0]}
+                selected={selected && i === selected[0] && j === selected[1]}
+                matched={rangeX && rangeY &&
                   rangeX[0] <= i && i <= rangeX[1] &&
                   rangeY[0] <= j && j <= rangeY[1]
-                    ? 'range-selected'
-                    : ''
-                }  
-                  `}
-            >
-              <span>{letter[0]}</span>
-              <span class='score'>{points[letter[0]]}</span>
+                }
+              />
             </div>
           {/each}
         </div>
     {/each}
   </div>
   <button class='action' on:click={handleReset}>Reset Game</button>
-  {#if lost}
-    <div class='dialog-container'>
-      <div class='dialog'>
-        <h1>Game Over</h1>
-        <h3>Best words:</h3>
-          <table>
-          {#each words.sort((a, b) => b.score - a.score).slice(0, 10) as word}
-            <tr>
-              <td>{word.word.toUpperCase()}:</td>
-              <td>{word.score}</td>
-            </tr>
-          {/each}
-          </table>
-        <button class='action' on:click={handleShare}>Share results</button>
-        <button class='action' on:click={handleReset}>Reset Game</button>
-      </div>
-    </div>
-  {/if}
+  <Modal open={lost} onClose={handleReset}>
+    <h1>Game Over</h1>
+    <h3>Best Streak: {bestStreak}</h3>
+    <h3>Best Chain: {bestChain}</h3>
+    <h3>Best Words:</h3>
+    <table>
+    {#each words.sort((a, b) => b.score - a.score).slice(0, 10) as word}
+      <tr>
+        <td>{word.word.toUpperCase()}:</td>
+        <td>{word.score}</td>
+      </tr>
+    {/each}
+    </table>
+    <button class='action' on:click={handleShare}>Share results</button>
+    <button class='action' on:click={handleReset}>Reset Game</button>
+  </Modal>
 </div>
 
 <style>
@@ -241,27 +278,6 @@
     display: flex;
     flex-direction: column;
   }
-	.tile {
-    position: relative;
-		background-color: lightgreen;
-    display: flex;
-		width: 2.5em;
-		height: 2.5em;
-    font-size: 1.25em;
-    margin: 0.2em;
-    font-weight: bold;
-    align-items: center;
-    justify-content: center;
-    user-select: none;
-	}
-  .score {
-    position: absolute;
-    font-size: 0.5em;
-    font-weight: normal;
-    bottom: 0;
-    right: 0;
-    padding: 0.2em;
-  }
   .score-container {
     display: flex;
     justify-content: center;
@@ -270,36 +286,12 @@
   .score-container div {
     padding-left: 8px;
   }
-  .chain {
-    position: absolute;
-    top: 0;
-    left: 0;
-  }
-  .tile.selected {
-    background-color: darkgreen;
-    box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    -webkit-box-sizing: border-box;
-  }
-  .range-selected {
-    background-color: lightcoral !important;
-  }
-  .dialog-container {
+  .multipliers {
     position: absolute;
     top: 0;
     left: 0;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-  }
-  .dialog {
-    border: none;
-    border-radius: 8px;
-    box-shadow: 0 0 8px darkgray;
-    background-color: white;
-    padding: 16px;
+    flex-direction: row;
   }
   .action {
     background-color: green;

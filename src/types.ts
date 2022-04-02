@@ -9,3 +9,5 @@ export type Match = {
   readonly axis: Axis,
   readonly score: number,
 };
+
+export type Freqs = Record<string, number>;
