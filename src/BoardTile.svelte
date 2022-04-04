@@ -42,8 +42,8 @@
     border: 1px solid #C4E0E3;
     border-radius: 2px;
     display: flex;
-		width: 2.5em;
-		height: 2.5em;
+		width: min(12vw, 8vh);
+		height: min(12vw, 8vh);
     font-size: 1.375em;
     margin: 0.2em;
     font-weight: bold;

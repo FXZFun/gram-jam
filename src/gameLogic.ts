@@ -77,7 +77,7 @@ const findWordRow = (board: Board, i: number, j: number): Tile[] => {
     const nextTile = board[i2][j];
     const nextLetter = nextTile.letter.toLowerCase();
     currWord.push(nextTile);
-    node = node.children.get(nextLetter);
+    node = node.children.get(nextLetter.charAt(0));
     if (node && nextLetter.length > 1) {
       node = node.children.get(nextLetter.charAt(1));
     }

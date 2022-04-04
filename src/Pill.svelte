@@ -47,7 +47,7 @@
     margin-right: 4px;
     padding: 4px;
     padding-right: 8px;
-    font-size: 1.5em;
+    font-size: 1.25em;
     font-weight: bold;
   }
   .pill .text {

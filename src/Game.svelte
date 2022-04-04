@@ -53,6 +53,7 @@ import Info from './Info.svelte';
   // for disabling the chain pill after a while
   let chainTimeout: NodeJS.Timeout;
   let latestWord: Tile[] = undefined;
+  let latestScore: number = undefined;
   
   const handleReset = () => {
     const tempBoard = [];
@@ -159,6 +160,7 @@ import Info from './Info.svelte';
 
       totalScore += match.score;
       latestWord = match.word;
+      latestScore = match.score;
       words = words.concat([match]);
      
       remainingSwaps += match.word.length - 4;
@@ -213,7 +215,7 @@ import Info from './Info.svelte';
  
 </script>
 
-<div class='container'>
+<div class=container>
   <div class=status>
     <Streak {streak} />
     <WordChain chain={latestChain} />
@@ -221,15 +223,15 @@ import Info from './Info.svelte';
     <Swaps swaps={remainingSwaps} />
   </div>
   {#key totalScore}
-    <div class='score-container'>
+    <div class=score-container>
       Score:
-      <div in:fly={{ y: 20 }}>{totalScore}</div>
+      <div class=score in:fly={{ y: 20 }}>{totalScore}</div>
     </div>
   {/key}
   <div class=latest-word>
     {#if latestWord !== undefined}
       <div>Latest Word:</div>
-      <Word word={latestWord} />
+      <Word word={latestWord} score={latestScore} />
     {/if}
   </div>
   <div class='game'>
@@ -267,10 +269,11 @@ import Info from './Info.svelte';
   </div>
   <GameOver
     {lost}
+    score={totalScore}
     onReset={handleReset}
     {bestStreak}
     {bestChain}
-    bestWords={words}
+    bestWords={words.sort((a, b) => b.score - a.score).slice(0, 5)}
   />
 </div>
 
@@ -305,7 +308,7 @@ import Info from './Info.svelte';
   .score-container {
     display: flex;
     justify-content: center;
-    font-size: 2em;
+    font-size: 1.75em;
   }
   .score-container div {
     padding-left: 8px;

@@ -3,6 +3,7 @@
   import type { Tile } from "./types";
 
   export let word: Tile[];
+  export let score: number | undefined;
 </script>
 
 <div class=container>
@@ -15,6 +16,11 @@
       size='small'
     />
   {/each}
+  {#if score}
+    <span class=score>
+      {score}
+    </span>
+  {/if}
 </div>
 
 <style>
@@ -23,5 +29,11 @@
     flex-direction: row;
     width: 100%;
     justify-content: center;
+    align-items: center;
+  }
+  .score {
+    width: 0;
+    padding-left: 1em;
+    overflow: visible;
   }
 </style>
