@@ -146,6 +146,7 @@ import Info from './Info.svelte';
     if (matches.length) {
       if (chain > 0) {
         streak++;
+        remainingSwaps++;
       }
       const match = matches[0];
       if (match.axis === 'row') {
@@ -160,7 +161,7 @@ import Info from './Info.svelte';
       latestWord = match.word;
       words = words.concat([match]);
      
-      remainingSwaps += match.word.length - 4 + chain;
+      remainingSwaps += match.word.length - 4;
       latestChain = chain;
       if (latestChain > bestChain) bestChain = latestChain;
       
