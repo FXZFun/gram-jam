@@ -7,6 +7,4 @@ words.forEach(w => {
   Dictionary.insert(w, w);
 })
 
-console.log(Dictionary.get("apple"));
-
 export default Dictionary;

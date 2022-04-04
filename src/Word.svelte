@@ -1,22 +1,16 @@
-<script lang='ts'>
-import Tile from "./Tile.svelte";
+<script lang="ts">
+  import BoardTile from "./BoardTile.svelte";
+  import type { Tile } from "./types";
 
-  export let word: string;
-  
-  const getLetters = (word: string) => {
-    const letters = [];
-    for (let i = 0; i < word.length; i++) {
-      letters.push(word.charAt(i).toUpperCase());
-    }
-    return letters;
-  }
+  export let word: Tile[];
 </script>
 
 <div class=container>
-  {#each getLetters(word) as letter}
-    <Tile
-      {letter}
+  {#each word as tile}
+    <BoardTile
+      letter={tile.letter}
       selected={false}
+      multiplier={tile.multiplier}
       matched
       size='small'
     />

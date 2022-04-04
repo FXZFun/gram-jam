@@ -8,14 +8,17 @@
 	import { quintOut } from 'svelte/easing';
 	import { crossfade, fly } from 'svelte/transition';
   
+  import Restart from 'svelte-material-icons/Restart.svelte';
   import { findWords } from './gameLogic';
-  import type { Board, Match } from './types';
+  import type { Board, Match, Tile } from './types';
   import WordChain from './WordChain.svelte';
-  import Modal from './Modal.svelte';
   import Swaps from './Swaps.svelte';
-  import Tile from './Tile.svelte';
+  import BoardTile from './BoardTile.svelte';
   import Streak from './Streak.svelte';
-import Word from './Word.svelte';
+  import Word from './Word.svelte';
+  import GameOver from './GameOver.svelte';
+  import ActionButton from './ActionButton.svelte';
+import Info from './Info.svelte';
 
 	const [send, receive] = crossfade({
 		duration: d => 200,
@@ -47,15 +50,16 @@ import Word from './Word.svelte';
   let totalScore = 0;
   let latestChain = 0;
   let bestChain = 0;
-  let newScore: number = undefined;
-  let latestWord: string = undefined;
+  // for disabling the chain pill after a while
+  let chainTimeout: NodeJS.Timeout;
+  let latestWord: Tile[] = undefined;
   
   const handleReset = () => {
     const tempBoard = [];
     lost = false;
     totalScore = 0;
     remainingSwaps = 10;
-    newScore = undefined;
+    streak = 0;
     latestWord = undefined;
     words = [];
     for (let i = 0; i < COLS; i++) {
@@ -68,21 +72,20 @@ import Word from './Word.svelte';
     let matches = findWords(tempBoard);
     while (matches.length) {
       for (const match of matches) {
-        console.log('scrambling', match.word);
         const tempTile = tempBoard[match.i][match.j];
         // TODO more sophisticated scramble
+        const toSwap =  Math.floor(Math.random() * match.word.length);
         if (match.axis === 'row') {
-          tempBoard[match.i][match.j] = tempBoard[match.i + 1][match.j];
-          tempBoard[match.i + 1][match.j] = tempTile;
+          tempBoard[match.i][match.j] = tempBoard[match.i + toSwap][match.j];
+          tempBoard[match.i + toSwap][match.j] = tempTile;
         } else {
-          tempBoard[match.i][match.j] = tempBoard[match.i][match.j + 1];
-          tempBoard[match.i][match.j + 1] = tempTile;
+          tempBoard[match.i][match.j] = tempBoard[match.i][match.j + toSwap];
+          tempBoard[match.i][match.j + toSwap] = tempTile;
         }
       }
       matches = findWords(tempBoard);
     }
     board = tempBoard;
-    // handleScore(matches, 0);
   }
   
  
@@ -139,9 +142,11 @@ import Word from './Word.svelte';
     selected = rangeX = rangeY = undefined;
   }
   
-  const handleScore = (matches: Match[], chain = 0, timeout = 500) => {
+  const handleScore = (matches: Match[], chain = 0, timeout = 750) => {
     if (matches.length) {
-    // for (let match of matches) {
+      if (chain > 0) {
+        streak++;
+      }
       const match = matches[0];
       if (match.axis === 'row') {
         rangeX = [match.i, match.i + match.word.length - 1];
@@ -151,7 +156,6 @@ import Word from './Word.svelte';
         rangeY = [match.j, match.j + match.word.length - 1];
       }
 
-      newScore = match.score;
       totalScore += match.score;
       latestWord = match.word;
       words = words.concat([match]);
@@ -159,13 +163,20 @@ import Word from './Word.svelte';
       remainingSwaps += match.word.length - 4 + chain;
       latestChain = chain;
       if (latestChain > bestChain) bestChain = latestChain;
+      
       setTimeout(() => {
         handleRemoveLetters();
         handleClearSelection();
         matches = findWords(board);
         handleScore(matches, chain + 1);
+        clearTimeout(chainTimeout);
       }, timeout)
-    }
+
+      chainTimeout = setTimeout(() => {
+        console.log('reseting chain');
+        latestChain = 0;
+      }, timeout * 2 + 10);
+     }
   }
   
   const handleRemoveLetters = () => {
@@ -174,9 +185,9 @@ import Word from './Word.svelte';
       const wordLength = rangeY[1] - rangeY[0] + 1;
       const i = rangeX[0];
       for (let j = rangeY[1]; j >= 0; j--) {
-        const newLetter = board[i][j - wordLength];
-        if (newLetter) {
-          board[i][j] = newLetter;
+        const tmp = board[i][j - wordLength];
+        if (tmp) {
+          board[i][j] = tmp;
         } else {
           board[i][j] = sample(board);
         }
@@ -185,19 +196,15 @@ import Word from './Word.svelte';
     } else {
       for (let j = rangeY[1]; j >= 0; j--) {
         for (let i = rangeX[0]; i <= rangeX[1]; i++) {
-          const newLetter = board[i][j - 1];
-          if (newLetter) {
-            board[i][j] = newLetter;
+          const tmp = board[i][j - 1];
+          if (tmp) {
+            board[i][j] = tmp;
           } else {
             board[i][j] = sample(board);
           }
         }
       }
     }
-  }
-  
-  const handleShare = () => {
-    alert('coming soon!');
   }
 
   // initialize board on first load
@@ -206,65 +213,70 @@ import Word from './Word.svelte';
 </script>
 
 <div class='container'>
+  <div class=status>
+    <Streak {streak} />
+    <WordChain chain={latestChain} />
+    <div class=spacer />
+    <Swaps swaps={remainingSwaps} />
+  </div>
   {#key totalScore}
     <div class='score-container'>
       Score:
       <div in:fly={{ y: 20 }}>{totalScore}</div>
     </div>
   {/key}
-  {#if latestWord !== undefined}
-    <div>Latest Word:</div>
-    <Word word={latestWord} />
-  {/if}
-  <div class=multipliers>
-    <Streak {streak} />
-    <WordChain chain={latestChain} />
+  <div class=latest-word>
+    {#if latestWord !== undefined}
+      <div>Latest Word:</div>
+      <Word word={latestWord} />
+    {/if}
   </div>
-  <Swaps swaps={remainingSwaps} />
   <div class='game'>
     {#each board as row, i}
         <div class='row'>
-          {#each row as letter, j (letter[1])}
+          {#each row as tile, j (tile.id)}
             <div
               animate:flip="{{duration: 200}}"
-              in:receive="{{key: letter[1]}}"
-              out:send="{{key: letter[1]}}"
+              in:receive="{{key: tile.id}}"
+              out:send="{{key: tile.id}}"
               on:drag={handleDrag}
               on:click={() => handleClick(i, j)}
             >
-              <Tile
-                letter={letter[0]}
+              <BoardTile
+                letter={tile.letter}
                 selected={selected && i === selected[0] && j === selected[1]}
                 matched={rangeX && rangeY &&
                   rangeX[0] <= i && i <= rangeX[1] &&
                   rangeY[0] <= j && j <= rangeY[1]
                 }
+                multiplier={tile.multiplier}
               />
             </div>
           {/each}
         </div>
     {/each}
   </div>
-  <button class='action' on:click={handleReset}>Reset Game</button>
-  <Modal open={lost} onClose={handleReset}>
-    <h1>Game Over</h1>
-    <h3>Best Streak: {bestStreak}</h3>
-    <h3>Best Chain: {bestChain}</h3>
-    <h3>Best Words:</h3>
-    <table>
-    {#each words.sort((a, b) => b.score - a.score).slice(0, 10) as word}
-      <tr>
-        <td>{word.word.toUpperCase()}:</td>
-        <td>{word.score}</td>
-      </tr>
-    {/each}
-    </table>
-    <button class='action' on:click={handleShare}>Share results</button>
-    <button class='action' on:click={handleReset}>Reset Game</button>
-  </Modal>
+  <div class=controls>
+    <ActionButton onClick={handleReset}>
+      <Restart size='1em' />
+      Reset Game
+    </ActionButton>
+    <div class=spacing />
+		<Info />
+  </div>
+  <GameOver
+    {lost}
+    onReset={handleReset}
+    {bestStreak}
+    {bestChain}
+    bestWords={words}
+  />
 </div>
 
 <style>
+  * {
+    font-family: 'Poppins', sans-serif;
+  }
   .container {
     position: relative;
   }
@@ -273,6 +285,17 @@ import Word from './Word.svelte';
     flex-direction: row;
     margin-left: auto;
     margin-right: auto;
+  }
+  .latest-word {
+    height: 4em;
+  }
+  .controls {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+  .spacing {
+    width: 1em;
   }
   .row {
     display: flex;
@@ -286,24 +309,12 @@ import Word from './Word.svelte';
   .score-container div {
     padding-left: 8px;
   }
-  .multipliers {
-    position: absolute;
-    top: 0;
-    left: 0;
+  .status {
     display: flex;
     flex-direction: row;
-  }
-  .action {
-    background-color: green;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    text-transform: uppercase;
-    margin: 0;
-  }
-  table {
     width: 100%;
-    text-align: start;
-    margin-bottom: 8px;
+  }
+  .status .spacer {
+    flex-grow: 1;
   }
 </style>

@@ -1,51 +1,24 @@
 <script lang='ts'>
-  import Shuffle from 'svelte-material-icons/Shuffle.svelte'
+  import Autorenew from 'svelte-material-icons/Autorenew.svelte'
 	import { fly } from 'svelte/transition';
+import Pill from './Pill.svelte';
 
   export let swaps: number;
   
   const getSwapLevel = (swaps: number) => {
-    if (swaps < 3) return 'low';
-    else if (swaps < 7) return 'med';
-    else if (swaps < 15) return 'high';
-    else return 'super';
+    if (swaps < 3) return '#b71c1c';
+    else if (swaps < 5) return '#e65100';
+    else if (swaps < 8) return '#fbc02d';
+    else if (swaps < 11) return '#33691e';
+    else if (swaps < 14) return '#01579b';
+    else return '#311b92';
   }
 </script>
 
-<div class={`swap-count ${getSwapLevel(swaps)}`}>
-  {#key swaps}
-    <div in:fly={{ y: 20 }}>
-      {swaps}
-    </div>
-  {/key}
-  <Shuffle />
-</div>
-
-<style>
-  .swap-count {
-    transition: all 1s ease-in-out;
-    position: absolute;
-    top: 0;
-    right: 0;
-    color: white;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    border-radius: 12px;
-    padding: 4px 8px;
-    font-size: 1.25em;
-    font-weight: bold;
-  }
-  .low {
-    background-color: red;
-  }
-  .med {
-    background-color: orange;
-  }
-  .high {
-    background-color: green;
-  }
-  .super {
-    background-color: blue;
-  }
-</style>
+<Pill
+  value={Math.max(swaps, 0)}
+  color='white'
+  backgroundColor={getSwapLevel(swaps)}
+>
+  <Autorenew />
+</Pill>

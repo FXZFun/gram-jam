@@ -1,4 +1,4 @@
-import type { Board, Freqs } from "./types";
+import type { Board, Freqs, Multiplier, Tile } from "./types";
 
 export const letterFreqs = {
   'A': 8.4966,
@@ -29,7 +29,66 @@ export const letterFreqs = {
   'Z': 0.2722, 
 }
 
+export const bigrams = {
+  'TH': 0.05,
+  'HE': 0.05,
+  'IN': 0.05,
+  'EN': 0.05,
+  'NT': 0.05,
+  'RE': 0.05,
+  'ER': 0.05,
+  'AN': 0.05,
+  'TI': 0.05,
+  'ES': 0.05,
+  'ON': 0.05,
+  'AT': 0.05,
+  'SE': 0.05,
+  'ND': 0.05,
+  'OR': 0.05,
+  'AR': 0.05,
+  'AL': 0.05,
+  'TE': 0.05,
+  'CO': 0.05,
+  'DE': 0.05,
+  'TO': 0.05,
+  'RA': 0.05,
+  'ET': 0.05,
+  'ED': 0.05,
+  'IT': 0.05,
+  'SA': 0.05,
+  'EM': 0.05,
+  'RO': 0.05, 
+}
+
 export const points = {
+  'TH': 1,
+  'HE': 1,
+  'IN': 1,
+  'EN': 1,
+  'NT': 1,
+  'RE': 1,
+  'ER': 1,
+  'AN': 1,
+  'TI': 1,
+  'ES': 1,
+  'ON': 1,
+  'AT': 1,
+  'SE': 1,
+  'ND': 1,
+  'OR': 1,
+  'AR': 1,
+  'AL': 1,
+  'TE': 1,
+  'CO': 1,
+  'DE': 1,
+  'TO': 1,
+  'RA': 1,
+  'ET': 1,
+  'ED': 1,
+  'IT': 1,
+  'SA': 1,
+  'EM': 1,
+  'RO': 1, 
   'A': 1,
   'B': 3,
   'C': 3,
@@ -58,23 +117,21 @@ export const points = {
   'Z': 10,
 }
 
-const getCumSum = (letterFreqs: Freqs): [ number[], number ] => {
-  const cum: number[] = [];
+const getCumSum = (letterFreqs: Freqs) => {
+  const cum: Array<{ letter: string, weight: number }> = [];
   let sum = 0;
-  Object.entries(letterFreqs).forEach(([l, f]) => {
-    sum += f;
-    cum.push(sum);
+  Object.entries(letterFreqs).forEach(([letter, freq]) => {
+    sum += freq;
+    cum.push({ letter, weight: sum });
   });
-  return [ cum, sum ];
+  return cum;
 }
-
-const [ cum, sum ] = getCumSum(letterFreqs);
 
 const countLetters = (board: Board) => {
   const counts = {};
   let total = 0;
   for (const row of board) {
-    for (const [ letter, id ] of row) {
+    for (const { letter, id } of row) {
       if (letter in counts) {
         counts[letter]++;
       } else {
@@ -90,34 +147,58 @@ const updateFreqs = (globalFreqs: Freqs, boardFreqs: Freqs) => {
   const updatedFreqs = {};
   Object.entries(globalFreqs).forEach(([letter, globalFreq]) => {
     const smoothed = (boardFreqs[letter] ?? 0) + 1;
+    // more intelligent sampling to keep board fairly distributed
     updatedFreqs[letter] = globalFreq / Math.sqrt(smoothed);
   });
-  return getCumSum(updatedFreqs);
+  return updatedFreqs;
 }
  
 let tileId = 0;
-export const sample = (board: Board): [string, number] => {
-  let cum: number[], sum: number;
+export const sample = (board: Board): Tile => {
+
+  let freqs: Record<string, number>;
+   
   if (board.length) {
     const boardFreqs = countLetters(board);
-    [ cum, sum ] = updateFreqs(letterFreqs, boardFreqs);
+    freqs = updateFreqs(letterFreqs, boardFreqs);
   } else {
-    [ cum, sum ] = getCumSum(letterFreqs);
+      freqs = letterFreqs
   }
-  const s = Math.random() * sum;
-  let l: string | undefined = undefined;
-  const letters = Object.keys(letterFreqs);
-  cum.forEach((c, i) => {
-    if (!l && c > s) l = letters[i];
-  });
+  // testing bigrams
+  if (true) {
+    freqs = {...freqs, ...bigrams};
+  }
+  const cum = getCumSum(freqs);
+  const sum = cum.slice(-1)[0].weight;
+  const sampleWeight = Math.random() * sum;
+  let sampledLetter: string | undefined = undefined;
+
+  for (const { letter, weight } of cum) {
+    if (weight > sampleWeight) {
+      sampledLetter = letter;
+      break;
+    }
+  }
+  if (sampledLetter.length > 1) console.log(sampledLetter);
   tileId++;
-  return [l, tileId];
+  const multSeed = Math.random();
+  let multiplier: Multiplier = 1;
+  if (multSeed > 0.95) multiplier = 3;
+  else if (multSeed > 0.90) multiplier = 2;
+  // TODO fix weighting
+  return {
+    letter: sampledLetter,
+    id: tileId,
+    multiplier
+  };
 }
 
-export const scoreWord = (word: string) => {
+export const scoreWord = (match: Tile[]) => {
   let score = 0;
-  for (let i = 0; i < word.length; i++) {
-    score += points[word.charAt(i).toUpperCase()];
+  let multiplier = 1;
+  for (const tile of match) {
+    score += points[tile.letter.toUpperCase()];
+    multiplier *= tile.multiplier;
   }
-  return score;
+  return score * multiplier;
 }

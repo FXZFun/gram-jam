@@ -1,28 +1,20 @@
 <script lang='ts'>
-  import Link from 'svelte-material-icons/Link.svelte'
-	import { fly } from 'svelte/transition';
+  import Flash from 'svelte-material-icons/Flash.svelte'
+  import Pill from './Pill.svelte';
+  import { schemeSpectral } from 'd3-scale-chromatic';
+
   export let chain: number;
+  $: backgroundColor = schemeSpectral[11][Math.min(Math.round(chain), 10)];
+  $: color = 3 < chain && chain < 8 ? 'black' : 'white';
+
 </script>
 
 {#if chain > 0}
-  {#key chain}
-    <div class=chain>
-      <div in:fly={{ y: -20 }}>{chain + 1}</div>
-      <Link />
-    </div>
-  {/key}
+  <Pill
+    value={chain + 1}
+    {color}
+    {backgroundColor}
+  >
+    <Flash />
+  </Pill>
 {/if}
-
-<style>
-  .chain {
-    background-color: orange;
-    color: white;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    border-radius: 12px;
-    padding: 4px 8px;
-    font-size: 1.25em;
-    font-weight: bold;
-  }
-</style>
