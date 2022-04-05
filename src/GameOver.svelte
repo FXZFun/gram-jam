@@ -32,7 +32,7 @@
       shareText += ` ${word.score}\n`
       
     }
-    shareText += `\nplay with your friends: https://jessecoleman.github.io/word-crush/`
+    shareText += `\nplay with your friends: https://gramjam.app/`
     const copyArea = document.createElement('textarea');
     copyArea.textContent = shareText;
     document.body.appendChild(copyArea);
