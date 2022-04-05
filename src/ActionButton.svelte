@@ -22,9 +22,12 @@
     display: flex;
     align-items: center;
   }
-  
-  .action:hover {
-    background-color: #2F3640;
+  :global(body.dark-mode) .action {
     color: white;
+    background-color: #2F3640;
+  }
+  .action:hover {
+    background-color: white;
+    color: black;
   }
 </style>

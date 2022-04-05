@@ -32,6 +32,10 @@
     margin: 2em 1em;
     width: 100%
   }
+  :global(body.dark-mode) .panel {
+    background-color: #1D1E20;
+    color: white;
+  }
   @media (min-width: 769px) {
     .panel {
       width: 30em;

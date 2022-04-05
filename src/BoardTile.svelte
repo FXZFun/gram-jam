@@ -55,6 +55,10 @@
     justify-content: center;
     user-select: none;
 	}
+  :global(body.dark-mode) .tile {
+    background-color: #2F3640;
+    border-color: black;
+  }
   .tile.small {
     width: 2em;
     height: 2em;
@@ -63,9 +67,18 @@
   .tile.selected {
     background-color: #C4E0E3;
   }
+  :global(body.dark-mode) .tile {
+    color: white;
+  }
+  :global(body.dark-mode) .tile.selected {
+    background-color: #2C47D3;
+  }
   .tile.matched {
-    background-color: #A2F594 !important;
-    border-color: #56ad47 !important;
+    background-color: #A2F594;
+    border-color: #56ad47;
+  }
+  :global(body.dark-mode) .tile.matched {
+    background-color: #2A9618;
   }
   .tile.adjacent {
   }
@@ -91,6 +104,12 @@
   }
   .multiplier.three {
     background: linear-gradient(to bottom right, #FBC6A4 0%, #FBC6A4 50%, #ffffff00 50%, #ffffff00 100%);
+  }
+  :global(body.dark-mode) .multiplier.two {
+    background: linear-gradient(to bottom right, #a16e00 0%, #a16e00 50%, #ffffff00 50%, #ffffff00 100%);
+  }
+  :global(body.dark-mode) .multiplier.three {
+    background: linear-gradient(to bottom right, #b43900 0%, #b43900 50%, #ffffff00 50%, #ffffff00 100%);
   }
   .score {
     position: absolute;

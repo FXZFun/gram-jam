@@ -9,6 +9,9 @@ with open('words.txt') as words, open('../src/words.json', 'w') as out:
 
         if '\'' in word:
             continue
+        
+        if word in ['spic', 'coon', 'cunt', 'nigger', 'nigga', 'fags', 'faggy', 'dike']:
+            continue
 
         if word != word.lower():
             continue

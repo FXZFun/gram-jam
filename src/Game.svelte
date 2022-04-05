@@ -19,6 +19,7 @@
   import GameOver from './GameOver.svelte';
   import ActionButton from './ActionButton.svelte';
 import Info from './Info.svelte';
+import DarkMode from './DarkMode.svelte';
 
 	const [send, receive] = crossfade({
 		duration: d => 200,
@@ -273,6 +274,8 @@ import Info from './Info.svelte';
     </ActionButton>
     <div class=spacing />
 		<Info />
+    <div class=spacing />
+    <DarkMode />
   </div>
 </div>
 <GameOver
@@ -302,6 +305,9 @@ import Info from './Info.svelte';
   .latest-word {
     height: 4em;
   }
+  :global(body.dark-mode) .latest-word {
+    color: white;
+  }
   .controls {
     width: 100%;
     display: flex;
@@ -319,6 +325,9 @@ import Info from './Info.svelte';
     justify-content: center;
     font-weight: bold;
     font-size: 1.75em;
+  }
+  :global(body.dark-mode) .score-container {
+    color: white;
   }
   .score-container div {
     padding-left: 8px;
