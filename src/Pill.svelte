@@ -44,11 +44,14 @@
     flex-direction: row;
     align-items: center;
     border-radius: 16px;
-    margin-right: 4px;
+    margin-right: 0.5em;
     padding: 4px;
     padding-right: 8px;
     font-size: 1.25em;
     font-weight: bold;
+  }
+  .pill:first-of-type {
+    margin-left: 0.5em;
   }
   .pill .text {
     position: absolute;

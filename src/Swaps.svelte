@@ -1,9 +1,15 @@
 <script lang='ts'>
   import Autorenew from 'svelte-material-icons/Autorenew.svelte'
-	import { fly } from 'svelte/transition';
-import Pill from './Pill.svelte';
+  import Pill from './Pill.svelte';
 
   export let swaps: number;
+  let prevSwaps: number;
+  let diff: number;
+
+  $: {
+    diff = swaps - prevSwaps;
+    prevSwaps = swaps;
+  }
   
   const getSwapLevel = (swaps: number) => {
     if (swaps < 3) return '#b71c1c';
@@ -15,6 +21,15 @@ import Pill from './Pill.svelte';
   }
 </script>
 
+{#if false}
+  <Pill
+    value={diff}
+    color='black'
+    backgroundColor='white'
+  >
+
+  </Pill>
+{/if}
 <Pill
   value={Math.max(swaps, 0)}
   color='white'

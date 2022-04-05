@@ -38,7 +38,7 @@ import Info from './Info.svelte';
 		}
 	});
 
-  const ROWS = 8;
+  const ROWS = 7;
   const COLS = 6;
 
 	let board: Board = [];
@@ -61,6 +61,8 @@ import Info from './Info.svelte';
     totalScore = 0;
     remainingSwaps = 10;
     streak = 0;
+    bestStreak = 0;
+    bestChain = 0;
     latestWord = undefined;
     words = [];
     for (let i = 0; i < COLS; i++) {
@@ -247,7 +249,12 @@ import Info from './Info.svelte';
             >
               <BoardTile
                 letter={tile.letter}
+                active={!!selected}
                 selected={selected && i === selected[0] && j === selected[1]}
+                adjacent={selected
+                  && Math.abs(i - selected[0]) <= 1
+                  && Math.abs(j - selected[1]) <= 1
+                }
                 matched={rangeX && rangeY &&
                   rangeX[0] <= i && i <= rangeX[1] &&
                   rangeY[0] <= j && j <= rangeY[1]
@@ -267,22 +274,24 @@ import Info from './Info.svelte';
     <div class=spacing />
 		<Info />
   </div>
-  <GameOver
-    {lost}
-    score={totalScore}
-    onReset={handleReset}
-    {bestStreak}
-    {bestChain}
-    bestWords={words.sort((a, b) => b.score - a.score).slice(0, 5)}
-  />
 </div>
+<GameOver
+  {lost}
+  score={totalScore}
+  onReset={handleReset}
+  {bestStreak}
+  {bestChain}
+  bestWords={words.sort((a, b) => b.score - a.score).slice(0, 5)}
+/>
 
 <style>
-  * {
-    font-family: 'Poppins', sans-serif;
-  }
   .container {
     position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
   .game {
     display: flex;
@@ -308,14 +317,17 @@ import Info from './Info.svelte';
   .score-container {
     display: flex;
     justify-content: center;
+    font-weight: bold;
     font-size: 1.75em;
   }
   .score-container div {
     padding-left: 8px;
+    flex-grow: 1;
   }
   .status {
     display: flex;
     flex-direction: row;
+    padding: 1em;
     width: 100%;
   }
   .status .spacer {

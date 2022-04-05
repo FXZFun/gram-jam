@@ -4,7 +4,9 @@
   import { points } from './letters';
   
   export let letter: string;
+  export let active: boolean | undefined;
   export let selected: boolean | undefined;
+  export let adjacent: boolean | undefined;
   export let matched: boolean | undefined;
   export let size: 'small' | 'large' = 'large';
   export let multiplier: 1 | 2 | 3 = 1;
@@ -13,6 +15,8 @@
 <div
   class={`tile
     ${selected ? 'selected' : ''}
+    ${adjacent && !selected ? 'adjacent' : ''}
+    ${active && !adjacent && !selected ? 'non-adjacent' : ''}
     ${matched ? 'matched' : ''}
     ${size}
   `}
@@ -62,6 +66,10 @@
   .tile.matched {
     background-color: #A2F594 !important;
     border-color: #56ad47 !important;
+  }
+  .tile.adjacent {
+  }
+  .tile.non-adjacent {
   }
   .multiplier {
     position: absolute;

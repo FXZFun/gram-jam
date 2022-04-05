@@ -212,8 +212,8 @@ export const sample = (board: Board): Tile => {
   tileId++;
   const multSeed = Math.random();
   let multiplier: Multiplier = 1;
-  if (multSeed > 0.95) multiplier = 3;
-  else if (multSeed > 0.90) multiplier = 2;
+  if (multSeed > 0.97) multiplier = 3;
+  else if (multSeed > 0.93) multiplier = 2;
   // TODO fix weighting
   return {
     letter: sampledLetter,

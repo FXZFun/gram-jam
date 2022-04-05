@@ -27,7 +27,16 @@
     background-color: white;
     border-radius: 4px;
     box-shadow: 0 0 8px #00000040;
-    padding: 8px;
+    max-height: calc(100% - 2em);
+    overflow-y: auto;
+    margin: 2em 1em;
+    width: 100%
   }
+  @media (min-width: 769px) {
+    .panel {
+      width: 30em;
+    }
+  }
+
 
 </style>

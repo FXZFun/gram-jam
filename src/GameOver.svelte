@@ -5,7 +5,6 @@
   import ActionButton from './ActionButton.svelte';
   import Streak from './Streak.svelte';
   import WordChain from './WordChain.svelte';
-  import { symbols } from './letters';
   
   export let lost: boolean;
   export let onReset: () => void;
@@ -16,9 +15,14 @@
   let shareText: string;
   let copied = false;
   
+  const handleReset = () => {
+    copied = false;
+    onReset();
+  }
+  
   const handleShare = () => {
    
-    shareText = '✨ WORD CRUSH ✨\n';
+    shareText = '✨ GRAM JAM ✨\n';
     shareText += `Score: ${score}\n\n`;
     shareText += `Best Streak: ${bestStreak}\n`;
     shareText += `Best Chain: ${bestChain}\n`;
@@ -51,7 +55,7 @@
   }
 </script>  
 
-<Modal open={lost} onClose={onReset}>
+<Modal open={lost} onClose={handleReset}>
   <div class=container>
     <h1>Game Over</h1>
     <h2>Score: {score}</h2>
@@ -75,9 +79,9 @@
     {/each}
     </table>
     <div class=controls>
-      <ActionButton onClick={handleShare}>{copied ? 'Copied' : 'Share results'}</ActionButton>
+      <ActionButton onClick={handleReset}>Reset Game</ActionButton>
       <div class=spacer />
-      <ActionButton onClick={onReset}>Reset Game</ActionButton>
+      <ActionButton onClick={handleShare}>{copied ? 'Copied' : 'Share results'}</ActionButton>
     </div>
   </div>
 </Modal>
@@ -93,11 +97,12 @@
   }
   .container {
     padding: 2em;
-    
   }
   .controls {
     display: flex;
     flex-direction: row;
+    width: 100%;
+    justify-content: center;
   }
   .result {
     display: flex;
