@@ -8,7 +8,7 @@
   export let selected: boolean | undefined;
   export let adjacent: boolean | undefined;
   export let matched: boolean | undefined;
-  export let size: 'small' | 'large' = 'large';
+  export let size: 'tiny' | 'small' | 'large' = 'large';
   export let multiplier: 1 | 2 | 3 = 1;
 </script>
 
@@ -64,6 +64,18 @@
     height: 2em;
     font-size: 1em;
   }
+  .tile.tiny {
+    width: 1.5em;
+    height: 1.5em;
+    font-size: 0.75em;
+  }
+  @media (min-width: 769px) {
+    .tile.tiny {
+      width: 2em;
+      height: 2em;
+      font-size: 1em;
+    }
+  }
   .tile.selected {
     background-color: #C4E0E3;
   }
@@ -118,6 +130,9 @@
     bottom: 0;
     right: 0;
     padding: 0.2em;
+  }
+  .tile.tiny .score {
+    display: none;
   }
   .bigram-container {
     position: relative;

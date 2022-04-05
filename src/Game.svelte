@@ -20,6 +20,7 @@
   import ActionButton from './ActionButton.svelte';
 import Info from './Info.svelte';
 import DarkMode from './DarkMode.svelte';
+import Title from './Title.svelte';
 
 	const [send, receive] = crossfade({
 		duration: d => 200,
@@ -219,6 +220,9 @@ import DarkMode from './DarkMode.svelte';
 </script>
 
 <div class=container>
+  <div class=title>
+    <Title />
+  </div>
   <div class=status>
     <Streak {streak} />
     <WordChain chain={latestChain} />
