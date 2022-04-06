@@ -3,12 +3,13 @@
   import type { Tile } from "./types";
 
   export let word: Tile[];
-  export let score: number | undefined;
 </script>
 
 <div class=container>
   {#each word as tile}
     <BoardTile
+      active={false}
+      adjacent={false}
       letter={tile.letter}
       selected={false}
       multiplier={tile.multiplier}
@@ -16,11 +17,6 @@
       size='small'
     />
   {/each}
-  {#if score}
-    <span class=score>
-      {score}
-    </span>
-  {/if}
 </div>
 
 <style>
@@ -30,10 +26,5 @@
     width: 100%;
     justify-content: center;
     align-items: center;
-  }
-  .score {
-    width: 0;
-    padding-left: 1em;
-    overflow: visible;
   }
 </style>

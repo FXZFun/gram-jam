@@ -157,27 +157,46 @@ const getCumSum = (letterFreqs: Freqs) => {
 }
 
 const countLetters = (board: Board) => {
-  const counts = {};
+  const letterCounts = {};
+  const multiplierCounts = {};
   let total = 0;
   for (const row of board) {
-    for (const { letter, id } of row) {
-      if (letter in counts) {
-        counts[letter]++;
-      } else {
-        counts[letter] = 1;
+    for (const tile of row) {
+      if (tile) {
+        const { letter, multiplier } = tile;
+        if (letter in letterCounts) {
+          letterCounts[letter]++;
+        } else {
+          letterCounts[letter] = 1;
+        }
+        if (multiplier in multiplierCounts) {
+          multiplierCounts[multiplier]++;
+        } else {
+          multiplierCounts[multiplier] = 1;
+        }
+        total++;
       }
-      total++;
     }
   }
-  return counts;
+  return {
+    letterCounts,
+    multiplierCounts,
+  };
 }
 
 const updateFreqs = (globalFreqs: Freqs, boardFreqs: Freqs) => {
   const updatedFreqs = {};
   Object.entries(globalFreqs).forEach(([letter, globalFreq]) => {
-    const smoothed = (boardFreqs[letter] ?? 0) + 1;
+    const total = Object.values(boardFreqs).reduce((a, b) => a + b);
+    // frequency as percentage
+    const boardFreq = 100 * (boardFreqs[letter] ?? 0) / total;
+    const diff = globalFreq - boardFreq;
+    const posterior = Math.atan(diff) + (Math.PI / 2);
+    // console.log(letter, globalFreq, '=>', boardFreq, boardFreqs[letter])
+    // console.log(Math.round(diff * 100) / 100, Math.round(posterior * 100) / 100)
     // more intelligent sampling to keep board fairly distributed
-    updatedFreqs[letter] = globalFreq / Math.sqrt(smoothed);
+    updatedFreqs[letter] = posterior * globalFreq;
+    // globalFreq / Math.sqrt(smoothed);
   });
   return updatedFreqs;
 }
@@ -188,8 +207,8 @@ export const sample = (board: Board): Tile => {
   let freqs: Record<string, number>;
    
   if (board.length) {
-    const boardFreqs = countLetters(board);
-    freqs = updateFreqs(letterFreqs, boardFreqs);
+    const { letterCounts, multiplierCounts } = countLetters(board);
+    freqs = updateFreqs(letterFreqs, letterCounts);
   } else {
       freqs = letterFreqs
   }
@@ -208,7 +227,6 @@ export const sample = (board: Board): Tile => {
       break;
     }
   }
-  if (sampledLetter.length > 1) console.log(sampledLetter);
   tileId++;
   const multSeed = Math.random();
   let multiplier: Multiplier = 1;

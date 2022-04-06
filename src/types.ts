@@ -1,9 +1,10 @@
-export type Axis = 'row' | 'col';
+export type Axis = 'row' | 'col' | 'intersection';
 
 export type Match = {
   readonly word: Tile[],
   readonly i: number,
   readonly j: number,
+  readonly coords: Array<[number, number]>,
   readonly axis: Axis,
   readonly score: number,
 };

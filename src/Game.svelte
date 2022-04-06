@@ -1,10 +1,9 @@
-<script lang="ts">
+<script lang='ts'>
 
   import { sample } from './letters';
   import { points } from './letters';
   import { flip } from 'svelte/animate';
 
-  //
 	import { quintOut } from 'svelte/easing';
 	import { crossfade, fly } from 'svelte/transition';
   
@@ -18,9 +17,10 @@
   import Word from './Word.svelte';
   import GameOver from './GameOver.svelte';
   import ActionButton from './ActionButton.svelte';
-import Info from './Info.svelte';
-import DarkMode from './DarkMode.svelte';
-import Title from './Title.svelte';
+  import Info from './Info.svelte';
+  import DarkMode from './DarkMode.svelte';
+  import Title from './Title.svelte';
+  import App from './App.svelte';
 
 	const [send, receive] = crossfade({
 		duration: d => 200,
@@ -77,9 +77,11 @@ import Title from './Title.svelte';
     let matches = findWords(tempBoard);
     while (matches.length) {
       for (const match of matches) {
+        if (match.axis === 'intersection') continue;
         const tempTile = tempBoard[match.i][match.j];
         // TODO more sophisticated scramble
         const toSwap =  Math.floor(Math.random() * match.word.length);
+
         if (match.axis === 'row') {
           tempBoard[match.i][match.j] = tempBoard[match.i + toSwap][match.j];
           tempBoard[match.i + toSwap][match.j] = tempTile;
@@ -95,8 +97,7 @@ import Title from './Title.svelte';
   
  
   let selected: [number, number] | undefined = undefined;
-  let rangeX: [number, number] | undefined = undefined;
-  let rangeY: [number, number] | undefined = undefined;
+  let toDelete: string[] | undefined = undefined;
   
   const handleDrag = (e: DragEvent) => {
     console.log(e);
@@ -107,11 +108,16 @@ import Title from './Title.svelte';
       selected = [i, j];
     } else if (!(selected[0] === i && selected[1] === j)) {
       const [ i2, j2 ] = selected;
+
+      // the ol' switcheroo
       const first = board[i][j];
       board[i][j] = board[i2][j2];
       board[i2][j2] = first;
+      // clear selection after switch
       selected = undefined;
 
+      // if tiles are adjacent deduct 1 swap
+      // else deduct 2
       const distanceX = Math.abs(i - i2);
       const distanceY = Math.abs(j - j2);
       let penalty = 0;
@@ -120,47 +126,47 @@ import Title from './Title.svelte';
       } else {
         penalty = 2;
       }
+
       if (streak > 0) {
         penalty--;
       }
       remainingSwaps -= penalty;
       
-      const matches = findWords(board);
-      if (matches.length > 0) {
-        streak++;
-        if (streak > bestStreak) bestStreak = streak;
+      const [ match, ] = findWords(board);
+      if (match) {
+        handleScore(match);
       } else {
         streak = 0;
       }
-      handleScore(matches);
+
     } else {
+      // click same tile twice
       selected = undefined;
     }
+    // this attempts to set lost = true after cascades resolve
     if (remainingSwaps <= 0) {
       setTimeout(() => {
         lost = true;
-      }, 505);
+      }, 1000);
     }
   }
   
   const handleClearSelection = () => {
-    selected = rangeX = rangeY = undefined;
+    selected = toDelete = undefined;
   }
   
-  const handleScore = (matches: Match[], chain = 0, timeout = 750) => {
-    if (matches.length) {
+  // chain is incremented on subsequent recursive calls of handleScore
+  const handleScore = (match: Match, chain = 0, timeout = 750) => {
+    streak++;
+    if (streak > bestStreak) {
+      bestStreak = streak;
+    }
+    if (match) {
       if (chain > 0) {
-        streak++;
         remainingSwaps++;
       }
-      const match = matches[0];
-      if (match.axis === 'row') {
-        rangeX = [match.i, match.i + match.word.length - 1];
-        rangeY = [match.j, match.j]
-      } else {
-        rangeX = [match.i, match.i];
-        rangeY = [match.j, match.j + match.word.length - 1];
-      }
+      toDelete = match.coords.map(c => c.join(','));
+      console.log(toDelete);
 
       totalScore += match.score;
       latestWord = match.word;
@@ -171,47 +177,42 @@ import Title from './Title.svelte';
       latestChain = chain;
       if (latestChain > bestChain) bestChain = latestChain;
       
+      // let animation play
       setTimeout(() => {
-        handleRemoveLetters();
-        handleClearSelection();
-        matches = findWords(board);
-        handleScore(matches, chain + 1);
-        clearTimeout(chainTimeout);
+        board = handleRemoveLetters(board, match.coords);
+        let [ nextMatch, ] = findWords(board);
+        if (match) {
+          handleClearSelection();
+          handleScore(nextMatch, chain + 1);
+          clearTimeout(chainTimeout);
+        }
       }, timeout)
 
+      if (chainTimeout) clearTimeout(chainTimeout);
       chainTimeout = setTimeout(() => {
         console.log('reseting chain');
         latestChain = 0;
-      }, timeout * 2 + 10);
+      }, timeout * 3);
      }
   }
   
-  const handleRemoveLetters = () => {
+  const handleRemoveLetters = (board: Board, coords: Array<[number, number]>) => {
+
+    // copy previous board
+    const tempBoard = board.map(col => col.map(tile => tile));
     // clear column
-    if (rangeX[0] === rangeX[1]) {
-      const wordLength = rangeY[1] - rangeY[0] + 1;
-      const i = rangeX[0];
-      for (let j = rangeY[1]; j >= 0; j--) {
-        const tmp = board[i][j - wordLength];
-        if (tmp) {
-          board[i][j] = tmp;
-        } else {
-          board[i][j] = sample(board);
-        }
-      }
-    // clear row
-    } else {
-      for (let j = rangeY[1]; j >= 0; j--) {
-        for (let i = rangeX[0]; i <= rangeX[1]; i++) {
-          const tmp = board[i][j - 1];
-          if (tmp) {
-            board[i][j] = tmp;
-          } else {
-            board[i][j] = sample(board);
-          }
-        }
-      }
+    for (const [ x, y ] of coords) {
+      tempBoard[x][y] = undefined;
     }
+    
+    return tempBoard.map(col => {
+      const deleted = col.filter(tile => tile == undefined);
+      return col.reverse()
+        .filter(tile => tile != undefined)
+        .concat(Array.from({ length: deleted.length }).map(_ => sample(tempBoard)))
+        .reverse()
+      }
+    )
   }
 
   // initialize board on first load
@@ -238,18 +239,21 @@ import Title from './Title.svelte';
   <div class=latest-word>
     {#if latestWord !== undefined}
       <div>Latest Word:</div>
-      <Word word={latestWord} score={latestScore} />
+      <div class=word-container>
+        <div class=word-score />
+        <Word word={latestWord} />
+        <div class=word-score>+{latestScore}</div>
+      </div>
     {/if}
   </div>
-  <div class='game'>
+  <div class=game>
     {#each board as row, i}
-        <div class='row'>
+        <div class=row>
           {#each row as tile, j (tile.id)}
             <div
               animate:flip="{{duration: 200}}"
               in:receive="{{key: tile.id}}"
               out:send="{{key: tile.id}}"
-              on:drag={handleDrag}
               on:click={() => handleClick(i, j)}
             >
               <BoardTile
@@ -260,10 +264,7 @@ import Title from './Title.svelte';
                   && Math.abs(i - selected[0]) <= 1
                   && Math.abs(j - selected[1]) <= 1
                 }
-                matched={rangeX && rangeY &&
-                  rangeX[0] <= i && i <= rangeX[1] &&
-                  rangeY[0] <= j && j <= rangeY[1]
-                }
+                matched={toDelete?.includes([i, j].join(','))}
                 multiplier={tile.multiplier}
               />
             </div>
@@ -308,6 +309,16 @@ import Title from './Title.svelte';
   }
   .latest-word {
     height: 4em;
+    font-weight: bold;
+  }
+  .word-container {
+    display: flex;
+    align-items: center;
+    width: 100%;
+  }
+  .word-score {
+    width: 3em;
+    overflow: visible;
   }
   :global(body.dark-mode) .latest-word {
     color: white;

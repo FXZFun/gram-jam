@@ -24,9 +24,9 @@
    
     shareText = '✨ GRAM JAM ✨\n';
     shareText += `Score: ${score}\n\n`;
-    shareText += `Best Streak: ${bestStreak}\n`;
-    shareText += `Best Chain: ${bestChain}\n`;
-    shareText += 'Best Words:\n';
+    shareText += `🔥 Best Streak: ${bestStreak}\n`;
+    shareText += `⚡ Best Chain: ${bestChain}\n`;
+    shareText += '📘 Best Words:\n';
 
     for (const word of bestWords) {
       for (const tile of word.word) {
@@ -36,7 +36,7 @@
       shareText += ` ${word.score}\n`
       
     }
-    shareText += `\nplay with your friends: https://gramjam.app/`
+    shareText += `https://gramjam.app/`
     const copyArea = document.createElement('textarea');
     copyArea.textContent = shareText;
     document.body.appendChild(copyArea);
@@ -73,7 +73,7 @@
     <table>
     {#each bestWords as word}
       <tr>
-        <td><Word word={word.word} score={undefined}/></td>
+        <td><Word word={word.word} /></td>
         <td><span class=score>{word.score}</span></td>
       </tr>
     {/each}

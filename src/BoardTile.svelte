@@ -1,6 +1,7 @@
  <script lang="ts">
 
   import Close from 'svelte-material-icons/Close.svelte';
+  import { swipe } from 'svelte-gestures';
   import { points } from './letters';
   
   export let letter: string;
@@ -10,9 +11,15 @@
   export let matched: boolean | undefined;
   export let size: 'tiny' | 'small' | 'large' = 'large';
   export let multiplier: 1 | 2 | 3 = 1;
+  
+  const handleSwipe = (e: any) => {
+    console.log(e);
+    console.log(e.detail.direction);
+  }
 </script>
 
 <div
+  on:swipe={handleSwipe}
   class={`tile
     ${selected ? 'selected' : ''}
     ${adjacent && !selected ? 'adjacent' : ''}

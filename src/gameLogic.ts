@@ -10,6 +10,7 @@ export const findWords = (board: Board) => {
       if (match.length) {
         words.push({
           word: match,
+          coords: match.map((_, offset) => ([i, j + offset])),
           i, j,
           axis: 'col',
           score: scoreWord(match),
@@ -19,6 +20,7 @@ export const findWords = (board: Board) => {
       if (match2.length) {
         words.push({
           word: match2,
+          coords: match2.map((_, offset) => ([i + offset, j])),
           i, j,
           axis: 'row',
           score: scoreWord(match2),
@@ -26,21 +28,44 @@ export const findWords = (board: Board) => {
       }
     }
   }
-  // for (const w1 of words) {
-  //   for (const w2 of words) {
-  //     if (w1.axis === 'row' && w2.axis === 'col') {
-  //       if (w2.j <= w1.j && w1.j <= w2.j + w2.word.length) {
-  //         if (w2.i <= w1.i && w1.i <= w2.i + w2.word.length) {
 
-  //         }
-  //       }
-  //     } else if (w1.axis === 'col' && w2.axis ==='row') {
-  //       if (w2.j <= w1.j && w1.j <= w2.j + w2.word.length) {
-  //       
-  //     }
-  //   }
-  // }
-  return words.sort((a, b) => b.score - a.score);
+  const mergedWords: Match[] = [];
+  const toOmit: Match[] = [];
+  for (let i = 0; i < words.length; i++) {
+    for (let j = i + 1; j < words.length; j++) {
+      const w1 = words[i];
+      const w2 = words[j];
+      const coords1 = w1.coords.map(coord => coord.join(','));
+      const coords2 = new Set(w2.coords.map(coord => coord.join(',')));
+      const intersection = new Set(coords1.filter(c => coords2.has(c)));
+      if (w1.axis !== w2.axis && intersection.size) {
+        mergedWords.push({
+          axis: 'intersection',
+          word: [...w1.word],
+          i: -1,
+          j: -1,
+          score: w1.score + w2.score,
+          coords: [
+            ...w1.coords,
+            ...w2.coords,
+          ]
+        });
+      } else if (w1.axis === w2.axis) {
+        // prefer higher scoring word
+        if (w1.word.length < w2.word.length) {
+          toOmit.push(w1);
+        } else {
+          toOmit.push(w2);
+        }
+      }
+    }
+  }
+  return [
+    ...words
+      .filter(w => !toOmit.includes(w))
+      .filter(w => w.word.length > 3),
+    ...mergedWords
+  ].sort((a, b) => b.j - a.j);
 }
 
 const findWordCol = (board: Board, i: number, j: number): Tile[] => {
