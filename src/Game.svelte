@@ -151,11 +151,11 @@
   
   // chain is incremented on subsequent recursive calls of handleScore
   const handleScore = (match: Match, chain = 0, timeout = 750) => {
-    streak++;
-    if (streak > bestStreak) {
-      bestStreak = streak;
-    }
     if (match) {
+      streak++;
+      if (streak > bestStreak) {
+        bestStreak = streak;
+      }
       if (chain > 0) {
         remainingSwaps++;
       }
