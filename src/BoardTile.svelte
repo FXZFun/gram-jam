@@ -28,7 +28,7 @@
     ${size}
   `}
 >
-  {#if letter.length === 1}
+  {#if true}
     <span>{letter}</span>
   {:else}
     <div class=bigram-container>

@@ -1,13 +1,12 @@
 <script lang='ts'>
 
   import { sample } from './letters';
-  import { points } from './letters';
   import { flip } from 'svelte/animate';
 
-	import { quintOut } from 'svelte/easing';
-	import { crossfade, fly } from 'svelte/transition';
+	import { fly } from 'svelte/transition';
   
   import Restart from 'svelte-material-icons/Restart.svelte';
+  import Shuffle from 'svelte-material-icons/Shuffle.svelte';
   import { findWords } from './gameLogic';
   import type { Board, Match, Tile } from './types';
   import WordChain from './WordChain.svelte';
@@ -20,25 +19,8 @@
   import Info from './Info.svelte';
   import DarkMode from './DarkMode.svelte';
   import Title from './Title.svelte';
-  import App from './App.svelte';
-
-	const [send, receive] = crossfade({
-		duration: d => 200,
-
-		fallback(node, params) {
-			const style = getComputedStyle(node);
-			const transform = style.transform === 'none' ? '' : style.transform;
-
-			return {
-				duration: 600,
-				easing: quintOut,
-				css: t => `
-					transform: ${transform} scale(${t});
-					opacity: ${t}
-				`
-			};
-		}
-	});
+  import { shuffle } from './shuffle';
+  import { send, receive } from './animations';
 
   const ROWS = 7;
   const COLS = 6;
@@ -46,6 +28,7 @@
 	let board: Board = [];
   let words: Match[] = [];
   let remainingSwaps = 10;
+  let shuffles = 1;
   let streak = 0;
   let bestStreak = 0;
   let lost = false;
@@ -57,11 +40,22 @@
   let latestWord: Tile[] = undefined;
   let latestScore: number = undefined;
   
+  const customFlyIn = (node) => {
+    if (node.style.animation) node.style = null;
+    return fly(node, { y: 15, duration: 400 });
+  }
+
+  const  customFlip = (node, fromTo) => {
+    if (node.style.animation) node.style = null;
+    return flip(node, fromTo, { duration: 500 });
+  }
+
   const handleReset = () => {
     const tempBoard = [];
     lost = false;
     totalScore = 0;
     remainingSwaps = 10;
+    shuffles = 1;
     streak = 0;
     bestStreak = 0;
     bestChain = 0;
@@ -165,11 +159,20 @@
       if (chain > 0) {
         remainingSwaps++;
       }
+      if (match.axis === 'intersection') {
+        remainingSwaps += 2;
+        shuffles++;
+      }
+      if (match.word.length === COLS && match.axis === 'row') {
+        shuffles++;
+      }
+      if (match.word.length === ROWS && match.axis === 'col') {
+        shuffles++;
+      }
       toDelete = match.coords.map(c => c.join(','));
-      console.log(toDelete);
 
       totalScore += match.score;
-      latestWord = match.word;
+      // latestWord = match.word;
       latestScore = match.score;
       words = words.concat([match]);
      
@@ -179,21 +182,22 @@
       
       // let animation play
       setTimeout(() => {
+        latestWord = match.word;
         board = handleRemoveLetters(board, match.coords);
         let [ nextMatch, ] = findWords(board);
         if (match) {
           handleClearSelection();
           handleScore(nextMatch, chain + 1);
-          clearTimeout(chainTimeout);
         }
       }, timeout)
 
       if (chainTimeout) clearTimeout(chainTimeout);
-      chainTimeout = setTimeout(() => {
-        console.log('reseting chain');
-        latestChain = 0;
-      }, timeout * 3);
-     }
+    }
+
+    chainTimeout = setTimeout(() => {
+      console.log('reseting chain');
+      latestChain = 0;
+    }, timeout * 3);
   }
   
   const handleRemoveLetters = (board: Board, coords: Array<[number, number]>) => {
@@ -214,6 +218,27 @@
       }
     )
   }
+  
+  const handleShuffle = () => {
+    shuffles--;
+    const coords = Array.from({ length: 42 }).map(_ => ([
+      Math.floor(Math.random() * COLS),
+      Math.floor(Math.random() * ROWS),
+    ]));
+    const shuffledCoords = shuffle([...coords]);
+    const tempBoard = board.map(col => col.map(tile => tile));
+    coords.forEach((coord, i) => {
+      const newCoord = shuffledCoords[i];
+      const tmp = tempBoard[coord[0]][coord[1]];
+      tempBoard[coord[0]][coord[1]] = tempBoard[newCoord[0]][newCoord[1]];
+      tempBoard[newCoord[0]][newCoord[1]] = tmp;
+    });
+    board = tempBoard;
+    setTimeout(() => {
+      const [ match, ] = findWords(board);
+      handleScore(match);
+    }, 500);
+  }
 
   // initialize board on first load
   handleReset();
@@ -232,6 +257,17 @@
   </div>
   {#key totalScore}
     <div class=score-container>
+    <div class=shuffle-container>
+      <ActionButton
+        onClick={shuffles > 0 ? handleShuffle : undefined}
+        disabled={shuffles === 0}
+      >
+        <span>
+          {shuffles}
+        </span>
+          <Shuffle />
+      </ActionButton>
+    </div>
       Score:
       <div class=score in:fly={{ y: 20 }}>{totalScore}</div>
     </div>
@@ -251,7 +287,7 @@
         <div class=row>
           {#each row as tile, j (tile.id)}
             <div
-              animate:flip="{{duration: 200}}"
+              animate:flip="{{duration: 500}}"
               in:receive="{{key: tile.id}}"
               out:send="{{key: tile.id}}"
               on:click={() => handleClick(i, j)}
@@ -327,6 +363,7 @@
     width: 100%;
     display: flex;
     justify-content: center;
+    padding-top: 1em;
   }
   .spacing {
     width: 1em;
@@ -336,10 +373,20 @@
     flex-direction: column;
   }
   .score-container {
+    position: relative;
     display: flex;
     justify-content: center;
     font-weight: bold;
     font-size: 1.75em;
+  }
+  .shuffle-container {
+    position: fixed;
+    padding-right: 0.5em;
+    right: 0;
+    font-size: 0.825em;
+  }
+  .shuffle-container span {
+    padding: 0.25em;
   }
   :global(body.dark-mode) .score-container {
     color: white;

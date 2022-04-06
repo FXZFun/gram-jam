@@ -61,34 +61,34 @@ export const bigrams = {
 }
 
 export const points = {
-  'TH': 1,
-  'HE': 1,
-  'IN': 1,
-  'EN': 1,
-  'NT': 1,
-  'RE': 1,
-  'ER': 1,
-  'AN': 1,
-  'TI': 1,
-  'ES': 1,
-  'ON': 1,
-  'AT': 1,
-  'SE': 1,
-  'ND': 1,
-  'OR': 1,
-  'AR': 1,
-  'AL': 1,
-  'TE': 1,
-  'CO': 1,
-  'DE': 1,
-  'TO': 1,
-  'RA': 1,
-  'ET': 1,
-  'ED': 1,
-  'IT': 1,
-  'SA': 1,
-  'EM': 1,
-  'RO': 1, 
+  'TH': 5,
+  'HE': 5,
+  'IN': 2,
+  'EN': 2,
+  'NT': 2,
+  'RE': 2,
+  'ER': 2,
+  'AN': 2,
+  'TI': 2,
+  'ES': 2,
+  'ON': 2,
+  'AT': 2,
+  'SE': 2,
+  'ND': 3,
+  'OR': 2,
+  'AR': 2,
+  'AL': 2,
+  'TE': 2,
+  'CO': 4,
+  'DE': 3,
+  'TO': 2,
+  'RA': 2,
+  'ET': 2,
+  'ED': 3,
+  'IT': 2,
+  'SA': 2,
+  'EM': 4,
+  'RO': 2, 
   'A': 1,
   'B': 3,
   'C': 3,
@@ -198,7 +198,7 @@ const updateFreqs = (globalFreqs: Freqs, boardFreqs: Freqs) => {
     updatedFreqs[letter] = posterior;
     // globalFreq / Math.sqrt(smoothed);
   });
-  console.log(Object.entries(updatedFreqs).sort((a, b) => (a[1] as number) - (b[1] as number)))
+  // console.log(Object.entries(updatedFreqs).sort((a, b) => (a[1] as number) - (b[1] as number)))
   return updatedFreqs;
 }
  
@@ -209,7 +209,7 @@ export const sample = (board: Board): Tile => {
    
   if (board.length) {
     const { letterCounts, multiplierCounts } = countLetters(board);
-    console.log(letterCounts);
+    // console.log(letterCounts);
     freqs = updateFreqs(letterFreqs, letterCounts);
   } else {
       freqs = letterFreqs

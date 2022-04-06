@@ -1,5 +1,6 @@
 <script lang='ts'>
   export let onClick: () => void;
+  export let disabled: boolean | undefined = undefined;
 </script>
 
 <button on:click={onClick} class=action>
@@ -18,7 +19,6 @@
     text-transform: uppercase;
     margin: 0;
     padding: 0 8px;
-    margin-top: 16px;
     display: flex;
     align-items: center;
   }

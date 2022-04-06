@@ -8,6 +8,7 @@
   import ActionButton from './ActionButton.svelte';
   import Close from 'svelte-material-icons/Close.svelte';
 import Flash from 'svelte-material-icons/Flash.svelte';
+import Shuffle from 'svelte-material-icons/Shuffle.svelte';
 
   let infoVisible = false;
 
@@ -45,6 +46,11 @@ import Flash from 'svelte-material-icons/Flash.svelte';
       <Flash size='1.5em' />
       <p class=primary>Create chains by creating multiple words in a swap</p>
       <p class=secondary>Chains give you back one swap per word</p>
+      <div class=spacer />
+      <Shuffle size='1.5em' />
+       <p class=primary>Use a shuffle to mix up the letters on the board</p>
+       <p class=secondary>Earn back shuffles by completing full-row, full-column, or intersecting words</p>
+       <p class=secondary>Shuffles do not use up swaps</p>
     </div>
     <div class=controls>
       <ActionButton onClick={handleClose}><Close /> Close</ActionButton>
