@@ -1,10 +1,11 @@
 <script lang='ts'>
   import Modal from './Modal.svelte';
   import Word from './Word.svelte';
-  import type { Match } from './types';
+  import type { GameRecord, Match } from './types';
   import ActionButton from './ActionButton.svelte';
   import Streak from './Streak.svelte';
   import WordChain from './WordChain.svelte';
+import Leaderboard from './Leaderboard.svelte';
   
   export let lost: boolean;
   export let onReset: () => void;
@@ -14,6 +15,7 @@
   export let score: number;
   let shareText: string;
   let copied = false;
+  let showLeaderboard = false;
   
   const handleReset = () => {
     copied = false;
@@ -53,6 +55,21 @@
 
     copied = true;
   }
+  
+  const toggleLeaderboard = () => {
+    showLeaderboard = !showLeaderboard;
+  }
+  
+  $: {
+    if (lost) {
+      const localGames: GameRecord[] = JSON.parse(localStorage.getItem('games') ?? '[]');
+      localGames.push({
+        date: (new Date()).toISOString(),
+        score
+      })
+      localStorage.setItem('games', JSON.stringify(localGames));
+    }
+  }
 </script>  
 
 <Modal open={lost} onClose={handleReset}>
@@ -83,8 +100,12 @@
       <div class=spacer />
       <ActionButton onClick={handleShare}>{copied ? 'Copied' : 'Share results'}</ActionButton>
     </div>
+    <div class=spacer-vert />
+    <div class=controls>
+      <ActionButton onClick={toggleLeaderboard}>View Leaderboard</ActionButton>
   </div>
 </Modal>
+<Leaderboard open={showLeaderboard} onClose={toggleLeaderboard} />
 
 <style>
   table {
@@ -111,6 +132,9 @@
   }
   .spacer {
     width: 1em;
+  }
+  .spacer-vert {
+    height: 1em;
   }
   .grow {
     flex-grow: 1;

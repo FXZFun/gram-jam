@@ -20,3 +20,8 @@ export type Tile = {
 }
 
 export type Board = Array<Array<Tile>>;
+
+export type GameRecord = {
+  date: string,
+  score: number,
+}
