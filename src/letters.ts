@@ -195,9 +195,10 @@ const updateFreqs = (globalFreqs: Freqs, boardFreqs: Freqs) => {
     // console.log(letter, globalFreq, '=>', boardFreq, boardFreqs[letter])
     // console.log(Math.round(diff * 100) / 100, Math.round(posterior * 100) / 100)
     // more intelligent sampling to keep board fairly distributed
-    updatedFreqs[letter] = posterior * globalFreq;
+    updatedFreqs[letter] = posterior;
     // globalFreq / Math.sqrt(smoothed);
   });
+  console.log(Object.entries(updatedFreqs).sort((a, b) => (a[1] as number) - (b[1] as number)))
   return updatedFreqs;
 }
  
@@ -208,6 +209,7 @@ export const sample = (board: Board): Tile => {
    
   if (board.length) {
     const { letterCounts, multiplierCounts } = countLetters(board);
+    console.log(letterCounts);
     freqs = updateFreqs(letterFreqs, letterCounts);
   } else {
       freqs = letterFreqs
