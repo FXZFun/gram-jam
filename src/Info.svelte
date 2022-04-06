@@ -32,6 +32,7 @@ import Shuffle from 'svelte-material-icons/Shuffle.svelte';
       <p class=primary>swap letters to make words along rows and columns</p>
       <p class=secondary>swap two letters by tapping them</p>
       <p class=secondary>words must be 4 or more letters long</p> 
+      <p class=secondary>words must not read backwards</p> 
       <p class=secondary>Swapping adjacent tiles costs 1 swap</p>
       <p class=secondary>Swapping non-adjacent tiles costs 2 swaps</p>
       <div class=spacer />
