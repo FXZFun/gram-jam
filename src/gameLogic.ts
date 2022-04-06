@@ -65,7 +65,7 @@ export const findWords = (board: Board) => {
       .filter(w => !toOmit.includes(w))
       .filter(w => w.word.length > 3),
     ...mergedWords
-  ].sort((a, b) => b.j - a.j);
+  ].sort((a, b) => (b.j - a.j) || (b.word.length - a.word.length));
 }
 
 const findWordCol = (board: Board, i: number, j: number): Tile[] => {
