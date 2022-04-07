@@ -1,7 +1,7 @@
 import json 
 
 with open('words.txt') as words, open('../src/words.json', 'w') as out:
-    filtered = []
+    filtered = ['orca', 'toon']
     for word in words:
         word = word.strip()
         if len(word) < 4:
@@ -11,6 +11,9 @@ with open('words.txt') as words, open('../src/words.json', 'w') as out:
             continue
         
         if word in ['spic', 'coon', 'cunt', 'nigger', 'nigga', 'fags', 'faggy', 'dike']:
+            continue
+        
+        if word in ['tbsp', 'chge']:
             continue
 
         if word != word.lower():

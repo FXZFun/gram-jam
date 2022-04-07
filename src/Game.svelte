@@ -27,6 +27,7 @@
 
 	let board: Board = [];
   let words: Match[] = [];
+  let turn = 0;
   let remainingSwaps = 10;
   let shuffles = 1;
   let streak = 0;
@@ -37,6 +38,7 @@
   let bestChain = 0;
   // for disabling the chain pill after a while
   let chainTimeout: NodeJS.Timeout;
+  let gameoverTimeout: NodeJS.Timeout;
   let latestWord: Tile[] = undefined;
   let latestScore: number = undefined;
   
@@ -53,6 +55,7 @@
   const handleReset = () => {
     const tempBoard = [];
     lost = false;
+    turn = 0;
     totalScore = 0;
     remainingSwaps = 10;
     shuffles = 1;
@@ -92,6 +95,7 @@
  
   let selected: [number, number] | undefined = undefined;
   let toDelete: string[] | undefined = undefined;
+  let matchBonus: boolean = undefined;
   
   const handleDrag = (e: DragEvent) => {
     console.log(e);
@@ -101,6 +105,7 @@
     if (!selected) {
       selected = [i, j];
     } else if (!(selected[0] === i && selected[1] === j)) {
+      turn++;
       const [ i2, j2 ] = selected;
 
       // the ol' switcheroo
@@ -131,22 +136,21 @@
         handleScore(match);
       } else {
         streak = 0;
+        if (remainingSwaps <= 0) {
+          setTimeout(() => {
+            lost = true;
+          }, 1000);
+        }
       }
 
     } else {
       // click same tile twice
       selected = undefined;
     }
-    // this attempts to set lost = true after cascades resolve
-    if (remainingSwaps <= 0) {
-      setTimeout(() => {
-        lost = true;
-      }, 1000);
-    }
   }
   
   const handleClearSelection = () => {
-    selected = toDelete = undefined;
+    selected = toDelete = matchBonus = undefined;
   }
   
   // chain is incremented on subsequent recursive calls of handleScore
@@ -170,10 +174,11 @@
         shuffles++;
       }
       toDelete = match.coords.map(c => c.join(','));
+      if ((match.axis === 'row' && match.word.length === COLS)
+        || (match.axis === 'col' && match.word.length === ROWS)) {
+        matchBonus = true;
+        }
 
-      totalScore += match.score;
-      // latestWord = match.word;
-      latestScore = match.score;
       words = words.concat([match]);
      
       remainingSwaps += match.word.length - 4;
@@ -183,6 +188,8 @@
       // let animation play
       setTimeout(() => {
         latestWord = match.word;
+        latestScore = match.score;
+        totalScore += match.score;
         board = handleRemoveLetters(board, match.coords);
         let [ nextMatch, ] = findWords(board);
         if (match) {
@@ -192,12 +199,18 @@
       }, timeout)
 
       if (chainTimeout) clearTimeout(chainTimeout);
+      if (gameoverTimeout) clearTimeout(gameoverTimeout);
     }
 
     chainTimeout = setTimeout(() => {
-      console.log('reseting chain');
       latestChain = 0;
     }, timeout * 3);
+
+    gameoverTimeout = setTimeout(() => {
+        if (remainingSwaps <= 0) {
+          lost = true;
+        }
+    }, timeout * 2);
   }
   
   const handleRemoveLetters = (board: Board, coords: Array<[number, number]>) => {
@@ -209,14 +222,20 @@
       tempBoard[x][y] = undefined;
     }
     
-    return tempBoard.map(col => {
-      const deleted = col.filter(tile => tile == undefined);
-      return col.reverse()
+    const cleared = tempBoard.map(col => (
+      col.reverse()
         .filter(tile => tile != undefined)
-        .concat(Array.from({ length: deleted.length }).map(_ => sample(tempBoard)))
-        .reverse()
+    ));
+    
+    for (let i = 0; i < COLS; i++) {
+      for (let j = 0; j < ROWS; j++) {
+        if (cleared[i][j] == undefined) {
+          cleared[i][j] = sample(cleared);
+        }
       }
-    )
+    }
+
+    return cleared.map(col => col.reverse());
   }
   
   const handleShuffle = () => {
@@ -250,28 +269,27 @@
     <Title />
   </div>
   <div class=status>
+    <Swaps swaps={remainingSwaps} />
     <Streak {streak} />
     <WordChain chain={latestChain} />
-    <div class=spacer />
-    <Swaps swaps={remainingSwaps} />
   </div>
-  {#key totalScore}
-    <div class=score-container>
-    <div class=shuffle-container>
-      <ActionButton
-        onClick={shuffles > 0 ? handleShuffle : undefined}
-        disabled={shuffles === 0}
-      >
-        <span>
-          {shuffles}
-        </span>
-          <Shuffle />
-      </ActionButton>
-    </div>
-      Score:
+  <div class=shuffle-container>
+    <ActionButton
+      onClick={shuffles > 0 ? handleShuffle : undefined}
+      disabled={shuffles === 0}
+    >
+      <span>
+        {shuffles}
+      </span>
+        <Shuffle />
+    </ActionButton>
+  </div>
+  <div class=score-container>
+    Score:
+    {#key totalScore}
       <div class=score in:fly={{ y: 20 }}>{totalScore}</div>
-    </div>
-  {/key}
+    {/key}
+  </div>
   <div class=latest-word>
     {#if latestWord !== undefined}
       <div>Latest Word:</div>
@@ -301,6 +319,7 @@
                   && Math.abs(j - selected[1]) <= 1
                 }
                 matched={toDelete?.includes([i, j].join(','))}
+                bonus={matchBonus}
                 multiplier={tile.multiplier}
               />
             </div>
@@ -373,6 +392,7 @@
     flex-direction: column;
   }
   .score-container {
+    margin-top: 2em;
     position: relative;
     display: flex;
     justify-content: center;
@@ -380,10 +400,11 @@
     font-size: 1.75em;
   }
   .shuffle-container {
-    position: fixed;
-    padding-right: 0.5em;
+    position: absolute;
+    padding: 0.75em;
+    font-size: 1.25em;
+    top: 0;
     right: 0;
-    font-size: 0.825em;
   }
   .shuffle-container span {
     padding: 0.25em;
@@ -397,11 +418,10 @@
   }
   .status {
     display: flex;
-    flex-direction: row;
-    padding: 1em;
-    width: 100%;
-  }
-  .status .spacer {
-    flex-grow: 1;
+    flex-direction: column;
+    padding: 0.75em;
+    position: absolute;
+    top: 0;
+    left: 0;
   }
 </style>

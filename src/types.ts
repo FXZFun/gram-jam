@@ -9,7 +9,7 @@ export type Match = {
   readonly score: number,
 };
 
-export type Freqs = Record<string, number>;
+export type Freqs<T extends string | number> = Record<T, number>;
 
 export type Multiplier = 1 | 2 | 3;
 

@@ -9,6 +9,7 @@
   export let selected: boolean | undefined;
   export let adjacent: boolean | undefined;
   export let matched: boolean | undefined;
+  export let bonus: boolean | undefined;
   export let size: 'tiny' | 'small' | 'large' = 'large';
   export let multiplier: 1 | 2 | 3 = 1;
   
@@ -25,6 +26,7 @@
     ${adjacent && !selected ? 'adjacent' : ''}
     ${active && !adjacent && !selected ? 'non-adjacent' : ''}
     ${matched ? 'matched' : ''}
+    ${bonus ? 'bonus' : ''}
     ${size}
   `}
 >
@@ -96,8 +98,16 @@
     background-color: #A2F594;
     border-color: #56ad47;
   }
+  .tile.matched.bonus {
+    background-color: #a994f5;
+    border-color: #474ead;
+  }
   :global(body.dark-mode) .tile.matched {
     background-color: #2A9618;
+  }
+  :global(body.dark-mode) .tile.matched.bonus {
+    background-color: #3f21ac;
+    border-color: #3800a1;
   }
   .tile.adjacent {
   }

@@ -58,6 +58,11 @@ export const bigrams = {
   'SA': 0.05,
   'EM': 0.05,
   'RO': 0.05, 
+  'NN': 0.03, 
+  'NG': 0.03, 
+  'SH': 0.03, 
+  'CH': 0.03, 
+  'QU': 0.01, 
 }
 
 export const points = {
@@ -89,6 +94,11 @@ export const points = {
   'SA': 2,
   'EM': 4,
   'RO': 2, 
+  'NN': 2, 
+  'NG': 3,
+  'SH': 5,
+  'CH': 7,
+  'QU': 11,
   'A': 1,
   'B': 3,
   'C': 3,
@@ -146,19 +156,25 @@ export const symbols = [
  '🇿',
 ]
 
-const getCumSum = (letterFreqs: Freqs) => {
-  const cum: Array<{ letter: string, weight: number }> = [];
+export const multFreqs = {
+  1: 92,
+  2: 6,
+  3: 2,
+}
+
+const getCDF = <T extends string | number>(freqs: Freqs<T>) => {
+  const cum: Array<[ T, number ]> = [];
   let sum = 0;
-  Object.entries(letterFreqs).forEach(([letter, freq]) => {
-    sum += freq;
-    cum.push({ letter, weight: sum });
+  Object.entries(freqs).forEach(([value, freq]) => {
+    sum += freq as number;
+    cum.push([ value as T, sum ]);
   });
   return cum;
 }
 
 const countLetters = (board: Board) => {
-  const letterCounts = {};
-  const multiplierCounts = {};
+  const letterCounts: Freqs<string> = {};
+  const multiplierCounts: Freqs<number> = {};
   let total = 0;
   for (const row of board) {
     for (const tile of row) {
@@ -184,61 +200,65 @@ const countLetters = (board: Board) => {
   };
 }
 
-const updateFreqs = (globalFreqs: Freqs, boardFreqs: Freqs) => {
+const sigmoid = (z: number, k: number = 2) => {
+  return 1 / (1 + Math.exp(-z/k));
+}
+
+const updateFreqs = <T extends string | number>(globalFreqs: Freqs<T>, boardFreqs: Freqs<T>, k: number) => {
   const updatedFreqs = {};
-  Object.entries(globalFreqs).forEach(([letter, globalFreq]) => {
-    const total = Object.values(boardFreqs).reduce((a, b) => a + b);
+  const total = Object.values(boardFreqs).reduce((a: number, b: number) => a + b) as number;
+  Object.entries(globalFreqs).forEach(([value, globalFreq]) => {
     // frequency as percentage
-    const boardFreq = 100 * (boardFreqs[letter] ?? 0) / total;
-    const diff = globalFreq - boardFreq;
-    const posterior = Math.atan(diff) + (Math.PI / 2);
-    // console.log(letter, globalFreq, '=>', boardFreq, boardFreqs[letter])
-    // console.log(Math.round(diff * 100) / 100, Math.round(posterior * 100) / 100)
-    // more intelligent sampling to keep board fairly distributed
-    updatedFreqs[letter] = posterior;
-    // globalFreq / Math.sqrt(smoothed);
+    const freq = 100 * (boardFreqs[value] ?? 0) / total;
+    const diff = (globalFreq as number) - freq;
+    const posterior = sigmoid(diff / Math.sqrt(globalFreq as number), k);
+    updatedFreqs[value] = posterior;
   });
-  // console.log(Object.entries(updatedFreqs).sort((a, b) => (a[1] as number) - (b[1] as number)))
   return updatedFreqs;
+}
+
+const sampleCDF = <T extends unknown>(cum: Array<[T, number]>) => {
+
+  const sum = cum.slice(-1)[0][1];
+  const sampleWeight = Math.random() * sum;
+
+  for (const [ value, weight ] of cum) {
+    if (weight > sampleWeight) {
+      return value;
+    }
+  }
 }
  
 let tileId = 0;
-export const sample = (board: Board): Tile => {
+export const sample = (board: Board, turn = 0): Tile => {
 
   let freqs: Record<string, number>;
+  let mFreqs:  Record<number, number>;
    
   if (board.length) {
     const { letterCounts, multiplierCounts } = countLetters(board);
-    // console.log(letterCounts);
-    freqs = updateFreqs(letterFreqs, letterCounts);
+    freqs = updateFreqs(letterFreqs, letterCounts, 2);
+    mFreqs = updateFreqs(multFreqs, multiplierCounts, 0.5);
   } else {
-      freqs = letterFreqs
+      freqs = letterFreqs;
+      mFreqs = multFreqs;
   }
   // testing bigrams
-  if (true) {
+  if (turn > 10) {
     freqs = {...freqs, ...bigrams};
   }
-  const cum = getCumSum(freqs);
-  const sum = cum.slice(-1)[0].weight;
-  const sampleWeight = Math.random() * sum;
-  let sampledLetter: string | undefined = undefined;
+  const cdf = getCDF(freqs);
+  const sampledLetter = sampleCDF(cdf);
+  
+  const mCDF = getCDF(mFreqs);
+  const sampledMult = parseInt(sampleCDF(mCDF) as any);
 
-  for (const { letter, weight } of cum) {
-    if (weight > sampleWeight) {
-      sampledLetter = letter;
-      break;
-    }
-  }
   tileId++;
-  const multSeed = Math.random();
-  let multiplier: Multiplier = 1;
-  if (multSeed > 0.97) multiplier = 3;
-  else if (multSeed > 0.93) multiplier = 2;
-  // TODO fix weighting
+
   return {
     letter: sampledLetter,
     id: tileId,
-    multiplier
+    multiplier: sampledMult as Multiplier,
   };
 }
 

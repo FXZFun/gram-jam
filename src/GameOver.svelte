@@ -76,17 +76,17 @@ import Leaderboard from './Leaderboard.svelte';
   <div class=container>
     <h1>Game Over</h1>
     <h2>Score: {score}</h2>
-    <h3 class=result>
+    <h4 class=result>
       Best Streak:
       <div class=grow />
       <Streak streak={bestStreak} />
-    </h3>
-    <h3 class=result>
+    </h4>
+    <h4 class=result>
       Best Chain:
       <div class=grow />
       <WordChain chain={bestChain} />
-    </h3>
-    <h3>Best Words:</h3>
+    </h4>
+    <h4>Best Words:</h4>
     <table>
     {#each bestWords as word}
       <tr>

@@ -2,6 +2,7 @@
 	import { fade, fly } from 'svelte/transition';
   
   export let value: number;
+  export let large: boolean = undefined;
   let prevValue: number;
   let direction: number;
   export let color: string;
@@ -16,11 +17,10 @@
 <div
   in:fade
   out:fade
-  class=pill
+  class={`pill ${large ? 'large' : ''}`}
   style={`
     background-color: ${backgroundColor};
     color: ${color};
-    padding-left: calc(${value.toString().length}em + 4px);
   `}
 >
   {#key value}
@@ -43,15 +43,15 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    border-radius: 16px;
-    margin-right: 0.5em;
-    padding: 4px;
-    padding-right: 8px;
     font-size: 1.25em;
+    border-radius: 1em;
+    margin: 0.25em;
+    padding: 0.25em;
+    padding-left: 2em;
     font-weight: bold;
   }
-  .pill:first-of-type {
-    margin-left: 0.5em;
+  .pill.large {
+    font-size: 1.5em;
   }
   .pill .text {
     position: absolute;

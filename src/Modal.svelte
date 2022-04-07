@@ -1,13 +1,21 @@
 <script lang='ts'>
+	import { fly, fade } from 'svelte/transition';
+
   export let open: boolean;
   export let onClose;
 </script>
   
 {#if open}
   <div class=container on:click|self={onClose}>
-    <div class=panel>
-      <slot />
-    </div>
+    {#key open}
+      <div
+        in:fly={{ y: 50, duration: 100 }}
+        out:fly={{ y: -50, duration: 100 }}
+        class=panel
+      >
+        <slot />
+      </div>
+    {/key}
   </div>
 {/if}
 

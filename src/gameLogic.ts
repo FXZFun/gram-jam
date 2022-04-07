@@ -60,12 +60,11 @@ export const findWords = (board: Board) => {
       }
     }
   }
-  console.log(mergedWords);
   return [
     ...mergedWords,
     ...words
       .filter(w => !toOmit.includes(w))
-      .filter(w => w.word.length > 3)
+      // .filter(w => w.word.length > 3)
       .sort((a, b) => (b.j - a.j) || (b.word.length - a.word.length)),
   ];
 }
