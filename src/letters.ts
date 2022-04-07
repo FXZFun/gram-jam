@@ -211,7 +211,7 @@ const updateFreqs = <T extends string | number>(globalFreqs: Freqs<T>, boardFreq
     // frequency as percentage
     const freq = 100 * (boardFreqs[value] ?? 0) / total;
     const diff = (globalFreq as number) - freq;
-    const posterior = sigmoid(diff / Math.sqrt(globalFreq as number), k);
+    const posterior = sigmoid(diff, k);
     updatedFreqs[value] = posterior;
   });
   return updatedFreqs;
@@ -237,8 +237,14 @@ export const sample = (board: Board, turn = 0): Tile => {
    
   if (board.length) {
     const { letterCounts, multiplierCounts } = countLetters(board);
-    freqs = updateFreqs(letterFreqs, letterCounts, 2);
-    mFreqs = updateFreqs(multFreqs, multiplierCounts, 0.5);
+    freqs = updateFreqs(letterFreqs, letterCounts, 1);
+    // console.log(Object.entries(freqs).sort((a, b) => +b[1] - +a[1]))
+    mFreqs = {...multFreqs}; //updateFreqs(multFreqs, multiplierCounts, 0.5);
+    if (multiplierCounts[2] > 4) {
+      multFreqs[2] = 0;
+    } if (multiplierCounts[3] > 2) {
+      multFreqs[3] = 0;
+    }
   } else {
       freqs = letterFreqs;
       mFreqs = multFreqs;

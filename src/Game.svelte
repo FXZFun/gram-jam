@@ -67,7 +67,8 @@
     for (let i = 0; i < COLS; i++) {
       tempBoard.push([]);
       for (let j = 0; j < ROWS; j++) {
-        tempBoard[i].push(sample([]));
+        const tile = sample([]);
+        tempBoard[i].push(tile);
       }
     }
 
@@ -157,36 +158,39 @@
   const handleScore = (match: Match, chain = 0, timeout = 750) => {
     if (match) {
       streak++;
-      if (streak > bestStreak) {
-        bestStreak = streak;
-      }
-      if (chain > 0) {
-        remainingSwaps++;
-      }
-      if (match.axis === 'intersection') {
-        remainingSwaps += 2;
-        shuffles++;
-      }
-      if (match.word.length === COLS && match.axis === 'row') {
-        shuffles++;
-      }
-      if (match.word.length === ROWS && match.axis === 'col') {
-        shuffles++;
-      }
       toDelete = match.coords.map(c => c.join(','));
-      if ((match.axis === 'row' && match.word.length === COLS)
-        || (match.axis === 'col' && match.word.length === ROWS)) {
-        matchBonus = true;
-        }
 
-      words = words.concat([match]);
-     
-      remainingSwaps += match.word.length - 4;
-      latestChain = chain;
-      if (latestChain > bestChain) bestChain = latestChain;
-      
       // let animation play
       setTimeout(() => {
+
+        if (streak > bestStreak) {
+          bestStreak = streak;
+        }
+        if (chain > 0) {
+          remainingSwaps++;
+        }
+        if (match.axis === 'intersection') {
+          remainingSwaps += 2;
+          shuffles++;
+        }
+        if (match.word.length === COLS && match.axis === 'row') {
+          shuffles++;
+        }
+        if (match.word.length === ROWS && match.axis === 'col') {
+          shuffles++;
+        }
+        if ((match.axis === 'row' && match.word.length === COLS)
+          || (match.axis === 'col' && match.word.length === ROWS)) {
+          matchBonus = true;
+          }
+
+        words = words.concat([match]);
+     
+        remainingSwaps += match.word.length - 4;
+        latestChain = chain;
+        if (latestChain > bestChain) bestChain = latestChain;
+        /* */
+      
         latestWord = match.word;
         latestScore = match.score;
         totalScore += match.score;
@@ -230,7 +234,7 @@
     for (let i = 0; i < COLS; i++) {
       for (let j = 0; j < ROWS; j++) {
         if (cleared[i][j] == undefined) {
-          cleared[i][j] = sample(cleared);
+          cleared[i][j] = sample(cleared, turn);
         }
       }
     }
