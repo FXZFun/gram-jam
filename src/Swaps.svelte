@@ -19,7 +19,8 @@
     else if (swaps < 8) return ['black', '#fbc02d'];
     else if (swaps < 11) return ['white', '#33691e'];
     else if (swaps < 14) return ['white', '#01579b'];
-    else return '#311b92';
+    else if (swaps < 17) return ['white', '#311b92'];
+    else return ['white', '#C2185B'];
   }
 </script>
 
