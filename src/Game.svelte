@@ -160,6 +160,12 @@
       streak++;
       toDelete = match.coords.map(c => c.join(','));
 
+      if ((match.axis === 'row' && match.word.length === COLS)
+          || (match.axis === 'col' && match.word.length === ROWS)
+          || (match.axis === 'intersection')) {
+          matchBonus = true;
+      }
+
       // let animation play
       setTimeout(() => {
 
@@ -179,17 +185,11 @@
         if (match.word.length === ROWS && match.axis === 'col') {
           shuffles++;
         }
-        if ((match.axis === 'row' && match.word.length === COLS)
-          || (match.axis === 'col' && match.word.length === ROWS)) {
-          matchBonus = true;
-          }
-
         words = words.concat([match]);
      
         remainingSwaps += Math.min(match.word.length - 4, 0);
         latestChain = chain;
         if (latestChain > bestChain) bestChain = latestChain;
-        /* */
       
         latestWord = match.word;
         latestScore = match.score;
