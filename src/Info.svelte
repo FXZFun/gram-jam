@@ -35,10 +35,11 @@ import Shuffle from 'svelte-material-icons/Shuffle.svelte';
       <p class=secondary>words must not read backwards</p> 
       <p class=secondary>Swapping adjacent tiles costs 1 swap</p>
       <p class=secondary>Swapping non-adjacent tiles costs 2 swaps</p>
+      <p class=secondary>Double-letter tiles must appear together in the word</p>
       <div class=spacer />
       <SwapHorizontal size='1.5em' />
       <p class=primary>Earn back swaps by making longer words</p>
-      <p class=secondary>5 letters = 1 swap<br/>6 letters = 2 swaps</p>
+      <p class=secondary>5 letters = 1 swap<br/>6 letters = 2 swaps<br/>7 letters = 3 swaps</p>
       <div class=spacer />
       <Fire size='1.5em' />
       <p class=primary>Maintain a word streak by creating a word every swap</p>

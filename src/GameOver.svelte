@@ -34,11 +34,12 @@
   
   const handleShare = () => {
    
-    shareText = '✨ GRAM JAM ✨\n';
+    shareText = 'GRAM JAM\n';
     shareText += `Score: ${score}\n\n`;
     shareText += `🔥 Best Streak: ${bestStreak}\n`;
     shareText += `⚡ Best Chain: ${bestChain}\n`;
     shareText += '📘 Best Words:\n';
+    shareText += '--------------\n';
 
     for (const word of bestWords) {
       for (const tile of word.word) {
