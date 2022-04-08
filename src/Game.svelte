@@ -187,7 +187,7 @@
         }
         words = words.concat([match]);
      
-        remainingSwaps += Math.min(match.word.length - 4, 0);
+        remainingSwaps += Math.max(match.word.length - 4, 0);
         latestChain = chain;
         if (latestChain > bestChain) bestChain = latestChain;
       
