@@ -179,10 +179,10 @@ const countLetters = (board: Board) => {
   let total = 0;
   for (const row of board) {
     for (const tile of row) {
-      if (tile?.letter) {
+      if (tile) {
         const { letter, multiplier } = tile;
-        letterCounts[letter]++;
-        multiplierCounts[multiplier]++;
+        letterCounts[letter] = (letterCounts[letter] ?? 0) + 1;
+        multiplierCounts[multiplier] = (multiplierCounts[multiplier] ?? 0) + 1;
         total++;
       }
     }
@@ -233,7 +233,7 @@ export const sample = (board: Board, sampleSize: number, turn = 0): Tile => {
     const { total, letterCounts, multiplierCounts } = countLetters(board);
     freqs = updateFreqs(letterFreqs, letterCounts, 1);
     // console.log(Object.values(freqs).reduce((a, b) => a + b) / Object.keys(freqs).length);
-    console.log(Object.entries(freqs).sort((a, b) => +b[1] - +a[1]))
+    // console.log(Object.entries(freqs).sort((a, b) => +b[1] - +a[1]))
     mFreqs = {...multFreqs}; //updateFreqs(multFreqs, multiplierCounts, 0.5);
     if (multiplierCounts[2] > 5) {
       mFreqs[2] = 0;
