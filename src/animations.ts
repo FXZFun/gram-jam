@@ -19,3 +19,11 @@ export const [send, receive] = crossfade({
 	}
 });
 
+export const spin = (node, params) => {
+	return {
+		duration: 600,
+    easing: quintOut,
+		css: t => `spin: ease-in-out`
+	};
+}
+  

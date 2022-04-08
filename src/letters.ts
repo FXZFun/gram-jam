@@ -30,34 +30,34 @@ export const letterFreqs = {
 }
 
 export const bigrams = {
-  'TH': 0.05,
-  'HE': 0.05,
-  'IN': 0.05,
-  'EN': 0.05,
-  'NT': 0.05,
-  'RE': 0.05,
-  'ER': 0.05,
-  'AN': 0.05,
-  'TI': 0.05,
-  'ES': 0.05,
-  'ON': 0.05,
-  'AT': 0.05,
-  'SE': 0.05,
-  'ND': 0.05,
-  'OR': 0.05,
-  'AR': 0.05,
-  'AL': 0.05,
-  'TE': 0.05,
-  'CO': 0.05,
-  'DE': 0.05,
-  'TO': 0.05,
-  'RA': 0.05,
-  'ET': 0.05,
-  'ED': 0.05,
-  'IT': 0.05,
-  'SA': 0.05,
-  'EM': 0.05,
-  'RO': 0.05, 
+  'TH': 0.04,
+  'HE': 0.04,
+  'IN': 0.04,
+  'EN': 0.04,
+  'NT': 0.04,
+  'RE': 0.04,
+  'ER': 0.04,
+  'AN': 0.04,
+  'TI': 0.04,
+  'ES': 0.04,
+  'ON': 0.04,
+  'AT': 0.04,
+  'SE': 0.04,
+  'ND': 0.04,
+  'OR': 0.04,
+  'AR': 0.04,
+  'AL': 0.04,
+  'TE': 0.04,
+  'CO': 0.04,
+  'DE': 0.04,
+  'TO': 0.04,
+  'RA': 0.04,
+  'ET': 0.04,
+  'ED': 0.04,
+  'IT': 0.04,
+  'SA': 0.04,
+  'EM': 0.04,
+  'RO': 0.04, 
   'NN': 0.03, 
   'NG': 0.03, 
   'SH': 0.03, 
@@ -173,23 +173,16 @@ const getCDF = <T extends string | number>(freqs: Freqs<T>) => {
 }
 
 const countLetters = (board: Board) => {
-  const letterCounts: Freqs<string> = {};
-  const multiplierCounts: Freqs<number> = {};
+  // smooth letter counts to make rare letters less biased
+  const letterCounts: Freqs<string> = Object.fromEntries(Object.keys(letterFreqs).map(l => [l, 1]));
+  const multiplierCounts: Freqs<number> = {1: 1, 2: 1, 3: 1};
   let total = 0;
   for (const row of board) {
     for (const tile of row) {
       if (tile) {
         const { letter, multiplier } = tile;
-        if (letter in letterCounts) {
-          letterCounts[letter]++;
-        } else {
-          letterCounts[letter] = 1;
-        }
-        if (multiplier in multiplierCounts) {
-          multiplierCounts[multiplier]++;
-        } else {
-          multiplierCounts[multiplier] = 1;
-        }
+        letterCounts[letter]++;
+        multiplierCounts[multiplier]++;
         total++;
       }
     }
@@ -197,6 +190,7 @@ const countLetters = (board: Board) => {
   return {
     letterCounts,
     multiplierCounts,
+    total,
   };
 }
 
@@ -230,20 +224,21 @@ const sampleCDF = <T extends unknown>(cum: Array<[T, number]>) => {
 }
  
 let tileId = 0;
-export const sample = (board: Board, turn = 0): Tile => {
+export const sample = (board: Board, sampleSize: number, turn = 0): Tile => {
 
   let freqs: Record<string, number>;
   let mFreqs:  Record<number, number>;
    
   if (board.length) {
-    const { letterCounts, multiplierCounts } = countLetters(board);
+    const { total, letterCounts, multiplierCounts } = countLetters(board);
     freqs = updateFreqs(letterFreqs, letterCounts, 1);
-    // console.log(Object.entries(freqs).sort((a, b) => +b[1] - +a[1]))
+    console.log(Object.values(freqs).reduce((a, b) => a + b) / Object.keys(freqs).length);
+    console.log(Object.entries(freqs).sort((a, b) => +b[1] - +a[1]))
     mFreqs = {...multFreqs}; //updateFreqs(multFreqs, multiplierCounts, 0.5);
-    if (multiplierCounts[2] > 4) {
-      multFreqs[2] = 0;
+    if (multiplierCounts[2] > 5) {
+      mFreqs[2] = 0;
     } if (multiplierCounts[3] > 2) {
-      multFreqs[3] = 0;
+      mFreqs[3] = 0;
     }
   } else {
       freqs = letterFreqs;
@@ -255,6 +250,7 @@ export const sample = (board: Board, turn = 0): Tile => {
   }
   const cdf = getCDF(freqs);
   const sampledLetter = sampleCDF(cdf);
+  console.log(sampledLetter);
   
   const mCDF = getCDF(mFreqs);
   const sampledMult = parseInt(sampleCDF(mCDF) as any);

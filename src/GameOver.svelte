@@ -1,18 +1,27 @@
 <script lang='ts'>
+  import History from 'svelte-material-icons/History.svelte';
+  import ContentCopy from 'svelte-material-icons/ContentCopy.svelte';
+  import ContentPaste from 'svelte-material-icons/ContentPaste.svelte';
+  import Restart from 'svelte-material-icons/Restart.svelte';
+  import Tile from './icons/Tile.svelte';
+
   import Modal from './Modal.svelte';
   import Word from './Word.svelte';
   import type { GameRecord, Match } from './types';
   import ActionButton from './ActionButton.svelte';
   import Streak from './Streak.svelte';
   import WordChain from './WordChain.svelte';
-import Leaderboard from './Leaderboard.svelte';
+  import Leaderboard from './Leaderboard.svelte';
+  import Pill from './Pill.svelte';
   
   export let lost: boolean;
   export let onReset: () => void;
   export let bestStreak: number;
   export let bestChain: number;
   export let bestWords: Match[];
+  export let numWords: number;
   export let score: number;
+  export let turns: number;
   let shareText: string;
   let copied = false;
   let showLeaderboard = false;
@@ -77,6 +86,17 @@ import Leaderboard from './Leaderboard.svelte';
     <h1>Game Over</h1>
     <h2>Score: {score}</h2>
     <h4 class=result>
+      Turns:
+      <div class=grow />
+      <Pill
+        value={turns}
+        color={'white'}
+        backgroundColor={'black'}
+      >
+        <History />
+      </Pill>
+    </h4>
+    <h4 class=result>
       Best Streak:
       <div class=grow />
       <Streak streak={bestStreak} />
@@ -85,6 +105,17 @@ import Leaderboard from './Leaderboard.svelte';
       Best Chain:
       <div class=grow />
       <WordChain chain={bestChain} />
+    </h4>
+    <h4 class=result>
+      Words Made:
+      <div class=grow />
+      <Pill
+        value={numWords}
+        color='white'
+        backgroundColor='black'
+      >
+        <Tile color='white' />
+      </Pill>
     </h4>
     <h4>Best Words:</h4>
     <table>
@@ -96,9 +127,18 @@ import Leaderboard from './Leaderboard.svelte';
     {/each}
     </table>
     <div class=controls>
-      <ActionButton onClick={handleReset}>Reset Game</ActionButton>
+      <ActionButton onClick={handleReset}>
+        <Restart size='1em' />
+        Reset Game
+      </ActionButton>
       <div class=spacer />
-      <ActionButton onClick={handleShare}>{copied ? 'Copied' : 'Share results'}</ActionButton>
+      <ActionButton onClick={handleShare}>
+        {#if copied}
+          <ContentPaste /> Copied
+        {:else}
+          <ContentCopy /> Share results
+        {/if}
+      </ActionButton>
     </div>
     <div class=spacer-vert />
     <div class=controls>

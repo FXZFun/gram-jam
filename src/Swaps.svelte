@@ -1,5 +1,7 @@
 <script lang='ts'>
-  import Autorenew from 'svelte-material-icons/Autorenew.svelte'
+  import Autorenew from 'svelte-material-icons/Autorenew.svelte';
+  import { spin } from './animations';
+  import { quintOut } from 'svelte/easing';
   import Pill from './Pill.svelte';
 
   export let swaps: number;
@@ -35,5 +37,7 @@
   color='white'
   backgroundColor={getSwapLevel(swaps)}
 >
-  <Autorenew />
+  {#key swaps}
+    <Autorenew />
+  {/key}
 </Pill>

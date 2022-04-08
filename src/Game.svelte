@@ -42,15 +42,15 @@
   let latestWord: Tile[] = undefined;
   let latestScore: number = undefined;
   
-  const customFlyIn = (node) => {
-    if (node.style.animation) node.style = null;
-    return fly(node, { y: 15, duration: 400 });
-  }
+  // const customFlyIn = (node) => {
+  //   if (node.style.animation) node.style = null;
+  //   return fly(node, { y: 15, duration: 400 });
+  // }
 
-  const  customFlip = (node, fromTo) => {
-    if (node.style.animation) node.style = null;
-    return flip(node, fromTo, { duration: 500 });
-  }
+  // const  customFlip = (node, fromTo) => {
+  //   if (node.style.animation) node.style = null;
+  //   return flip(node, fromTo, { duration: 500 });
+  // }
 
   const handleReset = () => {
     const tempBoard = [];
@@ -67,7 +67,7 @@
     for (let i = 0; i < COLS; i++) {
       tempBoard.push([]);
       for (let j = 0; j < ROWS; j++) {
-        const tile = sample([]);
+        const tile = sample([], 1);
         tempBoard[i].push(tile);
       }
     }
@@ -186,7 +186,7 @@
 
         words = words.concat([match]);
      
-        remainingSwaps += match.word.length - 4;
+        remainingSwaps += Math.min(match.word.length - 4, 0);
         latestChain = chain;
         if (latestChain > bestChain) bestChain = latestChain;
         /* */
@@ -234,7 +234,7 @@
     for (let i = 0; i < COLS; i++) {
       for (let j = 0; j < ROWS; j++) {
         if (cleared[i][j] == undefined) {
-          cleared[i][j] = sample(cleared, turn);
+          cleared[i][j] = sample(cleared, 1, turn);
         }
       }
     }
@@ -348,6 +348,8 @@
   onReset={handleReset}
   {bestStreak}
   {bestChain}
+  turns={turn}
+  numWords={words.length}
   bestWords={words.sort((a, b) => b.score - a.score).slice(0, 5)}
 />
 
