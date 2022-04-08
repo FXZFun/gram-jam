@@ -1,7 +1,8 @@
 <script lang='ts'>
-  import History from 'svelte-material-icons/History.svelte';
+  import Update from 'svelte-material-icons/Update.svelte';
   import ContentCopy from 'svelte-material-icons/ContentCopy.svelte';
   import ContentPaste from 'svelte-material-icons/ContentPaste.svelte';
+  import Scoreboard from 'svelte-material-icons/Scoreboard.svelte';
   import Restart from 'svelte-material-icons/Restart.svelte';
   import Tile from './icons/Tile.svelte';
 
@@ -90,10 +91,10 @@
       <div class=grow />
       <Pill
         value={turns}
-        color={'white'}
-        backgroundColor={'black'}
+        color='white'
+        backgroundColor='#D32F2F'
       >
-        <History />
+        <Update />
       </Pill>
     </h4>
     <h4 class=result>
@@ -111,10 +112,10 @@
       <div class=grow />
       <Pill
         value={numWords}
-        color='white'
-        backgroundColor='black'
+        color='black'
+        backgroundColor='#81C784'
       >
-        <Tile color='white' />
+        <Tile color='black' />
       </Pill>
     </h4>
     <h4>Best Words:</h4>
@@ -142,7 +143,10 @@
     </div>
     <div class=spacer-vert />
     <div class=controls>
-      <ActionButton onClick={toggleLeaderboard}>View Leaderboard</ActionButton>
+      <ActionButton onClick={toggleLeaderboard}>
+        <Scoreboard />
+         Your Leaderboard
+      </ActionButton>
   </div>
 </Modal>
 <Leaderboard open={showLeaderboard} onClose={toggleLeaderboard} />

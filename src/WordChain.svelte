@@ -12,8 +12,8 @@
 {#if chain > 0}
   <Pill
     value={chain + 1}
-    {color}
-    {backgroundColor}
+    color='black'
+    backgroundColor='#FFFF00'
   >
     <Flash />
   </Pill>

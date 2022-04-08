@@ -14,11 +14,11 @@
   }
   
   const getSwapLevel = (swaps: number) => {
-    if (swaps < 3) return '#b71c1c';
-    else if (swaps < 5) return '#e65100';
-    else if (swaps < 8) return '#fbc02d';
-    else if (swaps < 11) return '#33691e';
-    else if (swaps < 14) return '#01579b';
+    if (swaps < 3) return ['white', '#b71c1c'];
+    else if (swaps < 5) return ['white', '#e65100'];
+    else if (swaps < 8) return ['black', '#fbc02d'];
+    else if (swaps < 11) return ['white', '#33691e'];
+    else if (swaps < 14) return ['white', '#01579b'];
     else return '#311b92';
   }
 </script>
@@ -33,9 +33,10 @@
   </Pill>
 {/if}
 <Pill
+  large
   value={Math.max(swaps, 0)}
-  color='white'
-  backgroundColor={getSwapLevel(swaps)}
+  color={getSwapLevel(swaps)[0]}
+  backgroundColor={getSwapLevel(swaps)[1]}
 >
   {#key swaps}
     <Autorenew />

@@ -49,9 +49,11 @@
     padding: 0.25em;
     padding-left: 2em;
     font-weight: bold;
+    max-width: 1em;
   }
   .pill.large {
     font-size: 1.5em;
+    max-width: 2em;
   }
   .pill .text {
     position: absolute;

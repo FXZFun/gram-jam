@@ -10,8 +10,8 @@
 
 {#if streak > 0}
   <Pill
-    color={color}
-    backgroundColor={backgroundColor}
+    color='black'
+    backgroundColor='#FFB74D'
     value={streak}
   >
       <Hot />
