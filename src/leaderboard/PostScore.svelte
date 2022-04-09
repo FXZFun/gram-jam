@@ -28,6 +28,11 @@
     snapshot = topScores.docs;
   }
   
+  const handleClose = () => {
+    submitted = false;
+    onClose();
+  }
+  
   $: {
     if (submitted) {
       handleLoadLeaderboard();
