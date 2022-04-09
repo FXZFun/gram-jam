@@ -55,7 +55,7 @@
       <form on:submit|preventDefault={handleSubmit}>
         <input type='text' placeholder="name" bind:value={name} required />
         <div class=controls>
-          <ActionButton onClick={onClose}>Close</ActionButton>
+          <ActionButton onClick={handleClose}>Close</ActionButton>
           <div class=spacer />
           <ActionButton onClick={handleSubmit}>Submit</ActionButton>
         </div>
