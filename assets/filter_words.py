@@ -10,10 +10,10 @@ with open('words.txt') as words, open('../src/words.json', 'w') as out:
         if '\'' in word:
             continue
         
-        if word in ['spic', 'coon', 'cunt', 'nigger', 'nigga', 'fags', 'faggy', 'dike']:
+        if word in ['spic', 'coon', 'gook', 'cunt', 'nigger', 'nigga', 'fags', 'faggy', 'faggot', 'dike']:
             continue
         
-        if word in ['tbsp', 'chge']:
+        if word in ['tbsp', 'chge', 'quot', 'natl', 'acct', 'mfrs', 'subj', 'coed']:
             continue
 
         if word != word.lower():

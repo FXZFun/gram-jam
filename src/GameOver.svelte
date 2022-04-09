@@ -12,8 +12,9 @@
   import ActionButton from './ActionButton.svelte';
   import Streak from './Streak.svelte';
   import WordChain from './WordChain.svelte';
-  import Leaderboard from './Leaderboard.svelte';
+  import Leaderboard from './leaderboard/Leaderboard.svelte';
   import Pill from './Pill.svelte';
+  import PostScore from './leaderboard/PostScore.svelte';
   
   export let lost: boolean;
   export let onReset: () => void;
@@ -26,6 +27,7 @@
   let shareText: string;
   let copied = false;
   let showLeaderboard = false;
+  let showPostScore = false;
   
   const handleReset = () => {
     copied = false;
@@ -69,6 +71,10 @@
   
   const toggleLeaderboard = () => {
     showLeaderboard = !showLeaderboard;
+  }
+  
+  const togglePostScore = () => {
+    showPostScore = !showPostScore;
   }
   
   $: {
@@ -146,11 +152,28 @@
     <div class=controls>
       <ActionButton onClick={toggleLeaderboard}>
         <Scoreboard />
-         Your Leaderboard
+        Local Leaderboard
+      </ActionButton>
+      <div class=spacer />
+      <ActionButton onClick={togglePostScore}>
+        Submit Score
       </ActionButton>
   </div>
 </Modal>
 <Leaderboard open={showLeaderboard} onClose={toggleLeaderboard} />
+<PostScore
+  open={showPostScore}
+  onClose={togglePostScore}
+  entry={{
+    name: '',
+    score,
+    bestStreak,
+    bestChain,
+    turns,
+    bestWord: bestWords[0]?.word ?? [],
+    date: new Date(),
+  }}
+/>
 
 <style>
   table {

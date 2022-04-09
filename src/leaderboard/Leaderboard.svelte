@@ -1,10 +1,9 @@
 <script lang='ts'>
-  import Modal from './Modal.svelte';
-  import Word from './Word.svelte';
-  import type { GameRecord, Match } from './types';
-  import ActionButton from './ActionButton.svelte';
-  import Streak from './Streak.svelte';
-  import WordChain from './WordChain.svelte';
+  import Modal from '../Modal.svelte';
+  import type { GameRecord, Match } from '../types';
+  import ActionButton from '../ActionButton.svelte';
+  import Streak from '../Streak.svelte';
+  import WordChain from '../WordChain.svelte';
   
   // export let lost: boolean;
   // export let onReset: () => void;
@@ -14,7 +13,6 @@
   // export let score: number;
   export let open: boolean;
   export let onClose: () => void;
-  let shareText: string;
   let copied = false;
   let games: GameRecord[];
   

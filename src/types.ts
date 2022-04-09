@@ -25,3 +25,13 @@ export type GameRecord = {
   date: string,
   score: number,
 }
+
+export type LeaderboardEntry = {
+  name: string;
+  score: number;
+  bestStreak: number;
+  bestChain: number;
+  bestWord: Tile[];
+  turns: number;
+  date: Date;
+}
