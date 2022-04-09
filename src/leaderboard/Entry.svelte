@@ -15,13 +15,15 @@ import { scoreWord } from "../letters";
     <div class=row>
       <h3>{entry.name}</h3>
       <div class=spacer />
+      <div class=pills>
+        <WordChain chain={entry.bestChain} />
+        <Streak streak={entry.bestStreak} />
+      </div>
       <h3>{entry.score}</h3>
     </div>
     <div class=row>
       <Word word={entry.bestWord} />
       <h5>+{scoreWord(entry.bestWord)}</h5>
-      <div class=spacer />
-      <Streak streak={entry.bestStreak} />
     </div>
   </div>
 </div>
@@ -37,7 +39,6 @@ import { scoreWord } from "../letters";
   }
   h5 {
     margin: 0;
-    padding: 0.75em;
   }
   .stats {
     display: flex;
@@ -46,9 +47,14 @@ import { scoreWord } from "../letters";
   }
   .row {
     display: flex;
+    align-items: center;
   }
   h3 {
     display: inline;
+  }
+  .pills {
+    display: flex;
+    padding: 0 0.5em;
   }
   .spacer {
     flex-grow: 1;
