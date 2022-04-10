@@ -1,5 +1,5 @@
 <script lang='ts'>
-  export let onClick: () => void;
+  export let onClick: () => void | undefined = undefined;
   export let disabled: boolean | undefined = undefined;
   export let type: 'submit' | undefined = undefined;
 

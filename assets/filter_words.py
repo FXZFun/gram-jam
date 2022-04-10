@@ -10,7 +10,7 @@ with open('scrabble_dict.txt') as words, open('../src/words.json', 'w') as out:
         if '\'' in word:
             continue
         
-        if word in ['spic', 'coon', 'gook', 'cunt', 'nigger', 'nigga', 'fags', 'faggy', 'faggot', 'dike']:
+        if word.lower() in ['spic', 'coon', 'gook', 'cunt', 'nigger', 'nigga', 'fags', 'faggy', 'faggot', 'dike']:
             continue
 
         filtered.append(word.lower())

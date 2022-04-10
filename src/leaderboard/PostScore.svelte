@@ -23,13 +23,15 @@ import Trophy from "../icons/Trophy.svelte";
   }
    
   const handleSubmit = async () => {
-    loading = true;
-    await addDoc(leaderboard, {
-      ...entry,
-      name,
-    });
-    submitted = true;
-    handleLoadLeaderboard();
+    if (!loading) {
+      loading = true;
+      await addDoc(leaderboard, {
+        ...entry,
+        name,
+      });
+      submitted = true;
+      handleLoadLeaderboard();
+    }
   }
   
   const handleLoadLeaderboard = async () => {
@@ -78,7 +80,7 @@ import Trophy from "../icons/Trophy.svelte";
         <div class=controls>
           <ActionButton onClick={handleClose}>Close</ActionButton>
           <div class=spacer />
-          <ActionButton type=submit onClick={handleSubmit}>Submit</ActionButton>
+          <ActionButton type=submit>Submit</ActionButton>
         </div>
       </form>
     {/if}
