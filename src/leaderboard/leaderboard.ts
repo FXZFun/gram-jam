@@ -1,6 +1,7 @@
 import { initializeFirestore } from '@firebase/firestore/lite';
 import { initializeApp } from '@firebase/app';
-import  { collection, getFirestore, addDoc } from '@firebase/firestore';
+import  { collection, getFirestore, addDoc, CollectionReference } from '@firebase/firestore';
+import type { LeaderboardEntry } from '../types';
 
 const firebaseConfig = {
   apiKey: "AIzaSyCeKpexNFcB0ZBgKLBW0DFE8F34bLLjJHw",
@@ -15,4 +16,4 @@ const app = initializeApp(firebaseConfig);
 
 const db = getFirestore(app);
 
-export const leaderboard = collection(db, 'leaderboard');
+export const leaderboard = collection(db, 'leaderboard') as CollectionReference<LeaderboardEntry>;

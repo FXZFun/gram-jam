@@ -1,5 +1,6 @@
 <script lang='ts'>
 
+  import { v4 as uuid } from 'uuid';
   import { sample } from './letters';
   import { flip } from 'svelte/animate';
 
@@ -25,6 +26,7 @@
   const ROWS = 7;
   const COLS = 6;
 
+  let gameId: string;
 	let board: Board = [];
   let words: Match[] = [];
   let turn = 0;
@@ -42,17 +44,8 @@
   let latestWord: Tile[] = undefined;
   let latestScore: number = undefined;
   
-  // const customFlyIn = (node) => {
-  //   if (node.style.animation) node.style = null;
-  //   return fly(node, { y: 15, duration: 400 });
-  // }
-
-  // const  customFlip = (node, fromTo) => {
-  //   if (node.style.animation) node.style = null;
-  //   return flip(node, fromTo, { duration: 500 });
-  // }
-
   const handleReset = () => {
+    gameId = uuid();
     const tempBoard = [];
     lost = false;
     turn = 0;
@@ -71,7 +64,7 @@
         tempBoard[i].push(tile);
       }
     }
-
+    
     let matches = findWords(tempBoard);
     while (matches.length) {
       for (const match of matches) {
@@ -90,31 +83,80 @@
       }
       matches = findWords(tempBoard);
     }
+    
+    for (const [i, col] of tempBoard.entries()) {
+      for (const [j, row] of col.entries()) {
+        tempBoard[i][j].multiplier = 1;
+        const prevTile = board?.[i]?.[j];
+        // keep reference to previous tileId for flip transition
+        if (prevTile) {
+          tempBoard[i][j].id = prevTile.id;
+        }
+      }
+    }
+    
+    for (let i = 0; i < 3; i++) {
+      const col = Math.floor(Math.random() * COLS);
+      const row = Math.floor(Math.random() * ROWS);
+      tempBoard[col][row].multiplier = 2;
+    }
+
     board = tempBoard;
   }
   
  
-  let selected: [number, number] | undefined = undefined;
-  let toDelete: string[] | undefined = undefined;
+  let selected: string[] = [];
+  let toDelete: string[]= [];
   let matchBonus: boolean = undefined;
   
   const handleDrag = (e: DragEvent) => {
     console.log(e);
   }
   
+  const isSelected = (i: number, j: number) => {
+    return selected.includes([i, j].join(','))
+  };
+  
+  const getTileKey = (id: number) => {
+    return `${id}|${selected.join('|')}|${toDelete.join('|')}`
+  }
+  
+  const isMatched = (i: number, j: number) => (
+    toDelete?.includes([i, j].join(','))
+  );
+  
+  const isAdjacent = (i: number, j: number) => (
+    true
+    //selected[0]
+    //  && Math.abs(i - selected[0][0]) <= 1
+    //  && Math.abs(j - selected[0][1]) <= 1
+  )
+  
+  const handleIntroStart = () => {
+    // console.log("started");
+  }
+  
+  const handleIntroEnd = () => {
+    // console.log("ended");
+  }
+  
   const handleClick = (i: number, j: number) => {
-    if (!selected) {
-      selected = [i, j];
-    } else if (!(selected[0] === i && selected[1] === j)) {
+    const coord = [i, j].join(',');
+    if (selected.length === 0) {
+      selected = [coord];
+    } else if (selected.length === 1 && !(selected[0] === coord)) {
       turn++;
-      const [ i2, j2 ] = selected;
+      const [ i2, j2 ] = selected[0].split(',').map(i => parseInt(i));
 
       // the ol' switcheroo
       const first = board[i][j];
       board[i][j] = board[i2][j2];
       board[i2][j2] = first;
       // clear selection after switch
-      selected = undefined;
+      selected.push(coord);
+      setTimeout(() => {
+        selected = [];
+      }, 500);
 
       // if tiles are adjacent deduct 1 swap
       // else deduct 2
@@ -146,16 +188,18 @@
 
     } else {
       // click same tile twice
-      selected = undefined;
+      selected = [];
     }
   }
   
   const handleClearSelection = () => {
-    selected = toDelete = matchBonus = undefined;
+    selected = [];
+    toDelete = [];
+    matchBonus = undefined;
   }
   
   // chain is incremented on subsequent recursive calls of handleScore
-  const handleScore = (match: Match, chain = 0, timeout = 750) => {
+  const handleScore = (match: Match, chain = 0, timeout = 1000) => {
     if (match) {
       streak++;
       toDelete = match.coords.map(c => c.join(','));
@@ -310,22 +354,31 @@
           {#each row as tile, j (tile.id)}
             <div
               animate:flip="{{duration: 500}}"
-              in:receive="{{key: tile.id}}"
-              out:send="{{key: tile.id}}"
+              in:receive="{{
+                key: tile.id,
+                delay: 0,
+              }}"
+              out:send="{{
+                key: tile.id,
+                delay: isSelected(i, j) || isMatched(i, j)
+                ? 0 : 0
+              }}"
+              on:introstart="{handleIntroStart}"
+              on:introend="{handleIntroEnd}"
               on:click={() => handleClick(i, j)}
             >
-              <BoardTile
-                letter={tile.letter}
-                active={!!selected}
-                selected={selected && i === selected[0] && j === selected[1]}
-                adjacent={selected
-                  && Math.abs(i - selected[0]) <= 1
-                  && Math.abs(j - selected[1]) <= 1
-                }
-                matched={toDelete?.includes([i, j].join(','))}
-                bonus={matchBonus}
-                multiplier={tile.multiplier}
-              />
+              {#key `${tile.id}|${turn}|${selected.join('|')}|${toDelete.join('|')}`}
+                <BoardTile
+                  gameId={gameId}
+                  letter={tile.letter}
+                  active={!!selected.length}
+                  selected={isSelected(i, j)}
+                  matched={toDelete?.includes([i, j].join(','))}
+                  adjacent={false}
+                  bonus={matchBonus}
+                  multiplier={tile.multiplier}
+                />
+              {/key}
             </div>
           {/each}
         </div>
@@ -343,6 +396,7 @@
   </div>
 </div>
 <GameOver
+  {gameId}
   {lost}
   score={totalScore}
   onReset={handleReset}

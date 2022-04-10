@@ -2,7 +2,7 @@
   import Update from 'svelte-material-icons/Update.svelte';
   import ContentCopy from 'svelte-material-icons/ContentCopy.svelte';
   import ContentPaste from 'svelte-material-icons/ContentPaste.svelte';
-  import Scoreboard from 'svelte-material-icons/Scoreboard.svelte';
+  import Scoreboard from './icons/Scoreboard.svelte';
   import Restart from 'svelte-material-icons/Restart.svelte';
   import Tile from './icons/Tile.svelte';
 
@@ -16,6 +16,7 @@
   import Pill from './Pill.svelte';
   import PostScore from './leaderboard/PostScore.svelte';
   
+  export let gameId;
   export let lost: boolean;
   export let onReset: () => void;
   export let bestStreak: number;
@@ -27,7 +28,6 @@
   let shareText: string;
   let copied = false;
   let showLeaderboard = false;
-  let showPostScore = false;
   
   const handleReset = () => {
     copied = false;
@@ -71,10 +71,6 @@
   
   const toggleLeaderboard = () => {
     showLeaderboard = !showLeaderboard;
-  }
-  
-  const togglePostScore = () => {
-    showPostScore = !showPostScore;
   }
   
   $: {
@@ -144,7 +140,7 @@
         {#if copied}
           <ContentPaste /> Copied
         {:else}
-          <ContentCopy /> Share results
+          <ContentCopy /> Copy results
         {/if}
       </ActionButton>
     </div>
@@ -152,28 +148,25 @@
     <div class=controls>
       <ActionButton onClick={toggleLeaderboard}>
         <Scoreboard />
-        Local Leaderboard
+        Your Leaderboard
       </ActionButton>
       <div class=spacer />
-      <ActionButton onClick={togglePostScore}>
-        Submit Score
-      </ActionButton>
+      {#key gameId}
+        <PostScore
+          entry={{
+            name: '',
+            score,
+            bestStreak,
+            bestChain,
+            turns,
+            bestWord: bestWords[0]?.word ?? [],
+            date: new Date(),
+          }}
+        />
+      {/key}
   </div>
 </Modal>
 <Leaderboard open={showLeaderboard} onClose={toggleLeaderboard} />
-<PostScore
-  open={showPostScore}
-  onClose={togglePostScore}
-  entry={{
-    name: '',
-    score,
-    bestStreak,
-    bestChain,
-    turns,
-    bestWord: bestWords[0]?.word ?? [],
-    date: new Date(),
-  }}
-/>
 
 <style>
   table {

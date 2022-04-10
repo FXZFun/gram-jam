@@ -1,9 +1,16 @@
 <script lang='ts'>
   export let onClick: () => void;
   export let disabled: boolean | undefined = undefined;
+  export let type: 'submit' | undefined = undefined;
+
 </script>
 
-<button on:click={onClick} class=action>
+<button
+  on:click={onClick}
+  {type}
+  {disabled}
+  class=action
+>
   <slot />
 </button>
 
@@ -25,6 +32,10 @@
   :global(body.dark-mode) .action {
     color: white;
     background-color: #2F3640;
+  }
+  
+  .action :global(svg) {
+    margin-right: 4px;
   }
   .action:hover {
     background-color: white;

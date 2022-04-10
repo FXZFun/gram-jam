@@ -5,6 +5,7 @@
   import { points } from './letters';
   
   export let letter: string;
+  export let gameId: string = undefined;
   export let active: boolean | undefined;
   export let selected: boolean | undefined;
   export let adjacent: boolean | undefined;
@@ -12,35 +13,53 @@
   export let bonus: boolean | undefined;
   export let size: 'tiny' | 'small' | 'large' = 'large';
   export let multiplier: 1 | 2 | 3 = 1;
+
+  const pts = points[letter] ?? '';
+
+  let prevGameId: string;
+  let prevLetter: string;
+  let prevMultiplier: number;
+  let prevPoints: string;
   
   const handleSwipe = (e: any) => {
-    console.log(e);
-    console.log(e.detail.direction);
+    //console.log(e);
+    //console.log(e.detail.direction);
+  }
+  
+  // TODO this is hacky
+  $: {
+    if (prevGameId !== gameId) {
+      setTimeout(() => {
+        prevGameId = gameId;
+        prevLetter = letter;
+        prevMultiplier = multiplier;
+        prevPoints = points[prevLetter];
+      }, 500);
+    }
   }
 </script>
 
 <div
   on:swipe={handleSwipe}
-  class={`tile
-    ${selected ? 'selected' : ''}
-    ${adjacent && !selected ? 'adjacent' : ''}
-    ${active && !adjacent && !selected ? 'non-adjacent' : ''}
-    ${matched ? 'matched' : ''}
-    ${bonus ? 'bonus' : ''}
-    ${size}
-  `}
+  class=tile
+  class:selected={selected}
+  class:adjacent={adjacent && !selected}
+  class:non-adjacent={active && !adjacent && !selected}
+  class:matched={matched}
+  class:bonus={bonus}
+  class:tiny={size === 'tiny'}
+  class:small={size === 'small'}
+  class:large={size === 'large'}
+  class:flip-over={prevGameId && gameId !== prevGameId}
 >
-  {#if true}
-    <span>{letter}</span>
-  {:else}
-    <div class=bigram-container>
-      <span class='bigram top'>{letter.charAt(0)}</span>
-      <span class='bigram bottom'>{letter.charAt(1)}</span>
-    </div>
-  {/if}
-  <span class=score>{points[letter] ?? ''}</span>
-  {#if multiplier > 1}
-    <span class={`multiplier ${multiplier === 2 && 'two'} ${multiplier === 3 && 'three'}`}>
+  <span>{prevLetter ?? letter}</span>
+  <span class=score>{prevPoints ?? pts}</span>
+  {#if (prevMultiplier ?? multiplier) > 1}
+    <span
+      class=multiplier
+      class:two={(prevMultiplier ?? multiplier) === 2}
+      class:three={(prevMultiplier ?? multiplier) === 3}
+    >
       {multiplier}
       <Close size='0.625em' />
     </span>
@@ -51,6 +70,7 @@
 	.tile {
     font-family: 'Poppins', sans-serif;
     position: relative;
+    transition: all 0.25s ease-in-out;
     background-color: #F5F6FA;
     border: 1px solid #C4E0E3;
     border-radius: 2px;
@@ -151,23 +171,30 @@
   .tile.tiny .score {
     display: none;
   }
-  .bigram-container {
-    position: relative;
-    width: 66%;
-    height: 66%;
-  }
-  .bigram {
-    position: absolute;
-    line-height: 1;
-  }
-  .bigram.top {
-    top: 0;
-    left: 0;
-  }
+  
+  /* flip over animation */
+  /* Position the front and back side */
+	.flip-box-front, .flip-box-back {
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		-webkit-backface-visibility: hidden; /* Safari */
+		backface-visibility: hidden;
+		box-shadow: -1px 1px 3px black;
+	}
 
-  .bigram.bottom {
-    bottom: 0;
-    right: 0;
-  }
+	/* Style the front side */
+	.flip-box-front {
+		background-color: #ddd;
+		color: black;
+		display: flex;
+		justify-content: center;
+	}
+	
+	/* Style the back side */
+	.flip-over {
+    transition-duration: 0.5s;
+		transform: rotateY(90deg);
+	}
 
 </style>

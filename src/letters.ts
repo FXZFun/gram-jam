@@ -233,8 +233,8 @@ export const sample = (board: Board, sampleSize: number, turn = 0): Tile => {
     const { total, letterCounts, multiplierCounts } = countLetters(board);
     const K = 1;
     freqs = updateFreqs(letterFreqs, letterCounts, K);
-     console.log(Object.values(freqs).reduce((a, b) => a + b) / Object.keys(freqs).length);
-     console.log(Object.entries(freqs).sort((a, b) => +b[1] - +a[1]))
+    // console.log(Object.values(freqs).reduce((a, b) => a + b) / Object.keys(freqs).length);
+    // console.log(Object.entries(freqs).sort((a, b) => +b[1] - +a[1]))
     mFreqs = {...multFreqs}; //updateFreqs(multFreqs, multiplierCounts, 0.5);
     if (multiplierCounts[2] > 5) {
       mFreqs[2] = 0;
@@ -250,7 +250,7 @@ export const sample = (board: Board, sampleSize: number, turn = 0): Tile => {
     freqs = {...freqs, ...bigrams};
   }
   const cdf = getCDF(freqs);
-  console.log(cdf);
+  // console.log(cdf);
   const sampledLetter = sampleCDF(cdf);
   
   const mCDF = getCDF(mFreqs);

@@ -1,63 +1,84 @@
 <script lang='ts'>
   import ActionButton from "../ActionButton.svelte";
+  import Hourglass from "../icons/Hourglass.svelte";
   import { leaderboard } from "./leaderboard";
   import Modal from "../Modal.svelte";
   import type { LeaderboardEntry, Tile } from "../types";
   import  { addDoc, query, getDocs, orderBy, limit, QueryDocumentSnapshot } from '@firebase/firestore';
   import Entry from "./Entry.svelte";
+  import Leaderboard from "./Leaderboard.svelte";
+import Trophy from "../icons/Trophy.svelte";
 
-  export let open: boolean;
-  export let onClose: () => void;
   export let entry: LeaderboardEntry;
+
+  let showPostScore = false;
 
   let name: string;
   let submitted: boolean;
-  let snapshot: QueryDocumentSnapshot[] = [];
-  
-  const handleSubmit = () => {
-    addDoc(leaderboard, {
+  let loading: boolean = false;
+  let snapshot: QueryDocumentSnapshot<LeaderboardEntry>[] = [];
+
+  const togglePostScore = () => {
+    showPostScore = !showPostScore;
+  }
+   
+  const handleSubmit = async () => {
+    loading = true;
+    await addDoc(leaderboard, {
       ...entry,
       name,
     });
     submitted = true;
+    handleLoadLeaderboard();
   }
   
   const handleLoadLeaderboard = async () => {
     const q = query(leaderboard, orderBy('score', 'desc'), limit(25))
     const topScores = await getDocs(q);
+    loading = false;
     snapshot = topScores.docs;
   }
   
   const handleClose = () => {
     submitted = false;
-    onClose();
+    togglePostScore();
   }
   
-  $: {
-    if (submitted) {
-      handleLoadLeaderboard();
-    }
-  }
 </script>
 
-<Modal {open} {onClose}>
+<ActionButton onClick={togglePostScore}>
+  <Trophy />
+  Submit Score
+</ActionButton>
+<Modal open={showPostScore} onClose={togglePostScore}>
   <div class=container>
-    {#if submitted}
-      <h3>Global Leaderboard</h3>
+    {#if submitted && !loading}
+      <h1>Global Leaderboard</h1>
       {#each snapshot as entry, i}
         <Entry entry={entry.data()} position={i} />
       {/each}
       <div class=controls>
-        <ActionButton onClick={onClose}>Close</ActionButton>
+        <ActionButton onClick={togglePostScore}>Close</ActionButton>
       </div>
     {:else}
-      <h3>Submit Score</h3>
-      <form on:submit|preventDefault={handleSubmit}>
-        <input type='text' placeholder="name" bind:value={name} required />
+      <h2>Submit Score</h2>
+      <form
+        on:submit|preventDefault={handleSubmit}
+      >
+        <div class=submit-score>
+          <div class=load-indicator />
+          <input type='text' placeholder="name" bind:value={name} required />
+          <div
+            class=load-indicator
+            class:loading={loading}
+          >
+            <Hourglass />
+          </div>
+        </div>
         <div class=controls>
           <ActionButton onClick={handleClose}>Close</ActionButton>
           <div class=spacer />
-          <ActionButton onClick={handleSubmit}>Submit</ActionButton>
+          <ActionButton type=submit onClick={handleSubmit}>Submit</ActionButton>
         </div>
       </form>
     {/if}
@@ -70,6 +91,20 @@
     flex-direction: column;
     justify-content: center;
     padding: 1em;
+  }
+  .submit-score {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+  }
+  .load-indicator {
+    width: 2em;
+    opacity: 0;
+  }
+  .loading {
+    transition: all 0.25s ease-in;
+    opacity: 1;
   }
   .score-list {
     width: 100%;
