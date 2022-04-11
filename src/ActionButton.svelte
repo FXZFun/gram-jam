@@ -33,7 +33,6 @@
     color: white;
     background-color: #2F3640;
   }
-  
   .action :global(svg) {
     margin-right: 4px;
   }

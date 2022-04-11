@@ -108,9 +108,6 @@ import Trophy from "../icons/Trophy.svelte";
     transition: all 0.25s ease-in;
     opacity: 1;
   }
-  .score-list {
-    width: 100%;
-  }
   .spacer {
     width: 0.5em;
   }

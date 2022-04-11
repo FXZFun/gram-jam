@@ -31,7 +31,7 @@
     justify-content: center;
   }
   .panel {
-    z-index: 100;
+    z-index: 1000;
     background-color: white;
     border-radius: 4px;
     box-shadow: 0 0 8px #00000040;

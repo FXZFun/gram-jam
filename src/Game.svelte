@@ -21,7 +21,8 @@
   import DarkMode from './DarkMode.svelte';
   import Title from './Title.svelte';
   import { shuffle } from './shuffle';
-  import { send, receive } from './animations';
+  import { send, receive, animationDuration } from './animations';
+import Definition from './Definition.svelte';
 
   const ROWS = 7;
   const COLS = 6;
@@ -106,7 +107,7 @@
   
  
   let selected: string[] = [];
-  let toDelete: string[]= [];
+  let toClear: string[]= [];
   let matchBonus: boolean = undefined;
   
   const handleDrag = (e: DragEvent) => {
@@ -118,11 +119,11 @@
   };
   
   const getTileKey = (id: number) => {
-    return `${id}|${selected.join('|')}|${toDelete.join('|')}`
+    return `${id}|${selected.join('|')}|${toClear.join('|')}`
   }
   
   const isMatched = (i: number, j: number) => (
-    toDelete?.includes([i, j].join(','))
+    toClear?.includes([i, j].join(','))
   );
   
   const isAdjacent = (i: number, j: number) => (
@@ -194,7 +195,7 @@
   
   const handleClearSelection = () => {
     selected = [];
-    toDelete = [];
+    toClear = [];
     matchBonus = undefined;
   }
   
@@ -202,8 +203,9 @@
   const handleScore = (match: Match, chain = 0, timeout = 1000) => {
     if (match) {
       streak++;
-      toDelete = match.coords.map(c => c.join(','));
+      toClear = match.coords.map(c => c.join(','));
 
+      // highlight words that give shuffle bonus
       if ((match.axis === 'row' && match.word.length === COLS)
           || (match.axis === 'col' && match.word.length === ROWS)
           || (match.axis === 'intersection')) {
@@ -216,11 +218,7 @@
         if (streak > bestStreak) {
           bestStreak = streak;
         }
-        if (chain > 0) {
-          remainingSwaps++;
-        }
         if (match.axis === 'intersection') {
-          remainingSwaps += 2;
           shuffles++;
         }
         if (match.word.length === COLS && match.axis === 'row') {
@@ -231,9 +229,13 @@
         }
         words = words.concat([match]);
      
-        remainingSwaps += Math.max(match.word.length - 4, 0);
+        if (chain === 0) {
+          remainingSwaps += Math.max(match.word.length - 4, 0);
+        } else {
+          remainingSwaps++;
+        }
         latestChain = chain;
-        if (latestChain > bestChain) bestChain = latestChain;
+        bestChain = Math.max(bestChain, latestChain);
       
         latestWord = match.word;
         latestScore = match.score;
@@ -303,7 +305,9 @@
     board = tempBoard;
     setTimeout(() => {
       const [ match, ] = findWords(board);
-      handleScore(match);
+      if (match) {
+        handleScore(match);
+      }
     }, 500);
   }
 
@@ -342,7 +346,9 @@
     {#if latestWord !== undefined}
       <div>Latest Word:</div>
       <div class=word-container>
-        <div class=word-score />
+        <div class=word-score>
+          <Definition word={latestWord.map(t => t.letter).join('')} />
+        </div>
         <Word word={latestWord} />
         <div class=word-score>+{latestScore}</div>
       </div>
@@ -353,32 +359,29 @@
         <div class=row>
           {#each row as tile, j (tile.id)}
             <div
-              animate:flip="{{duration: 500}}"
+              animate:flip="{{duration: animationDuration}}"
               in:receive="{{
                 key: tile.id,
                 delay: 0,
               }}"
               out:send="{{
                 key: tile.id,
-                delay: isSelected(i, j) || isMatched(i, j)
-                ? 0 : 0
+                delay: 0,
               }}"
               on:introstart="{handleIntroStart}"
               on:introend="{handleIntroEnd}"
               on:click={() => handleClick(i, j)}
             >
-              {#key `${tile.id}|${turn}|${selected.join('|')}|${toDelete.join('|')}`}
-                <BoardTile
-                  gameId={gameId}
-                  letter={tile.letter}
-                  active={!!selected.length}
-                  selected={isSelected(i, j)}
-                  matched={toDelete?.includes([i, j].join(','))}
-                  adjacent={false}
-                  bonus={matchBonus}
-                  multiplier={tile.multiplier}
-                />
-              {/key}
+              <BoardTile
+                gameId={gameId}
+                letter={tile.letter}
+                active={!!selected.length}
+                selected={selected.includes([i, j].join(','))}
+                matched={toClear.includes([i, j].join(','))}
+                adjacent={false}
+                bonus={matchBonus}
+                multiplier={tile.multiplier}
+              />
             </div>
           {/each}
         </div>

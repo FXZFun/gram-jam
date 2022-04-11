@@ -1,15 +1,15 @@
 import { crossfade, fly } from 'svelte/transition';
 import { quintOut, quintIn, quadIn, sineOut } from 'svelte/easing';
 
-export const [send, receive] = crossfade({
-	duration: d => Math.log(d) * 100,
+export const [ send, receive ] = crossfade({
+	duration: d => animationDuration,
   easing: quintOut,
 	fallback: (node, params, intro) => fly(node, {
     y: intro ? -100 : 0,
-    x: intro ? 0 : 200,
+    x: intro ? 0 : 150,
     //delay: 500,
-    duration: intro ? 500 : 500,
-    easing: intro ? quadIn : quintOut,
+    duration: 800,
+    easing: quintOut
   })
 });
 
@@ -20,4 +20,5 @@ export const spin = (node, params) => {
 		css: t => `spin: ease-in-out`
 	};
 }
-  
+
+export const animationDuration = 750;

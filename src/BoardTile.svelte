@@ -6,11 +6,11 @@
   
   export let letter: string;
   export let gameId: string = undefined;
-  export let active: boolean | undefined;
-  export let selected: boolean | undefined;
-  export let adjacent: boolean | undefined;
-  export let matched: boolean | undefined;
-  export let bonus: boolean | undefined;
+  export let active: boolean = false;
+  export let selected: boolean = false;
+  export let adjacent: boolean = false;
+  export let matched: boolean = false;
+  export let bonus: boolean = false;
   export let size: 'tiny' | 'small' | 'large' = 'large';
   export let multiplier: 1 | 2 | 3 = 1;
 

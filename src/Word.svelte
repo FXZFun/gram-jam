@@ -2,7 +2,7 @@
   import { flip } from 'svelte/animate';
   import BoardTile from "./BoardTile.svelte";
   import type { Tile } from "./types";
-  import { send, receive } from './animations';
+  import { send, receive, animationDuration } from './animations';
 
   export let word: Tile[];
 </script>
@@ -10,7 +10,7 @@
 <div class=container>
   {#each word as tile (tile.id)}
     <div
-      animate:flip="{{duration: 500}}"
+      animate:flip="{{duration: animationDuration}}"
       in:receive="{{key: tile.id}}"
       out:send="{{key: tile.id}}"
     >
