@@ -2,6 +2,7 @@
   export let onClick: () => void | undefined = undefined;
   export let disabled: boolean | undefined = undefined;
   export let type: 'submit' | undefined = undefined;
+  export let form: string = undefined;
 
 </script>
 
@@ -9,6 +10,7 @@
   on:click={onClick}
   {type}
   {disabled}
+  {form}
   class=action
 >
   <slot />
@@ -16,6 +18,7 @@
 
 <style>
   .action {
+    transition: all 0.25s ease-in;
     cursor: pointer;
     font-weight: bold;
     color: #2F3640;
@@ -30,8 +33,10 @@
     align-items: center;
   }
   :global(body.dark-mode) .action {
+    transition: all 0.25s ease-in;
     color: white;
     background-color: #2F3640;
+    border-color: white;
   }
   .action :global(svg) {
     margin-right: 4px;

@@ -25,6 +25,7 @@
 </ActionButton>
 <style>
   :global(body.dark-mode) {
+    transition: all 0.25s ease-in;
     background-color: #1D1E20;
   }
 </style>

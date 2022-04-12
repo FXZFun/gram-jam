@@ -86,8 +86,10 @@
 </script>  
 
 <Modal open={lost} onClose={handleReset}>
-  <div class=container>
+  <div slot=title>
     <h1>Game Over</h1>
+  </div>
+  <div slot=content>
     <h2>Score: {score}</h2>
     <h4 class=result>
       Turns:
@@ -130,6 +132,8 @@
       </tr>
     {/each}
     </table>
+  </div>
+  <div slot=controls>
     <div class=controls>
       <ActionButton onClick={handleReset}>
         <Restart size='1em' />
@@ -164,6 +168,7 @@
           }}
         />
       {/key}
+    </div>
   </div>
 </Modal>
 <Leaderboard open={showLeaderboard} onClose={toggleLeaderboard} />

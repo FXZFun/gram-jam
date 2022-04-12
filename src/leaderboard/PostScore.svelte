@@ -14,14 +14,10 @@ import Trophy from "../icons/Trophy.svelte";
   let showPostScore = false;
 
   let name: string;
-  let submitted: boolean;
-  let loading: boolean = false;
+  let showLeaderboard= false;
+  let loading = false;
   let snapshot: QueryDocumentSnapshot<LeaderboardEntry>[] = [];
 
-  const togglePostScore = () => {
-    showPostScore = !showPostScore;
-  }
-   
   const handleSubmit = async () => {
     if (!loading) {
       loading = true;
@@ -29,7 +25,6 @@ import Trophy from "../icons/Trophy.svelte";
         ...entry,
         name,
       });
-      submitted = true;
       handleLoadLeaderboard();
     }
   }
@@ -37,63 +32,72 @@ import Trophy from "../icons/Trophy.svelte";
   const handleLoadLeaderboard = async () => {
     const q = query(leaderboard, orderBy('score', 'desc'), limit(25))
     const topScores = await getDocs(q);
-    loading = false;
+    showPostScore = false;
+    showLeaderboard = true;
     snapshot = topScores.docs;
   }
   
   const handleClose = () => {
-    submitted = false;
-    togglePostScore();
+    showPostScore = false;
+  }
+  
+  const handleCloseLeaderboard = () => {
+    showLeaderboard = false;
   }
   
 </script>
 
-<ActionButton onClick={togglePostScore}>
+<ActionButton onClick={() => { showPostScore = true }}>
   <Trophy />
   Submit Score
 </ActionButton>
-<Modal open={showPostScore} onClose={togglePostScore}>
-  <div class=container>
-    {#if submitted && !loading}
-      <h1>Global Leaderboard</h1>
-      {#each snapshot as entry, i}
-        <Entry entry={entry.data()} position={i} />
-      {/each}
-      <div class=controls>
-        <ActionButton onClick={togglePostScore}>Close</ActionButton>
+<Modal open={showPostScore} onClose={handleClose}>
+  <div slot=title>
+    <h2>Submit Score</h2>
+  </div>
+  <div slot=content>
+    <form
+      name=submit-score
+      on:submit|preventDefault={handleSubmit}
+    >
+      <div class=submit-score>
+        <div class=load-indicator />
+        <input
+          type='text'
+          placeholder="name"
+          bind:value={name}
+          required
+        />
+        <div
+          class=load-indicator
+          class:loading={loading}
+        >
+          <Hourglass />
+        </div>
       </div>
-    {:else}
-      <h2>Submit Score</h2>
-      <form
-        on:submit|preventDefault={handleSubmit}
-      >
-        <div class=submit-score>
-          <div class=load-indicator />
-          <input type='text' placeholder="name" bind:value={name} required />
-          <div
-            class=load-indicator
-            class:loading={loading}
-          >
-            <Hourglass />
-          </div>
-        </div>
-        <div class=controls>
-          <ActionButton onClick={handleClose}>Close</ActionButton>
-          <div class=spacer />
-          <ActionButton type=submit>Submit</ActionButton>
-        </div>
-      </form>
-    {/if}
+    </form>
+  </div>
+  <div slot=controls class=controls>
+    <ActionButton onClick={handleClose}>Close</ActionButton>
+    <div class=spacer />
+    <ActionButton onClick={handleSubmit}>Submit</ActionButton>
+  </div>
+</Modal>
+<Modal open={showLeaderboard} onClose={handleCloseLeaderboard}>
+  <div slot=title>
+    <h1>Global Leaderboard</h1>
+  </div>
+  <div slot=content>
+    {#each snapshot as entry, i}
+      <Entry entry={entry.data()} position={i} />
+    {/each}
+  </div>
+  <div slot=controls class=controls>
+    <ActionButton onClick={handleCloseLeaderboard}>Close</ActionButton>
   </div>
 </Modal>
 
 <style>
-  .container {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 1em;
-  }
   .submit-score {
     display: flex;
     flex-direction: row;

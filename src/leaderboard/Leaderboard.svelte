@@ -29,8 +29,10 @@
 </script>  
 
 <Modal open={open} onClose={onClose}>
-  <div class=container>
+  <div slot=title>
     <h1>Your Leaderboard</h1>
+  </div>
+  <div slot=content>
     <table>
     {#each games.sort((a, b) => b.score - a.score) as game}
       <tr>
@@ -44,9 +46,9 @@
       </tr>
     {/each}
     </table>
-    <div class=controls>
-      <ActionButton onClick={onClose}>Close</ActionButton>
-    </div>
+  </div>
+  <div slot=controls>
+    <ActionButton onClick={onClose}>Close</ActionButton>
   </div>
 </Modal>
 
