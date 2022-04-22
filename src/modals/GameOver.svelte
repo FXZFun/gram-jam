@@ -2,19 +2,19 @@
   import Update from 'svelte-material-icons/Update.svelte';
   import ContentCopy from 'svelte-material-icons/ContentCopy.svelte';
   import ContentPaste from 'svelte-material-icons/ContentPaste.svelte';
-  import Scoreboard from './icons/Scoreboard.svelte';
+  import Scoreboard from '../icons/Scoreboard.svelte';
   import Restart from 'svelte-material-icons/Restart.svelte';
-  import Tile from './icons/Tile.svelte';
+  import Tile from '../icons/Tile.svelte';
 
-  import Modal from './Modal.svelte';
-  import Word from './Word.svelte';
-  import type { GameRecord, Match } from './types';
-  import ActionButton from './ActionButton.svelte';
-  import Streak from './Streak.svelte';
-  import WordChain from './WordChain.svelte';
-  import Leaderboard from './leaderboard/Leaderboard.svelte';
-  import Pill from './Pill.svelte';
-  import PostScore from './leaderboard/PostScore.svelte';
+  import Modal from '../components/Modal.svelte';
+  import Word from '../Word.svelte';
+  import type { GameRecord, Match } from '../types';
+  import ActionButton from '../components/ActionButton.svelte';
+  import Streak from '../Streak.svelte';
+  import WordChain from '../WordChain.svelte';
+  import Leaderboard from '../leaderboard/Leaderboard.svelte';
+  import Pill from '../components/Pill.svelte';
+  import PostScore from '../leaderboard/PostScore.svelte';
   
   export let gameId;
   export let lost: boolean;
@@ -124,37 +124,18 @@
       </Pill>
     </h4>
     <h4>Best Words:</h4>
-    <table>
+    <ul>
     {#each bestWords as word}
-      <tr>
-        <td><Word word={word.word} /></td>
-        <td><span class=score>{word.score}</span></td>
-      </tr>
+      <li class='word-container'>
+        <Word word={word.word} />
+        <div class=word-spacer />
+        <span class=score>{word.score}</span>
+      </li>
     {/each}
-    </table>
+    </ul>
   </div>
   <div slot=controls>
     <div class=controls>
-      <ActionButton onClick={handleReset}>
-        <Restart size='1em' />
-        Reset Game
-      </ActionButton>
-      <div class=spacer />
-      <ActionButton onClick={handleShare}>
-        {#if copied}
-          <ContentPaste /> Copied
-        {:else}
-          <ContentCopy /> Copy results
-        {/if}
-      </ActionButton>
-    </div>
-    <div class=spacer-vert />
-    <div class=controls>
-      <ActionButton onClick={toggleLeaderboard}>
-        <Scoreboard />
-        Your Leaderboard
-      </ActionButton>
-      <div class=spacer />
       {#key gameId}
         <PostScore
           entry={{
@@ -168,28 +149,51 @@
           }}
         />
       {/key}
+      <div class=spacer />
+      {#if copied}
+        <ActionButton onClick={handleShare}>
+          <ContentPaste slot=icon /> Copied
+        </ActionButton>
+      {:else}
+        <ActionButton onClick={handleShare}>
+          <ContentCopy slot=icon /> Copy results
+        </ActionButton>
+      {/if}
+    </div>
+    <div class=spacer-vert />
+    <div class=controls>
+      <ActionButton onClick={toggleLeaderboard}>
+        <Scoreboard slot=icon />
+        Leaderboard
+      </ActionButton>
+      <div class=spacer />
+      <ActionButton onClick={handleReset}>
+        <Restart slot=icon size='1em' />
+        Reset Game
+      </ActionButton>
     </div>
   </div>
 </Modal>
 <Leaderboard open={showLeaderboard} onClose={toggleLeaderboard} />
 
 <style>
-  table {
-    width: 100%;
-    text-align: start;
-    margin-bottom: 8px;
-  }
   .score {
     font-weight: bold;
-  }
-  .container {
-    padding: 2em;
   }
   .controls {
     display: flex;
     flex-direction: row;
     width: 100%;
     justify-content: center;
+  }
+  .word-container {
+    display: flex;
+    justify-content: left;
+    align-items: center;
+    padding: 0.25em;
+  }
+  .word-spacer {
+    flex-grow: 1
   }
   .result {
     display: flex;

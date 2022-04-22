@@ -2,6 +2,7 @@
 import BoardTile from "./BoardTile.svelte";
 
 </script>
+
 <div class=title>
   <div class=subtitle>
     {#each ['G', 'R', 'A', 'M'] as letter, i}
@@ -15,7 +16,7 @@ import BoardTile from "./BoardTile.svelte";
   <div class=subtitle>
     {#each ['J', 'A', 'M'] as letter, i}
       <BoardTile
-        matched={i === 0}
+        highlighted={i === 0 ? 'green' : undefined}
         letter={letter}
         size='tiny'
       />
@@ -32,7 +33,6 @@ import BoardTile from "./BoardTile.svelte";
   }
   .title {
     position: absolute;
-    top: 0.5em;
     left: 50%;
     width: 0;
     overflow: visible;

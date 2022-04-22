@@ -1,7 +1,8 @@
 <script lang='ts'>
-  import Modal from '../Modal.svelte';
+  import Close from 'svelte-material-icons/Close.svelte';
+  import Modal from '../components/Modal.svelte';
   import type { GameRecord, Match } from '../types';
-  import ActionButton from '../ActionButton.svelte';
+  import ActionButton from '../components/ActionButton.svelte';
   import Streak from '../Streak.svelte';
   import WordChain from '../WordChain.svelte';
   
@@ -48,7 +49,10 @@
     </table>
   </div>
   <div slot=controls>
-    <ActionButton onClick={onClose}>Close</ActionButton>
+    <ActionButton onClick={onClose}>
+      <Close slot=icon />
+      Close
+    </ActionButton>
   </div>
 </Modal>
 
@@ -60,28 +64,5 @@
   }
   table h3 {
     margin: 0.5em;
-  }
-  .score {
-    font-weight: bold;
-  }
-  .container {
-    padding: 2em;
-  }
-  .controls {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-    justify-content: center;
-  }
-  .result {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-  }
-  .spacer {
-    width: 1em;
-  }
-  .grow {
-    flex-grow: 1;
   }
 </style>

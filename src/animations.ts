@@ -1,19 +1,34 @@
-import { crossfade, fly } from 'svelte/transition';
-import { quintOut, quintIn, quadIn, sineOut } from 'svelte/easing';
+import { crossfade, fade, fly } from 'svelte/transition';
+import { quintOut, quadInOut, quintInOut, quadOut, quintIn, quadIn, sineOut } from 'svelte/easing';
+
+const getMajorAxis = () => {
+  if (document.body.clientHeight / document.body.clientWidth > 16 / 9) {
+    return document.body.clientWidth;
+  } else {
+    return document.body.clientHeight;
+  }
+}
+
+const getTileSize = (): number => {
+  const boardSize = document.querySelector('.board').getBoundingClientRect();
+  const tileSize = boardSize.width / 6;
+  return tileSize;
+}
+
+export const flipDuration = (len: number) => animationDuration * Math.sqrt(len / getMajorAxis());
 
 export const [ send, receive ] = crossfade({
-	duration: d => animationDuration,
-  easing: quintOut,
+	duration: flipDuration,
+  easing: quadOut,
 	fallback: (node, params, intro) => fly(node, {
-    y: intro ? -100 : 0,
-    x: intro ? 0 : 150,
-    //delay: 500,
-    duration: 800,
-    easing: quintOut
-  })
+      y: intro ? -getTileSize() : 0,
+      x: intro ? 0 : 100,
+      duration: animationDuration,
+      easing: intro ? quadIn : quadOut
+    })
 });
 
-export const spin = (node, params) => {
+export const spin = (node: HTMLElement) => {
 	return {
 		duration: 600,
     easing: quintOut,
@@ -21,4 +36,62 @@ export const spin = (node, params) => {
 	};
 }
 
+export const flyIn = (node: HTMLElement, {
+  y = 20,
+  duration = 500,
+  delay = 0,
+}) => ({
+  duration,
+  delay,
+  easing: quintOut,
+  css: (t: number) => `transform: translateY(${t * y}px); transform: scale(${t})`,
+});
+
 export const animationDuration = 750;
+
+export const getAnimationPromise = (): [ Promise<void>, () => void ] => {
+  let resolve: () => void;
+
+  const promise = new Promise<void>(_resolve => {
+    resolve = _resolve;
+  })
+
+  return [ promise, resolve ];
+}
+
+export const delay = async (t: number) => new Promise(resolve => setTimeout(resolve, t));
+
+export const flipOver = (node: HTMLElement, {
+  delay = 0,
+	duration = 500
+}) => {
+  const style = getComputedStyle(node);
+  const transform = style.transform === 'none' ? '' : style.transform;
+	return {
+		delay,
+		duration,
+		css: (t: number, u: number) => `
+      transform: ${transform} rotateY(${u * 90}deg);
+    `
+	};
+}
+
+export const flipOut = (node: HTMLElement, {
+  delay = 0,
+	duration = 500
+}) => {
+  const style = getComputedStyle(node);
+  const transform = style.transform === 'none' ? '' : style.transform;
+  console.log(node);
+	return {
+		delay,
+		duration,
+		css: (t: number, u: number) => `
+      transform: ${transform} rotateY(${1 - (u * 90)}deg);
+    `
+	};
+}
+
+export const getBBoxJSON = () => (
+  JSON.stringify(document.querySelector('.large.selected')?.getBoundingClientRect())
+);

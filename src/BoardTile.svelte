@@ -1,85 +1,87 @@
  <script lang="ts">
 
   import Close from 'svelte-material-icons/Close.svelte';
-  import { swipe } from 'svelte-gestures';
-  import { points } from './letters';
+  import { points } from './algorithms/letters';
+  import { flipOver, flipOut } from './animations';
+import type { HighlightColors, Highlighted } from './types';
   
   export let letter: string;
   export let gameId: string = undefined;
+  let prevGameId: string = gameId;
   export let active: boolean = false;
   export let selected: boolean = false;
   export let adjacent: boolean = false;
-  export let matched: boolean = false;
-  export let bonus: boolean = false;
+  export let highlighted: HighlightColors;
   export let size: 'tiny' | 'small' | 'large' = 'large';
   export let multiplier: 1 | 2 | 3 = 1;
+  export let id: number = undefined;
 
   const pts = points[letter] ?? '';
 
-  let prevGameId: string;
-  let prevLetter: string;
-  let prevMultiplier: number;
-  let prevPoints: string;
-  
   const handleSwipe = (e: any) => {
     //console.log(e);
     //console.log(e.detail.direction);
   }
   
   // TODO this is hacky
-  $: {
-    if (prevGameId !== gameId) {
-      setTimeout(() => {
-        prevGameId = gameId;
-        prevLetter = letter;
-        prevMultiplier = multiplier;
-        prevPoints = points[prevLetter];
-      }, 500);
-    }
-  }
+  // $: {
+  //   if (prevGameId !== gameId) {
+  //     setTimeout(() => {
+  //       prevGameId = gameId;
+  //       prevLetter = letter;
+  //       prevMultiplier = multiplier;
+  //       prevPoints = points[prevLetter];
+  //     }, 500);
+  //   }
+  // }
 </script>
 
-<div
-  on:swipe={handleSwipe}
-  class=tile
-  class:selected={selected}
-  class:adjacent={adjacent && !selected}
-  class:non-adjacent={active && !adjacent && !selected}
-  class:matched={matched}
-  class:bonus={bonus}
-  class:tiny={size === 'tiny'}
-  class:small={size === 'small'}
-  class:large={size === 'large'}
-  class:flip-over={prevGameId && gameId !== prevGameId}
->
-  <span>{prevLetter ?? letter}</span>
-  <span class=score>{prevPoints ?? pts}</span>
-  {#if (prevMultiplier ?? multiplier) > 1}
-    <span
-      class=multiplier
-      class:two={(prevMultiplier ?? multiplier) === 2}
-      class:three={(prevMultiplier ?? multiplier) === 3}
-    >
-      {multiplier}
-      <Close size='0.625em' />
-    </span>
-  {/if}
-</div>
+{#key id}
+  <div
+    data-id={gameId}
+    class=tile
+    class:selected={selected}
+    class:adjacent={adjacent && !selected}
+    class:non-adjacent={active && !adjacent && !selected}
+    class:matched={highlighted === 'green'}
+    class:bonus={highlighted === 'purple'}
+    class:intersection={highlighted === 'red'}
+    class:long={highlighted === 'orange'}
+    class:tiny={size === 'tiny'}
+    class:small={size === 'small'}
+    class:large={size === 'large'}
+  >
+    <span>{letter}</span>
+    <span class=score>{pts}</span>
+    <span class=debug-id>{id}</span>
+    {#if multiplier > 1}
+      <span
+        class=multiplier
+        class:two={multiplier === 2}
+        class:three={multiplier === 3}
+      >
+        {multiplier}
+        <Close size='0.625em' />
+      </span>
+    {/if}
+  </div>
+{/key}
 
 <style>
 	.tile {
-    font-family: 'Poppins', sans-serif;
     position: relative;
-    transition: all 0.25s ease-in-out;
+    grid-column: 1/2;
+    grid-row: 1/2;
+    transition: all 0.2s ease-out;
     background-color: #F5F6FA;
     border: 1px solid #C4E0E3;
-    border-radius: 2px;
-    display: flex;
-		width: min(12vw, 8vh);
-		height: min(12vw, 8vh);
+    border-bottom: 2px solid #C4E0E3;
+    border-radius: 4px;
+		width: 100%;
+		height: 100%;
     font-size: 1.375em;
-    margin: 0.2em;
     font-weight: bold;
+    display: flex;
     align-items: center;
     justify-content: center;
     user-select: none;
@@ -94,11 +96,19 @@
     font-size: 1em;
   }
   .tile.tiny {
+    position: inherit;
     width: 1.5em;
     height: 1.5em;
     font-size: 0.75em;
+    margin: 0.125em;
   }
   @media (min-width: 769px) {
+    .tile.small {
+      font-size: 0.75em;
+    }
+    .tile.large {
+      font-size: 0.75em;
+    }
     .tile.tiny {
       width: 2em;
       height: 2em;
@@ -107,27 +117,46 @@
   }
   .tile.selected {
     background-color: #C4E0E3;
+    border-color: #9ec1c5;
   }
   :global(body.dark-mode) .tile {
     color: white;
   }
   :global(body.dark-mode) .tile.selected {
     background-color: #2C47D3;
+    border-color: #122aa1;
   }
   .tile.matched {
     background-color: #A2F594;
     border-color: #56ad47;
   }
-  .tile.matched.bonus {
+  .tile.bonus {
     background-color: #a994f5;
     border-color: #474ead;
   }
+  .tile.intersection {
+    background-color: #d85454;
+    border-color: #bb2020;
+  }
+  .tile.long {
+    background-color: #d8b554;
+    border-color: #b89d05;
+  }
   :global(body.dark-mode) .tile.matched {
     background-color: #2A9618;
+    border-color: #28701b;
   }
-  :global(body.dark-mode) .tile.matched.bonus {
+  :global(body.dark-mode) .tile.bonus {
     background-color: #3f21ac;
     border-color: #3800a1;
+  }
+  :global(body.dark-mode) .tile.intersection {
+    background-color: #ac2121;
+    border-color: #7e0000;
+  }
+  :global(body.dark-mode) .tile.long {
+    background-color: #cc9601;
+    border-color: #836f00;
   }
   .tile.adjacent {
   }
@@ -143,7 +172,7 @@
     line-height: 1;
     padding: 2px;
     font-weight: normal;
-    background: linear-gradient(to bottom right, darkgreen 0%, darkgreen 50%, #ffffff00 50%, #ffffff00 100%);
+    border-radius: 4px 0 0 0;
     display: flex;
     align-items: start;
     justify-content: start;
@@ -160,13 +189,22 @@
   :global(body.dark-mode) .multiplier.three {
     background: linear-gradient(to bottom right, #b43900 0%, #b43900 50%, #ffffff00 50%, #ffffff00 100%);
   }
+  .debug-id {
+    position: absolute;
+    opacity: 0;
+    font-size: 0.5em;
+    font-weight: normal;
+    top: 0;
+    right: 0;
+    padding: 0.2em;
+  }
   .score {
     position: absolute;
     font-size: 0.5em;
     font-weight: normal;
+    opacity: 0.8;
     bottom: 0;
-    right: 0;
-    padding: 0.2em;
+    right: 0.4em;
   }
   .tile.tiny .score {
     display: none;

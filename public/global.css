@@ -15,6 +15,11 @@ body {
 a {
     color: rgb(0, 100, 200);
     text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+button {
+    -webkit-tap-highlight-color: transparent;
 }
 
 a:hover {

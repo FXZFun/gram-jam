@@ -1,278 +1,333 @@
 <script lang='ts'>
 
-  import { v4 as uuid } from 'uuid';
-  import { sample } from './letters';
-  import { flip } from 'svelte/animate';
+  import { onMount } from 'svelte';
+  import { sample } from './algorithms/letters';
 
-	import { fly } from 'svelte/transition';
+	import { fly, fade, crossfade } from 'svelte/transition';
   
-  import Restart from 'svelte-material-icons/Restart.svelte';
   import Shuffle from 'svelte-material-icons/Shuffle.svelte';
-  import { findWords } from './gameLogic';
-  import type { Board, Match, Tile } from './types';
+  import { loadDictionary } from './algorithms/dictionary';
+  import { findWords, getMarqueeText } from './algorithms/gameLogic';
+  import type { Board, Coord, HighlightColors, Highlighted, Match, Tile } from './types';
   import WordChain from './WordChain.svelte';
   import Swaps from './Swaps.svelte';
-  import BoardTile from './BoardTile.svelte';
   import Streak from './Streak.svelte';
-  import Word from './Word.svelte';
-  import GameOver from './GameOver.svelte';
-  import ActionButton from './ActionButton.svelte';
-  import Info from './Info.svelte';
-  import DarkMode from './DarkMode.svelte';
+  import GameOver from './modals/GameOver.svelte';
+  import ActionButton from './components/ActionButton.svelte';
   import Title from './Title.svelte';
-  import { shuffle } from './shuffle';
-  import { send, receive, animationDuration } from './animations';
-import Definition from './Definition.svelte';
+  import { shuffle } from './algorithms/shuffle';
+  import { animationDuration, flyIn, getAnimationPromise, delay, getBBoxJSON } from './animations';
+  import type { Trie } from './algorithms/trie';
+  import GameBoard from './Board.svelte';
+import { initializeGameState, gameState, sampleBoard } from './store';
+import BottomControls from './BottomControls.svelte';
+import WordContainer from './WordContainer.svelte';
+  
+  let loading = true;
+  let dictionary: Trie<string>;
+  onMount(async () => {
+    dictionary = await loadDictionary();
+    loading = false;
+    // initialize board on first load
+    handleReset();
+  });
 
   const ROWS = 7;
   const COLS = 6;
 
-  let gameId: string;
-	let board: Board = [];
-  let words: Match[] = [];
-  let turn = 0;
-  let remainingSwaps = 10;
-  let shuffles = 1;
+ 
+  let game = initializeGameState();
+
+  let marquee: string;
   let streak = 0;
-  let bestStreak = 0;
-  let lost = false;
-  let totalScore = 0;
-  let latestChain = 0;
   let bestChain = 0;
+  
+  let introPromises: Record<string, Promise<void>> = {};
+  let introResolvers: Record<string, () => void> = {};
+  
+  let outroPromises: Record<string, Promise<void>> = {};
+  let outroResolvers: Record<string, () => void> = {};
+
+  // let [ introPromise, introResolve ] = getAnimationPromise();
+  // let [ outroPromise, outroResolve ] = getAnimationPromise();
+
   // for disabling the chain pill after a while
-  let chainTimeout: NodeJS.Timeout;
-  let gameoverTimeout: NodeJS.Timeout;
   let latestWord: Tile[] = undefined;
   let latestScore: number = undefined;
   
   const handleReset = () => {
-    gameId = uuid();
-    const tempBoard = [];
-    lost = false;
-    turn = 0;
-    totalScore = 0;
-    remainingSwaps = 10;
-    shuffles = 1;
+    const prevBoard = game.board;
+    game = initializeGameState();
+
+    highlighted = {};
     streak = 0;
-    bestStreak = 0;
     bestChain = 0;
     latestWord = undefined;
-    words = [];
-    for (let i = 0; i < COLS; i++) {
-      tempBoard.push([]);
-      for (let j = 0; j < ROWS; j++) {
-        const tile = sample([], 1);
-        tempBoard[i].push(tile);
+    if (!game.board.length) {
+      for (let i = 0; i < COLS; i++) {
+        game.board.push([]);
+        for (let j = 0; j < ROWS; j++) {
+          const tile = sample([], 1);
+          game.board[i].push(tile);
+        }
       }
     }
     
-    let matches = findWords(tempBoard);
+    let matches = findWords(dictionary, game.board);
     while (matches.length) {
       for (const match of matches) {
-        if (match.axis === 'intersection') continue;
-        const tempTile = tempBoard[match.i][match.j];
-        // TODO more sophisticated scramble
-        const toSwap =  Math.floor(Math.random() * match.word.length);
+        const a =  match.coords[Math.floor(Math.random() * match.word.length)];
+        const b =  match.coords[Math.floor(Math.random() * match.word.length)];
 
-        if (match.axis === 'row') {
-          tempBoard[match.i][match.j] = tempBoard[match.i + toSwap][match.j];
-          tempBoard[match.i + toSwap][match.j] = tempTile;
-        } else {
-          tempBoard[match.i][match.j] = tempBoard[match.i][match.j + toSwap];
-          tempBoard[match.i][match.j + toSwap] = tempTile;
-        }
+        const tempTile = game.board[a[0]][a[1]];
+        game.board[a[0]][a[1]] = game.board[b[0]][b[1]];
+        game.board[b[0]][b[1]] = tempTile;
       }
-      matches = findWords(tempBoard);
+      matches = findWords(dictionary, game.board);
     }
     
-    for (const [i, col] of tempBoard.entries()) {
+    for (const [i, col] of game.board.entries()) {
       for (const [j, row] of col.entries()) {
-        tempBoard[i][j].multiplier = 1;
-        const prevTile = board?.[i]?.[j];
+        // reset multipliers
+        game.board[i][j].multiplier = 1;
+        const prevTile = prevBoard?.[i]?.[j];
         // keep reference to previous tileId for flip transition
         if (prevTile) {
-          tempBoard[i][j].id = prevTile.id;
+          game.board[i][j].id = prevTile.id;
         }
       }
     }
     
+    // start game with 3 2x multipliers
     for (let i = 0; i < 3; i++) {
       const col = Math.floor(Math.random() * COLS);
       const row = Math.floor(Math.random() * ROWS);
-      tempBoard[col][row].multiplier = 2;
+      game.board[col][row].multiplier = 2;
     }
 
-    board = tempBoard;
+    game = game;
   }
-  
  
-  let selected: string[] = [];
-  let toClear: string[]= [];
-  let matchBonus: boolean = undefined;
+  let selectedCoords: string[] = [];
+  let selectedTiles: number[] = [];
+  let highlighted: Highlighted = {};
+  let animating = false;
   
-  const handleDrag = (e: DragEvent) => {
-    console.log(e);
+  const getTileId = (e) => parseInt((e.target as HTMLElement).getAttribute('data-id'));
+  
+  const handleIntroStart = (e) => {
+    const tileId = getTileId(e);
+    const [ introPromise, introResolve ] = getAnimationPromise();
+    introPromises[tileId] = introPromise;
+    introResolvers[tileId] = introResolve;
   }
   
-  const isSelected = (i: number, j: number) => {
-    return selected.includes([i, j].join(','))
-  };
-  
-  const getTileKey = (id: number) => {
-    return `${id}|${selected.join('|')}|${toClear.join('|')}`
+  const handleIntroEnd = (e) => {
+    const tileId = getTileId(e);
+    introResolvers[tileId]?.();
+    delete introPromises[tileId];
+    delete introResolvers[tileId];
   }
   
-  const isMatched = (i: number, j: number) => (
-    toClear?.includes([i, j].join(','))
-  );
-  
-  const isAdjacent = (i: number, j: number) => (
-    true
-    //selected[0]
-    //  && Math.abs(i - selected[0][0]) <= 1
-    //  && Math.abs(j - selected[0][1]) <= 1
-  )
-  
-  const handleIntroStart = () => {
-    // console.log("started");
+  const handleOutroStart = (e) => {
+    const tileId = getTileId(e);
+    const [ outroPromise, outroResolve ] = getAnimationPromise();
+    outroPromises[tileId] = outroPromise;
+    outroResolvers[tileId] = outroResolve;
   }
   
-  const handleIntroEnd = () => {
-    // console.log("ended");
+  const handleOutroEnd = (e) => {
+    const tileId = getTileId(e);
+    outroResolvers[tileId]?.();
+    delete outroPromises[tileId];
+    delete outroResolvers[tileId];
   }
   
-  const handleClick = (i: number, j: number) => {
-    const coord = [i, j].join(',');
-    if (selected.length === 0) {
-      selected = [coord];
-    } else if (selected.length === 1 && !(selected[0] === coord)) {
-      turn++;
-      const [ i2, j2 ] = selected[0].split(',').map(i => parseInt(i));
+  const handleClick = async (i: number, j: number) => {
+    if (!animating) {
+      animating = true;
+      const coord = [i, j].join(',');
+      const tileId = game.board[i][j].id;
+      if (selectedCoords.length === 0) {
+        selectedCoords = [coord];
+        selectedTiles = [tileId];
+      } else if (selectedTiles.length === 1 && selectedTiles[0] !== tileId) {
+        game.turn++;
+        const [ i2, j2 ] = selectedCoords[0].split(',').map(i => parseInt(i));
 
-      // the ol' switcheroo
-      const first = board[i][j];
-      board[i][j] = board[i2][j2];
-      board[i2][j2] = first;
-      // clear selection after switch
-      selected.push(coord);
-      setTimeout(() => {
-        selected = [];
-      }, 500);
+        // the ol' switcheroo
+        const first = game.board[i][j];
+        game.board[i][j] = game.board[i2][j2];
+        game.board[i2][j2] = first;
+        game = game;
+        // clear selection after switch
+        selectedCoords = selectedCoords.concat([coord]);
+        selectedTiles = selectedTiles.concat([tileId]);
 
-      // if tiles are adjacent deduct 1 swap
-      // else deduct 2
-      const distanceX = Math.abs(i - i2);
-      const distanceY = Math.abs(j - j2);
-      let penalty = 0;
-      if (Math.max(distanceX, distanceY) === 1) {
-        penalty = 1;
-      } else {
-        penalty = 2;
-      }
-
-      if (streak > 0) {
-        penalty--;
-      }
-      remainingSwaps -= penalty;
-      
-      const [ match, ] = findWords(board);
-      if (match) {
-        handleScore(match);
-      } else {
-        streak = 0;
-        if (remainingSwaps <= 0) {
-          setTimeout(() => {
-            lost = true;
-          }, 1000);
+        // if tiles are adjacent deduct 1 swap
+        // else deduct 2
+        const distanceX = Math.abs(i - i2);
+        const distanceY = Math.abs(j - j2);
+        let penalty = 0;
+        if (Math.max(distanceX, distanceY) === 1) {
+          penalty = 1;
+        } else {
+          penalty = 2;
         }
-      }
 
-    } else {
-      // click same tile twice
-      selected = [];
+        if (streak > 0) {
+          penalty--;
+        }
+        game.remainingSwaps -= penalty;
+        game = game;
+        
+        // gross!
+        let bbox = getBBoxJSON();
+        while (selectedCoords.length) {
+          await delay(50);
+          const bbox2 = getBBoxJSON();
+          if (bbox === bbox2) {
+            clearSelection();
+            break;
+          }
+          bbox = bbox2;
+        };
+        
+        await handleScore();
+        // check game lose conditions
+      } else {
+        // click same tile twice
+        clearSelection();
+      }
+      animating = false;
     }
   }
   
-  const handleClearSelection = () => {
-    selected = [];
-    toClear = [];
-    matchBonus = undefined;
+  const syncAnimations = async (message: string, promises: Promise<void>[]) => {
+    let t = new Date();
+    if (Object.keys(introPromises).length || Object.keys(outroPromises).length) {
+      console.log(message)
+      console.log('pending', introPromises);
+      await Promise.all(promises);
+      console.log('resolved', new Date().getMilliseconds() - t.getMilliseconds());
+    }
+  }
+  
+  const clearSelection = () => {
+    selectedCoords = [];
+    selectedTiles = [];
+  }
+  
+  const handleEndTurn = async () => {
+    if (game.remainingSwaps <= 0) {
+      await delay(animationDuration * 2);
+      game.lost = true;
+      animating = false;
+    } else {
+      // re-enable input faster
+      animating = false;
+      await delay(animationDuration * 3);
+      game.latestChain = 0;
+      marquee = undefined;
+    }
+    return game.lost;
   }
   
   // chain is incremented on subsequent recursive calls of handleScore
-  const handleScore = (match: Match, chain = 0, timeout = 1000) => {
-    if (match) {
-      streak++;
-      toClear = match.coords.map(c => c.join(','));
-
-      // highlight words that give shuffle bonus
-      if ((match.axis === 'row' && match.word.length === COLS)
-          || (match.axis === 'col' && match.word.length === ROWS)
-          || (match.axis === 'intersection')) {
-          matchBonus = true;
+  const handleScore = async (chain = 0, shuffle = false) => {
+    let words = findWords(dictionary, game.board);
+    if (!words.length) {
+      if (!shuffle && chain === 0) {
+        streak = 0;
       }
-
-      // let animation play
-      setTimeout(() => {
-
-        if (streak > bestStreak) {
-          bestStreak = streak;
-        }
-        if (match.axis === 'intersection') {
-          shuffles++;
-        }
-        if (match.word.length === COLS && match.axis === 'row') {
-          shuffles++;
-        }
-        if (match.word.length === ROWS && match.axis === 'col') {
-          shuffles++;
-        }
-        words = words.concat([match]);
-     
-        if (chain === 0) {
-          remainingSwaps += Math.max(match.word.length - 4, 0);
-        } else {
-          remainingSwaps++;
-        }
-        latestChain = chain;
-        bestChain = Math.max(bestChain, latestChain);
-      
-        latestWord = match.word;
-        latestScore = match.score;
-        totalScore += match.score;
-        board = handleRemoveLetters(board, match.coords);
-        let [ nextMatch, ] = findWords(board);
-        if (match) {
-          handleClearSelection();
-          handleScore(nextMatch, chain + 1);
-        }
-      }, timeout)
-
-      if (chainTimeout) clearTimeout(chainTimeout);
-      if (gameoverTimeout) clearTimeout(gameoverTimeout);
+      return await handleEndTurn();
     }
 
-    chainTimeout = setTimeout(() => {
-      latestChain = 0;
-    }, timeout * 3);
+    game.words = game.words.concat(words[0]);
+    highlighted = highlightTiles(words, highlighted);
 
-    gameoverTimeout = setTimeout(() => {
-        if (remainingSwaps <= 0) {
-          lost = true;
-        }
-    }, timeout * 2);
+    const word = words[0];
+    let coords = word.coords;
+    if (word.intersection) {
+      game.intersectingTile = word.intersectingTile;
+      game.intersection = word.intersection.split(',').map(c => parseInt(c)) as Coord;
+      coords = word.coords.filter(coord => coord.join(',') !== word.intersection)
+    } 
+
+    // let user see match before exiting
+    await delay(2 * animationDuration / 3);
+    score(words[0], chain);
+
+    marquee = getMarqueeText(words[0], chain);
+
+    game.board = removeLetters(game.board, coords);
+    game.intersectingTile = undefined;
+    game = game;
+
+    await delay(animationDuration);
+    await handleScore(chain + 1);
+    
+    game = game;
   }
   
-  const handleRemoveLetters = (board: Board, coords: Array<[number, number]>) => {
+  const highlightTiles = (words: Match[], prevHighlighted: Highlighted) => {
+    const highlighted: Highlighted = {...prevHighlighted};
+    for (const word of words) {
+      let highlight: HighlightColors = 'green';
+      if ((word.axis === 'row' && word.word.length === COLS)
+        || (word.axis === 'col' && word.word.length === ROWS)) {
+          highlight = 'orange';
+      } else if (word.intersectingTile) {
+        highlighted[word.intersectingTile.id] = 'red';
+        highlight = 'purple';
+      }
+      for (const tile of word.word) {
+        if (!highlighted[tile.id]) {
+          highlighted[tile.id] = highlight;
+        }
+      }
+    }
+    return highlighted;
+  }
+  
+  const score = (match: Match, chain: number) => {
+    streak++;
 
-    // copy previous board
-    const tempBoard = board.map(col => col.map(tile => tile));
+    if (streak > game.bestStreak) {
+      game.bestStreak = streak;
+    }
+    if (match.intersection) {
+      game.shuffles++;
+    }
+    if (match.word.length === COLS && match.axis === 'row') {
+      game.shuffles++;
+    }
+    if (match.word.length === ROWS && match.axis === 'col') {
+      game.shuffles++;
+    }
+
+    if (chain === 0) {
+      game.remainingSwaps += Math.max(match.word.length - 4, 0);
+    } else {
+      game.remainingSwaps++;
+    }
+    game.latestChain = chain;
+    bestChain = Math.max(bestChain, game.latestChain);
+    
+    latestWord = match.word;
+    game.intersectingTile = match.intersectingTile;
+    latestScore = match.score;
+    game.score += match.score;
+  }
+  
+  const removeLetters = (board: Board, coords: Coord[]) => {
+
     // clear column
     for (const [ x, y ] of coords) {
-      tempBoard[x][y] = undefined;
+      board[x][y] = undefined;
     }
     
-    const cleared = tempBoard.map(col => (
+    const cleared = board.map(col => (
       col.reverse()
         .filter(tile => tile != undefined)
     ));
@@ -280,7 +335,7 @@ import Definition from './Definition.svelte';
     for (let i = 0; i < COLS; i++) {
       for (let j = 0; j < ROWS; j++) {
         if (cleared[i][j] == undefined) {
-          cleared[i][j] = sample(cleared, 1, turn);
+          cleared[i][j] = sample(cleared, 1, game.turn);
         }
       }
     }
@@ -288,173 +343,112 @@ import Definition from './Definition.svelte';
     return cleared.map(col => col.reverse());
   }
   
-  const handleShuffle = () => {
-    shuffles--;
-    const coords = Array.from({ length: 42 }).map(_ => ([
-      Math.floor(Math.random() * COLS),
-      Math.floor(Math.random() * ROWS),
-    ]));
-    const shuffledCoords = shuffle([...coords]);
-    const tempBoard = board.map(col => col.map(tile => tile));
-    coords.forEach((coord, i) => {
-      const newCoord = shuffledCoords[i];
-      const tmp = tempBoard[coord[0]][coord[1]];
-      tempBoard[coord[0]][coord[1]] = tempBoard[newCoord[0]][newCoord[1]];
-      tempBoard[newCoord[0]][newCoord[1]] = tmp;
-    });
-    board = tempBoard;
-    setTimeout(() => {
-      const [ match, ] = findWords(board);
-      if (match) {
-        handleScore(match);
-      }
-    }, 500);
+  const handleShuffle = async () => {
+    if (!animating) {
+      game.shuffles--;
+      clearSelection();
+      const coords = Array.from({ length: COLS }).flatMap((_, i) => 
+        Array.from({ length: ROWS }).map((_, j) => [i, j])
+      );
+      const shuffledCoords = shuffle([...coords]);
+      const tempBoard = game.board.map(col => col.map(tile => tile));
+      coords.forEach((coord, i) => {
+        const newCoord = shuffledCoords[i];
+        const tmp = tempBoard[coord[0]][coord[1]];
+        tempBoard[coord[0]][coord[1]] = tempBoard[newCoord[0]][newCoord[1]];
+        tempBoard[newCoord[0]][newCoord[1]] = tmp;
+      });
+      game.board = tempBoard;
+      game = game;
+
+      // pause for animation
+      await delay(1200);
+      await handleScore(0, true);
+    }
   }
 
-  // initialize board on first load
-  handleReset();
- 
 </script>
 
 <div class=container>
-  <div class=title>
-    <Title />
-  </div>
+  <Title />
   <div class=status>
-    <Swaps swaps={remainingSwaps} />
+    <Swaps swaps={game.remainingSwaps} />
     <Streak {streak} />
-    <WordChain chain={latestChain} />
+    <WordChain chain={game.latestChain} />
   </div>
   <div class=shuffle-container>
     <ActionButton
-      onClick={shuffles > 0 ? handleShuffle : undefined}
-      disabled={shuffles === 0}
+      onClick={game.shuffles > 0 ? handleShuffle : undefined}
+      disabled={game.shuffles === 0}
     >
       <span>
-        {shuffles}
+        {game.shuffles}
       </span>
-        <Shuffle />
+      <Shuffle slot=icon />
     </ActionButton>
   </div>
   <div class=score-container>
-    Score:
-    {#key totalScore}
-      <div class=score in:fly={{ y: 20 }}>{totalScore}</div>
-    {/key}
-  </div>
-  <div class=latest-word>
-    {#if latestWord !== undefined}
-      <div>Latest Word:</div>
-      <div class=word-container>
-        <div class=word-score>
-          <Definition word={latestWord.map(t => t.letter).join('')} />
-        </div>
-        <Word word={latestWord} />
-        <div class=word-score>+{latestScore}</div>
-      </div>
+    {#if loading}
+      Loading Dictionary...
+    {:else}
+      {#key game.score}
+        <div in:fly={{ y: 20 }}>{game.score}</div>
+      {/key}
     {/if}
   </div>
-  <div class=game>
-    {#each board as row, i}
-        <div class=row>
-          {#each row as tile, j (tile.id)}
-            <div
-              animate:flip="{{duration: animationDuration}}"
-              in:receive="{{
-                key: tile.id,
-                delay: 0,
-              }}"
-              out:send="{{
-                key: tile.id,
-                delay: 0,
-              }}"
-              on:introstart="{handleIntroStart}"
-              on:introend="{handleIntroEnd}"
-              on:click={() => handleClick(i, j)}
-            >
-              <BoardTile
-                gameId={gameId}
-                letter={tile.letter}
-                active={!!selected.length}
-                selected={selected.includes([i, j].join(','))}
-                matched={toClear.includes([i, j].join(','))}
-                adjacent={false}
-                bonus={matchBonus}
-                multiplier={tile.multiplier}
-              />
-            </div>
-          {/each}
-        </div>
-    {/each}
-  </div>
-  <div class=controls>
-    <ActionButton onClick={handleReset}>
-      <Restart size='1em' />
-      Reset Game
-    </ActionButton>
-    <div class=spacing />
-		<Info />
-    <div class=spacing />
-    <DarkMode />
-  </div>
+  <WordContainer
+    {latestWord}
+    {latestScore}
+    {marquee}
+    onIntroStart={handleIntroStart}
+    onIntroEnd={handleIntroEnd}
+    onOutroStart={handleOutroStart}
+    onOutroEnd={handleOutroEnd}
+  />
+  <GameBoard
+    gameId={game.id}
+    board={game.board}
+    selected={selectedTiles}
+    {highlighted}
+    onClick={handleClick}
+    intersection={game.intersection}
+    intersectingTile={game.intersectingTile}
+  />
+  <div class=spacer />
+  <BottomControls onReset={handleReset} />
 </div>
-<GameOver
-  {gameId}
-  {lost}
-  score={totalScore}
-  onReset={handleReset}
-  {bestStreak}
-  {bestChain}
-  turns={turn}
-  numWords={words.length}
-  bestWords={words.sort((a, b) => b.score - a.score).slice(0, 5)}
-/>
+{#key game.id}
+  <GameOver
+    gameId={game.id}
+    lost={game.lost}
+    score={game.score}
+    onReset={handleReset}
+    bestStreak={game.bestStreak}
+    {bestChain}
+    turns={game.turn}
+    numWords={game.words.length}
+    bestWords={game.words.sort((a, b) => b.score - a.score).slice(0, 5)}
+  />
+{/key}
 
 <style>
   .container {
-    position: relative;
     width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
+    padding: 1.5em;
+    -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+    -moz-box-sizing: border-box;    /* Firefox, other Gecko */
+    box-sizing: border-box;         /* Opera/IE 8+ */
   }
-  .game {
-    display: flex;
-    flex-direction: row;
-    margin-left: auto;
-    margin-right: auto;
-  }
-  .latest-word {
-    height: 4em;
-    font-weight: bold;
-  }
-  .word-container {
-    display: flex;
-    align-items: center;
-    width: 100%;
-  }
-  .word-score {
-    width: 3em;
-    overflow: visible;
-  }
-  :global(body.dark-mode) .latest-word {
-    color: white;
-  }
-  .controls {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    padding-top: 1em;
-  }
-  .spacing {
-    width: 1em;
-  }
-  .row {
-    display: flex;
-    flex-direction: column;
+  .spacer {
+    flex-grow: 1;
   }
   .score-container {
+    transition: color 0.5s ease-in-out;
+    color: black;
     margin-top: 2em;
     position: relative;
     display: flex;
@@ -482,9 +476,8 @@ import Definition from './Definition.svelte';
   .status {
     display: flex;
     flex-direction: column;
-    padding: 0.75em;
     position: absolute;
-    top: 0;
-    left: 0;
+    top: 0.5em;
+    left: 0.5em;
   }
 </style>

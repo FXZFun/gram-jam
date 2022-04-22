@@ -1,13 +1,16 @@
 <script lang='ts'>
-  import ActionButton from "../ActionButton.svelte";
+  import ActionButton from "../components/ActionButton.svelte";
   import Hourglass from "../icons/Hourglass.svelte";
   import { leaderboard } from "./leaderboard";
-  import Modal from "../Modal.svelte";
+  import Modal from "../components/Modal.svelte";
   import type { LeaderboardEntry, Tile } from "../types";
   import  { addDoc, query, getDocs, orderBy, limit, QueryDocumentSnapshot } from '@firebase/firestore';
   import Entry from "./Entry.svelte";
   import Leaderboard from "./Leaderboard.svelte";
 import Trophy from "../icons/Trophy.svelte";
+import Close from "svelte-material-icons/Close.svelte";
+import Send from "svelte-material-icons/Send.svelte";
+import { getUserId } from "../store";
 
   export let entry: LeaderboardEntry;
 
@@ -24,6 +27,7 @@ import Trophy from "../icons/Trophy.svelte";
       await addDoc(leaderboard, {
         ...entry,
         name,
+        userId: getUserId(),
       });
       handleLoadLeaderboard();
     }
@@ -48,7 +52,7 @@ import Trophy from "../icons/Trophy.svelte";
 </script>
 
 <ActionButton onClick={() => { showPostScore = true }}>
-  <Trophy />
+  <Trophy slot=icon />
   Submit Score
 </ActionButton>
 <Modal open={showPostScore} onClose={handleClose}>
@@ -78,9 +82,15 @@ import Trophy from "../icons/Trophy.svelte";
     </form>
   </div>
   <div slot=controls class=controls>
-    <ActionButton onClick={handleClose}>Close</ActionButton>
+    <ActionButton onClick={handleClose}>
+      <Close slot=icon />
+      Close
+    </ActionButton>
     <div class=spacer />
-    <ActionButton onClick={handleSubmit}>Submit</ActionButton>
+    <ActionButton onClick={handleSubmit}>
+      <Send slot=icon />
+      Submit
+    </ActionButton>
   </div>
 </Modal>
 <Modal open={showLeaderboard} onClose={handleCloseLeaderboard}>

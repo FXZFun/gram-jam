@@ -3,7 +3,7 @@ import Word from "../Word.svelte";
 import type { LeaderboardEntry, Tile } from "../types";
 import Streak from "../Streak.svelte";
 import WordChain from "../WordChain.svelte";
-import { scoreWord } from "../letters";
+import { scoreWord } from "../algorithms/letters";
 
   export let entry: LeaderboardEntry;
   export let position: number;

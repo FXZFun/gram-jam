@@ -2,7 +2,7 @@
   import Autorenew from 'svelte-material-icons/Autorenew.svelte';
   import { spin } from './animations';
   import { quintOut } from 'svelte/easing';
-  import Pill from './Pill.svelte';
+  import Pill from './components/Pill.svelte';
 
   export let swaps: number;
   let prevSwaps: number;

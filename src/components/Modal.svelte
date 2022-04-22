@@ -48,14 +48,18 @@
     background-color: #00000040;
   }
   .title {
+    width: 100%;
     padding: 0 0.5em;
+    -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+    -moz-box-sizing: border-box;    /* Firefox, other Gecko */
+    box-sizing: border-box;         /* Opera/IE 8+ */
   }
   .controls {
     display: flex;
     padding: 0.5em;
   }
   .panel {
-    z-index: 1000;
+    z-index: 2000;
     background-color: white;
     border-radius: 4px;
     box-shadow: 0 0 8px #00000040;

@@ -1,4 +1,4 @@
-import type { Board, Freqs, Multiplier, Tile } from "./types";
+import type { Board, Freqs, Multiplier, Tile } from "../types";
 
 export const letterFreqs = {
   'A': 8.4966,
@@ -223,7 +223,7 @@ const sampleCDF = <T extends unknown>(cum: Array<[T, number]>) => {
   }
 }
  
-let tileId = 0;
+let tileId = 42;
 export const sample = (board: Board, sampleSize: number, turn = 0): Tile => {
 
   let freqs: Record<string, number>;

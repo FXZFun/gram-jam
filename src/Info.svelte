@@ -4,8 +4,8 @@
   import SwapVertical from 'svelte-material-icons/SwapVertical.svelte';
   import Autorenew from 'svelte-material-icons/Autorenew.svelte'
   import Fire from 'svelte-material-icons/Fire.svelte'
-  import Modal from './Modal.svelte';
-  import ActionButton from './ActionButton.svelte';
+  import Modal from './components/Modal.svelte';
+  import ActionButton from './components/ActionButton.svelte';
   import Close from 'svelte-material-icons/Close.svelte';
 import Flash from 'svelte-material-icons/Flash.svelte';
 import Shuffle from 'svelte-material-icons/Shuffle.svelte';
@@ -22,7 +22,7 @@ import Shuffle from 'svelte-material-icons/Shuffle.svelte';
 </script>
 
 <ActionButton onClick={handleClick}>
-  <Info size='1em' /> Tutorial
+  <Info slot=icon size='1em' /> Tutorial
 </ActionButton>
 <Modal open={infoVisible} onClose={handleClose}>
   <div class=container slot=title>
@@ -56,7 +56,10 @@ import Shuffle from 'svelte-material-icons/Shuffle.svelte';
      <p class=secondary>Shuffles do not use up swaps</p>
   </div>
   <div slot=controls>
-    <ActionButton onClick={handleClose}><Close /> Close</ActionButton>
+    <ActionButton onClick={handleClose}>
+      <Close slot=icon />
+      Close
+    </ActionButton>
   </div>
 </Modal>
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import ActionButton from "./ActionButton.svelte"
+  import IconButton from "./components/IconButton.svelte"
   import DarkMode from 'svelte-material-icons/Brightness3.svelte';
   import LightMode from 'svelte-material-icons/Brightness7.svelte';
 
@@ -16,13 +16,13 @@
   }
 </script>
 
-<ActionButton onClick={toggle}>
+<IconButton onClick={toggle}>
   {#if mode === 'light'}
     <DarkMode />
   {:else}
     <LightMode />
   {/if}
-</ActionButton>
+</IconButton>
 <style>
   :global(body.dark-mode) {
     transition: all 0.25s ease-in;
