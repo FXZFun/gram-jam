@@ -11,9 +11,6 @@ import StaticWord from "../StaticWord.svelte";
   export let entry: LeaderboardEntry;
   export let position: number;
   export let submitted: boolean;
-  $: {
-    console.log(submitted)
-  }
   let ref: HTMLElement;
 
   onMount(() => {

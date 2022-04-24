@@ -36,8 +36,8 @@ export const sampleBoard = makeBoardFromLetters([
   ["A", "T", "U", "A", "O", "A", "A"],
   ["E", "E", "D", "E", "X", "R", "R"],
   ["A", "C", "T", "N", "S", "L", "E"],
-  ["C", "I", "F", "E", "F", "C", "I"],
-  ["T", "N", "D", "L", "Y", "A", "O"],
+  ["C", "I", "F", "E", "F", "E", "I"],
+  ["P", "U", "Z", "Z", "L", "A", "O"],
 ]);
 
 export const getUserId = () => {

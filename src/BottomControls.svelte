@@ -1,5 +1,6 @@
 <script lang="ts">
 import Restart from 'svelte-material-icons/Restart.svelte';
+import Twitter from 'svelte-material-icons/Twitter.svelte';
 
 import ActionButton from './components/ActionButton.svelte';
 import Tutorial from './Tutorial.svelte';
@@ -17,6 +18,9 @@ const handleToggleLeaderboard = () => {
 </script>
 
 <div class=controls>
+  <ActionButton href='https://twitter.com/GramJamGame'>
+    <Twitter size='1em' />
+  </ActionButton>
   <ActionButton onClick={handleToggleLeaderboard}>
     <Trophy />
   </ActionButton>

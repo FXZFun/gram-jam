@@ -396,7 +396,7 @@ export const sample = (
   const cdf = getCDF(freqs);
   let sampledLetter = sampleCDF(cdf);
   // testing bigrams
-  if (turn > 5 && Math.random() > 0.95) {
+  if (Math.random() > Math.max(1 - turn / 200, 0.85)) {
     const bigramCDF = getCDF(bigrams[sampledLetter]);
     sampledLetter = sampleCDF(bigramCDF);
   }

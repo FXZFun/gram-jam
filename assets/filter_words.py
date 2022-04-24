@@ -5,7 +5,8 @@ with open('scrabble_dict.txt') as words,\
         open('no_definitions.mod.txt') as no_defs:
 
     no_defs = set(w.strip() for w in no_defs)
-    filtered = []
+    filtered = ['kite']
+
     for word in words:
         word = word.strip()
         if len(word) < 4 or len(word) > 14:

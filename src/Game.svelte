@@ -51,10 +51,6 @@ import { saveAnalytics } from './analytics';
   let outroPromises: Record<string, Promise<void>> = {};
   let outroResolvers: Record<string, () => void> = {};
 
-  // let [ introPromise, introResolve ] = getAnimationPromise();
-  // let [ outroPromise, outroResolve ] = getAnimationPromise();
-
-  // for disabling the chain pill after a while
   let latestWord: Tile[] = undefined;
   let latestScore: number = undefined;
   
@@ -216,16 +212,6 @@ import { saveAnalytics } from './analytics';
         clearSelection();
       }
       animating = false;
-    }
-  }
-  
-  const syncAnimations = async (message: string, promises: Promise<void>[]) => {
-    let t = new Date();
-    if (Object.keys(introPromises).length || Object.keys(outroPromises).length) {
-      console.log(message)
-      console.log('pending', introPromises);
-      await Promise.all(promises);
-      console.log('resolved', new Date().getMilliseconds() - t.getMilliseconds());
     }
   }
   

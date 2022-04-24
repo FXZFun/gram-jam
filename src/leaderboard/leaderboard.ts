@@ -10,7 +10,6 @@ export const loadLeaderboard = async (today = false) => {
     date.setMinutes(0);
     date.setSeconds(0);
   }
-  console.log(date);
 
   const q = query(
     leaderboard,

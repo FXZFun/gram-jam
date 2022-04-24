@@ -102,7 +102,6 @@ export const flipOut = (node: HTMLElement, {
 export const shrink = (node: HTMLElement, {
   duration = 2000,
 }) => {
-  console.log(node);
   return {
     duration,
     css: (t: number) => `
