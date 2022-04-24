@@ -1,23 +1,22 @@
-import { initializeFirestore } from '@firebase/firestore/lite';
-import { initializeApp } from '@firebase/app';
-import  { collection, getFirestore, addDoc, CollectionReference } from '@firebase/firestore';
-import type { LeaderboardEntry, Flagged, Feedback } from '../types';
+import { getDocs, limit, orderBy, query, where } from "@firebase/firestore";
+import { dataset_dev } from "svelte/internal";
+import { leaderboard } from "../db";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCeKpexNFcB0ZBgKLBW0DFE8F34bLLjJHw",
-  authDomain: "gramjam-7b408.firebaseapp.com",
-  projectId: "gramjam-7b408",
-  storageBucket: "gramjam-7b408.appspot.com",
-  messagingSenderId: "627588992213",
-  appId: "1:627588992213:web:f28fac5f4e8e63ad77a65c"
-};
+export const loadLeaderboard = async (today = false) => {
+  let date = new Date(0);
+  if (today) {
+    date = new Date();
+    date.setHours(0);
+    date.setMinutes(0);
+    date.setSeconds(0);
+  }
+  console.log(date);
 
-const app = initializeApp(firebaseConfig);
-
-const db = getFirestore(app);
-
-export const leaderboard = collection(db, 'leaderboard') as CollectionReference<LeaderboardEntry>;
-
-export const flagged = collection(db, 'flagged') as CollectionReference<Flagged>;
-
-export const feedback = collection(db, 'feedback') as CollectionReference<Feedback>;
+  const q = query(
+    leaderboard,
+    orderBy('score', 'desc'),
+    // limit(50),
+  )
+  const topScores = await getDocs(q);
+  return topScores;
+}

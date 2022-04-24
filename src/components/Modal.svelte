@@ -1,8 +1,10 @@
 <script lang='ts'>
-	import { fly, fade } from 'svelte/transition';
+
+	import { fly } from 'svelte/transition';
 
   export let open: boolean;
-  export let onClose;
+  export let onClose: () => void;
+  
 </script>
   
 {#if open}
@@ -13,8 +15,8 @@
   >
     {#key open}
       <div
-        in:fly={{ y: 50, duration: 100 }}
-        out:fly={{ y: -50, duration: 100 }}
+        in:fly={{ y: 100, duration: 250 }}
+        out:fly={{ y: 100, duration: 250 }}
         class=panel
       >
         <div class=title>
@@ -36,6 +38,7 @@
 <style>
   .container {
     position: absolute;
+    overflow: hidden;
     top: 0;
     right: 0;
     width: 100%;

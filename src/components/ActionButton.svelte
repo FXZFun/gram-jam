@@ -3,7 +3,6 @@
   export let disabled: boolean | undefined = undefined;
   export let type: 'submit' | undefined = undefined;
   export let form: string = undefined;
-  export let iconOnly: boolean = false;
 
 </script>
 
@@ -13,14 +12,8 @@
   {disabled}
   {form}
   class=action
-  class:icon-only={iconOnly}
 >
-  <span class=icon>
-    <slot name=icon />
-  </span>
-  <span class=text>
-    <slot />
-  </span>
+  <slot />
 </button>
 
 <style>
@@ -38,6 +31,7 @@
     padding: 0 8px;
     display: flex;
     align-items: center;
+    gap: 0.5em;
   }
   .action:active {
     background-color: hsl(213, 56%, 71%);

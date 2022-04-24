@@ -1,21 +1,25 @@
-export const accordion = (node: HTMLElement, isOpen: boolean) => {
-	let initialHeight = node.offsetHeight;
-	node.style.height = isOpen ? 'auto' : '0';
+export const accordion = (node: HTMLElement, {
+	isOpen,
+	axis = 'height',
+	duration = 100,
+}) => {
+	let initial = axis === 'height' ? node.offsetHeight : node.offsetWidth;
+	node.style[axis] = isOpen ? 'auto' : '0';
 	node.style.overflow = "hidden";
 	return {
 		update(isOpen: boolean) {
 			let animation = node.animate(
 				[
 					{
-						height: initialHeight + 'px',
+						[axis]: 0,
 						overflow: 'hidden'
 					},
 					{
-						height: 0,
+						[axis]: initial + 'px',
 						overflow: 'hidden'
-					}
+					},
 				],
-				{ duration: 100, fill: 'both' }
+				{ duration, fill: 'both' }
 			);
 			animation.pause();
 			if (!isOpen) {

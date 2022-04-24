@@ -1,6 +1,6 @@
 <script lang='ts'>
   import Flash from 'svelte-material-icons/Flash.svelte'
-  import Pill from './components/Pill.svelte';
+  import Pill from '../components/Pill.svelte';
   import { schemeSpectral } from 'd3-scale-chromatic';
 
   export let chain: number;

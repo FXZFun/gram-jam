@@ -30,16 +30,19 @@ export type GameRecord = {
 
 export type LeaderboardEntry = {
   userId?: string;
+  gameId: string;
   name: string;
   score: number;
   bestStreak: number;
   bestChain: number;
   bestWord: Tile[];
+  numWords: number;
   turns: number;
-  date: Date;
+  date: string | { seconds: number };
 }
 
 export type GameState = {
+  readonly startedAt: number,
   readonly id: string;
   board: Board;
   words: Match[];
@@ -68,4 +71,16 @@ export type Feedback = {
   userId?: string,
   feedback: string,
   date: Date,
+}
+
+export type AnalyticsReport = {
+  gameId: string,
+  userId: string,
+  duration: number,
+  date: string,
+  words: string[],
+  turns: number,
+  bestStreak: number,
+  bestChain: number,
+  abandoned?: boolean,
 }

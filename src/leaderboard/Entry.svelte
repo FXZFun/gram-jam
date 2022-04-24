@@ -1,62 +1,125 @@
 <script lang="ts">
-import Word from "../Word.svelte";
-import type { LeaderboardEntry, Tile } from "../types";
-import Streak from "../Streak.svelte";
-import WordChain from "../WordChain.svelte";
+import type { LeaderboardEntry } from "../types";
+import Streak from "../pills/Streak.svelte";
+import WordChain from "../pills/WordChain.svelte";
 import { scoreWord } from "../algorithms/letters";
+import Turns from "../pills/Turns.svelte";
+import Words from "../pills/Words.svelte";
+import { onMount } from "svelte";
+import StaticWord from "../StaticWord.svelte";
 
   export let entry: LeaderboardEntry;
   export let position: number;
+  export let submitted: boolean;
+  $: {
+    console.log(submitted)
+  }
+  let ref: HTMLElement;
+
+  onMount(() => {
+    if (submitted) {
+      ref.scrollIntoView({ behavior: 'smooth' });
+    }
+  })
+ 
+  const parseDate = (timestamp: string | { seconds: number }) => (
+    typeof timestamp === 'string'
+      ? new Date(timestamp)
+      : new Date(timestamp.seconds*1000)
+  )
+
+  const formatDate = (date: Date) => (
+    new Date(date).toLocaleDateString('en-US', { 
+      month: 'short',
+      day: 'numeric'
+    })
+  )
+
 </script>
 
-<div class=container>
-  <h2>{position + 1}</h2>
-  <div class=stats>
-    <div class=row>
-      <h3>{entry.name}</h3>
-      <div class=spacer />
-      <div class=pills>
-        <WordChain chain={entry.bestChain} />
-        <Streak streak={entry.bestStreak} />
-      </div>
-      <h3>{entry.score}</h3>
+<div
+  bind:this={ref}
+  id={entry.gameId}
+  class=container
+  class:selected={submitted}
+>
+  <div class=row>
+    <div class=topline>
+      <h2 class=rank>#{position + 1}</h2>
+      <h3 class=name>{entry.name}</h3>
+      <h2 class=score>{entry.score}</h2>
     </div>
-    <div class=row>
-      <Word word={entry.bestWord} />
-      <h5>+{scoreWord(entry.bestWord)}</h5>
+  </div>
+  <div class=row>
+    <div class=pills>
+      <Turns turns={entry.turns} />
+      {#if entry.numWords}
+        <Words numWords={entry.numWords} />
+      {/if}
+      <WordChain chain={entry.bestChain} />
+      <Streak streak={entry.bestStreak} />
     </div>
+  </div>
+  <div class=row>
+    <StaticWord word={entry.bestWord.map(tile => ({ ...tile, id: Math.random() }))} />
+    <h5>+{scoreWord(entry.bestWord)}</h5>
+  </div>
+  <div class=row>
+    <h5 class=date>{formatDate(parseDate(entry.date))}</h5>
   </div>
 </div>
 
 <style>
   .container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5em;
+    padding-bottom: 0.5em;
+    border-bottom: 2px solid grey;
+    padding: 0.5em;
+  }
+  .selected {
+    background-color: #80808080;
+    border-radius: 0.5em;
+    border-bottom: 2px solid darkgrey;
+  }
+  .row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+  }
+  .topline {
+    width: 100%;
     display: flex;
     flex-direction: row;
     align-items: center;
+    justify-content: space-between;
+    gap: 0.25em;
   }
-  h2 {
-    padding: 1em;
+  .score {
+    margin: 0;
+    align-self: end;
   }
-  h5 {
+  .rank {
+    margin: 0;
+    padding: 0;
+  }
+  h3, h5 {
     margin: 0;
   }
-  .stats {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-  }
-  .row {
-    display: flex;
-    align-items: center;
+  .date {
+    font-style: italic;
+    opacity: 0.6;
+    align-self: end;
   }
   h3 {
     display: inline;
   }
   .pills {
+    width: 100%;
     display: flex;
-    padding: 0 0.5em;
-  }
-  .spacer {
-    flex-grow: 1;
+    justify-content: center;
   }
 </style>

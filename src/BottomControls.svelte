@@ -1,26 +1,39 @@
 <script lang="ts">
-  import Restart from 'svelte-material-icons/Restart.svelte';
+import Restart from 'svelte-material-icons/Restart.svelte';
 
-  import ActionButton from './components/ActionButton.svelte';
-  import Info from './Info.svelte';
-  import DarkMode from './DarkMode.svelte';
+import ActionButton from './components/ActionButton.svelte';
+import Tutorial from './Tutorial.svelte';
+import DarkMode from './DarkMode.svelte';
 import Feedback from './modals/Feedback.svelte';
+import Leaderboard from './leaderboard/Leaderboard.svelte';
+import Trophy from './icons/Trophy.svelte';
 
-  export let onReset: () => void;
+export let onReset: () => void;
+
+let leaderboardOpen = false;
+const handleToggleLeaderboard = () => {
+  leaderboardOpen = !leaderboardOpen;
+}
 </script>
 
 <div class=controls>
+  <ActionButton onClick={handleToggleLeaderboard}>
+    <Trophy />
+  </ActionButton>
   <Feedback />
-  <div class=spacing />
   <ActionButton onClick={onReset}>
-    <Restart slot=icon size='1em' />
+    <Restart size='1em' />
     Reset
   </ActionButton>
-  <div class=spacing />
-	<Info />
-  <div class=spacing />
+	<Tutorial />
   <DarkMode />
 </div>
+{#if leaderboardOpen}
+  <Leaderboard
+    open={leaderboardOpen}
+    onClose={handleToggleLeaderboard}
+  />
+{/if}
 
 <style>
   .controls {
@@ -28,8 +41,6 @@ import Feedback from './modals/Feedback.svelte';
     width: 100%;
     display: flex;
     justify-content: center;
-  }
-  .spacing {
-    width: 1em;
+    gap: 1em;
   }
 </style>

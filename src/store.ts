@@ -3,6 +3,7 @@ import { writable } from "svelte/store";
 import type { Board, GameState } from './types';
 
 export const initializeGameState = (sampleBoard?: Board): GameState => ({
+  startedAt: +new Date(),
   id: uuid(),
   board: sampleBoard ?? [],
   words: [],

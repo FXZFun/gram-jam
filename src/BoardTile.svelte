@@ -1,13 +1,10 @@
  <script lang="ts">
 
   import Close from 'svelte-material-icons/Close.svelte';
-  import { points } from './algorithms/letters';
-  import { flipOver, flipOut } from './animations';
-import type { HighlightColors, Highlighted } from './types';
+  import { getTilePoints } from './algorithms/letters';
+  import type { HighlightColors } from './types';
   
   export let letter: string;
-  export let gameId: string = undefined;
-  let prevGameId: string = gameId;
   export let active: boolean = false;
   export let selected: boolean = false;
   export let adjacent: boolean = false;
@@ -16,29 +13,17 @@ import type { HighlightColors, Highlighted } from './types';
   export let multiplier: 1 | 2 | 3 = 1;
   export let id: number = undefined;
 
-  const pts = points[letter] ?? '';
+  const pts = getTilePoints(letter);
 
   const handleSwipe = (e: any) => {
     //console.log(e);
     //console.log(e.detail.direction);
   }
   
-  // TODO this is hacky
-  // $: {
-  //   if (prevGameId !== gameId) {
-  //     setTimeout(() => {
-  //       prevGameId = gameId;
-  //       prevLetter = letter;
-  //       prevMultiplier = multiplier;
-  //       prevPoints = points[prevLetter];
-  //     }, 500);
-  //   }
-  // }
 </script>
 
 {#key id}
   <div
-    data-id={gameId}
     class=tile
     class:selected={selected}
     class:adjacent={adjacent && !selected}
@@ -79,12 +64,14 @@ import type { HighlightColors, Highlighted } from './types';
     border-radius: 4px;
 		width: 100%;
 		height: 100%;
-    font-size: 1.375em;
+    font-size: 1.5em;
     font-weight: bold;
     display: flex;
     align-items: center;
     justify-content: center;
     user-select: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: rgba(0, 17, 255, 0);
 	}
   :global(body.dark-mode) .tile {
     background-color: #2F3640;

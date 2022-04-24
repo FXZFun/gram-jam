@@ -1,11 +1,10 @@
 <script lang="ts">
 import QuestionMark from '../icons/QuestionMark.svelte';
 import Close from 'svelte-material-icons/Close.svelte';
-import IconButton from "../components/IconButton.svelte";
 import ActionButton from "../components/ActionButton.svelte";
 import Modal from "../components/Modal.svelte";
 import Insensitive from '../icons/Insensitive.svelte';
-import { flagged } from '../leaderboard/leaderboard';
+import { flagged } from '../db';
 import { addDoc } from '@firebase/firestore';
 import { delay } from '../animations';
 
@@ -37,18 +36,18 @@ const handleClose = () => {
       <h5>submitted! Thank you!</h5>
     {:else}
       <ActionButton onClick={() => handleReport('insensitive')}>
-        <Insensitive slot=icon />
+        <Insensitive />
         Offensive
       </ActionButton>
       <ActionButton onClick={() => handleReport('obscure')}>
-        <QuestionMark slot=icon />
+        <QuestionMark />
         Obscure
       </ActionButton>
     {/if}
   </div>
   <div class=controls slot=controls>
     <ActionButton onClick={handleClose}>
-      <Close slot=icon />
+      <Close />
       Close
     </ActionButton>
   </div>

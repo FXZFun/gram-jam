@@ -1,38 +1,64 @@
 <script lang='ts'>
-  import Update from 'svelte-material-icons/Update.svelte';
-  import ContentCopy from 'svelte-material-icons/ContentCopy.svelte';
-  import ContentPaste from 'svelte-material-icons/ContentPaste.svelte';
-  import Scoreboard from '../icons/Scoreboard.svelte';
-  import Restart from 'svelte-material-icons/Restart.svelte';
-  import Tile from '../icons/Tile.svelte';
+import { onMount } from 'svelte';
+import ContentCopy from 'svelte-material-icons/ContentCopy.svelte';
+import ContentPaste from 'svelte-material-icons/ContentPaste.svelte';
+import Scoreboard from '../icons/Scoreboard.svelte';
+import Restart from 'svelte-material-icons/Restart.svelte';
 
-  import Modal from '../components/Modal.svelte';
-  import Word from '../Word.svelte';
-  import type { GameRecord, Match } from '../types';
-  import ActionButton from '../components/ActionButton.svelte';
-  import Streak from '../Streak.svelte';
-  import WordChain from '../WordChain.svelte';
-  import Leaderboard from '../leaderboard/Leaderboard.svelte';
-  import Pill from '../components/Pill.svelte';
-  import PostScore from '../leaderboard/PostScore.svelte';
+import Modal from '../components/Modal.svelte';
+import Word from '../Word.svelte';
+import type { LeaderboardEntry, Match } from '../types';
+import ActionButton from '../components/ActionButton.svelte';
+import Streak from '../pills/Streak.svelte';
+import WordChain from '../pills/WordChain.svelte';
+import Leaderboard from '../leaderboard/Leaderboard.svelte';
+import PostScore from '../leaderboard/PostScore.svelte';
+import Turns from '../pills/Turns.svelte';
+import Words from '../pills/Words.svelte';
+import { saveAnalytics } from '../analytics';
+import { getUserId } from '../store';
+import StaticWord from '../StaticWord.svelte';
+import Trophy from '../icons/Trophy.svelte';
   
-  export let gameId;
-  export let lost: boolean;
+  export let gameId: string;
   export let onReset: () => void;
   export let bestStreak: number;
   export let bestChain: number;
-  export let bestWords: Match[];
+  export let words: Match[];
   export let numWords: number;
   export let score: number;
   export let turns: number;
+  export let duration: number;
+
   let shareText: string;
   let copied = false;
   let showLeaderboard = false;
+
+  let entry: LeaderboardEntry;
   
-  const handleReset = () => {
-    copied = false;
-    onReset();
-  }
+  onMount(() => {
+    entry = {
+      name: '',
+      gameId,
+      score,
+      bestStreak,
+      bestChain,
+      turns,
+      bestWord: words[0]?.word ?? [],
+      numWords: words.length,
+      date: (new Date()).toISOString(),
+    }
+    const localGames: LeaderboardEntry[] = JSON.parse(localStorage.getItem('games') ?? '[]');
+    localGames.push(entry);
+    localStorage.setItem('games', JSON.stringify(localGames));
+    saveAnalytics({
+      ...entry,
+      date: (new Date()).toISOString(),
+      userId: getUserId(),
+      words: words.map(w => w.word.map(tile => tile.letter).join('')),
+      duration,
+    })
+  });
   
   const handleShare = () => {
    
@@ -43,9 +69,8 @@
     shareText += '📘 Best Words:\n';
     shareText += '--------------\n';
 
-    for (const word of bestWords) {
+    for (const word of words.slice(0, 5)) {
       for (const tile of word.word) {
-        // const idx = tile.letter.charCodeAt(0) - 'A'.charCodeAt(0);
         shareText += tile.letter;
       }
       shareText += ` ${word.score}\n`
@@ -73,19 +98,9 @@
     showLeaderboard = !showLeaderboard;
   }
   
-  $: {
-    if (lost) {
-      const localGames: GameRecord[] = JSON.parse(localStorage.getItem('games') ?? '[]');
-      localGames.push({
-        date: (new Date()).toISOString(),
-        score
-      })
-      localStorage.setItem('games', JSON.stringify(localGames));
-    }
-  }
 </script>  
 
-<Modal open={lost} onClose={handleReset}>
+<Modal open onClose={onReset}>
   <div slot=title>
     <h1>Game Over</h1>
   </div>
@@ -93,120 +108,85 @@
     <h2>Score: {score}</h2>
     <h4 class=result>
       Turns:
-      <div class=grow />
-      <Pill
-        value={turns}
-        color='white'
-        backgroundColor='#D32F2F'
-      >
-        <Update />
-      </Pill>
+      <Turns {turns} />
     </h4>
     <h4 class=result>
       Best Streak:
-      <div class=grow />
       <Streak streak={bestStreak} />
     </h4>
     <h4 class=result>
       Best Chain:
-      <div class=grow />
       <WordChain chain={bestChain} />
     </h4>
     <h4 class=result>
       Words Made:
-      <div class=grow />
-      <Pill
-        value={numWords}
-        color='black'
-        backgroundColor='#81C784'
-      >
-        <Tile color='black' />
-      </Pill>
+      <Words {numWords} />
     </h4>
     <h4>Best Words:</h4>
     <ul>
-    {#each bestWords as word}
+    {#each words.slice(0, 5) as word}
       <li class='word-container'>
-        <Word word={word.word} />
-        <div class=word-spacer />
+        <StaticWord word={word.word} />
         <span class=score>{word.score}</span>
       </li>
     {/each}
     </ul>
   </div>
-  <div slot=controls>
-    <div class=controls>
-      {#key gameId}
-        <PostScore
-          entry={{
-            name: '',
-            score,
-            bestStreak,
-            bestChain,
-            turns,
-            bestWord: bestWords[0]?.word ?? [],
-            date: new Date(),
-          }}
-        />
-      {/key}
-      <div class=spacer />
-      {#if copied}
-        <ActionButton onClick={handleShare}>
-          <ContentPaste slot=icon /> Copied
-        </ActionButton>
-      {:else}
-        <ActionButton onClick={handleShare}>
-          <ContentCopy slot=icon /> Copy results
-        </ActionButton>
-      {/if}
-    </div>
-    <div class=spacer-vert />
-    <div class=controls>
-      <ActionButton onClick={toggleLeaderboard}>
-        <Scoreboard slot=icon />
-        Leaderboard
+  <div slot=controls class=controls>
+    <PostScore
+      {entry}
+      onSubmit={toggleLeaderboard}
+    />
+    {#if copied}
+      <ActionButton onClick={handleShare}>
+        <ContentPaste /> Copied
       </ActionButton>
-      <div class=spacer />
-      <ActionButton onClick={handleReset}>
-        <Restart slot=icon size='1em' />
-        Reset Game
+    {:else}
+      <ActionButton onClick={handleShare}>
+        <ContentCopy /> Copy results
       </ActionButton>
-    </div>
+    {/if}
+    <ActionButton onClick={toggleLeaderboard}>
+      <Trophy />
+      Leaderboard
+    </ActionButton>
+    <ActionButton onClick={onReset}>
+      <Restart size='1em' />
+      Reset Game
+    </ActionButton>
   </div>
 </Modal>
-<Leaderboard open={showLeaderboard} onClose={toggleLeaderboard} />
+{#if entry?.gameId && showLeaderboard}
+  <Leaderboard
+    {entry}
+    submitted={entry.gameId}
+    open={showLeaderboard}
+    onClose={toggleLeaderboard}
+  />
+{/if}
 
 <style>
   .score {
     font-weight: bold;
   }
   .controls {
-    display: flex;
-    flex-direction: row;
     width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
     justify-content: center;
+    gap: 1em;
   }
   .word-container {
     display: flex;
-    justify-content: left;
+    justify-content: space-between;
     align-items: center;
     padding: 0.25em;
-  }
-  .word-spacer {
-    flex-grow: 1
   }
   .result {
     display: flex;
     flex-direction: row;
     align-items: center;
-  }
-  .spacer {
-    width: 1em;
-  }
-  .spacer-vert {
-    height: 1em;
-  }
-  .grow {
-    flex-grow: 1;
+    justify-content: space-between;
   }
 </style>

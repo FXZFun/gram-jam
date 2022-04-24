@@ -1,27 +1,29 @@
 <script lang='ts'>
 
-  import { onMount } from 'svelte';
-  import { sample } from './algorithms/letters';
+import { onMount } from 'svelte';
+import { sample } from './algorithms/letters';
 
-	import { fly, fade, crossfade } from 'svelte/transition';
-  
-  import Shuffle from 'svelte-material-icons/Shuffle.svelte';
-  import { loadDictionary } from './algorithms/dictionary';
-  import { findWords, getMarqueeText } from './algorithms/gameLogic';
-  import type { Board, Coord, HighlightColors, Highlighted, Match, Tile } from './types';
-  import WordChain from './WordChain.svelte';
-  import Swaps from './Swaps.svelte';
-  import Streak from './Streak.svelte';
-  import GameOver from './modals/GameOver.svelte';
-  import ActionButton from './components/ActionButton.svelte';
-  import Title from './Title.svelte';
-  import { shuffle } from './algorithms/shuffle';
-  import { animationDuration, flyIn, getAnimationPromise, delay, getBBoxJSON } from './animations';
-  import type { Trie } from './algorithms/trie';
-  import GameBoard from './Board.svelte';
-import { initializeGameState, gameState, sampleBoard } from './store';
+import { fly } from 'svelte/transition';
+
+import Shuffle from 'svelte-material-icons/Shuffle.svelte';
+import { loadDictionary } from './algorithms/dictionary';
+import { findWords, getMarqueeText } from './algorithms/gameLogic';
+import type { Board, Coord, Freqs, HighlightColors, Highlighted, Match, Tile } from './types';
+import WordChain from './pills/WordChain.svelte';
+import Swaps from './Swaps.svelte';
+import Streak from './pills/Streak.svelte';
+import GameOver from './modals/GameOver.svelte';
+import ActionButton from './components/ActionButton.svelte';
+import Title from './Title.svelte';
+import { shuffle} from './algorithms/shuffle';
+import { animationDuration, getAnimationPromise, delay, getBBoxJSON } from './animations';
+import type { Trie } from './algorithms/trie';
+import GameBoard from './Board.svelte';
+import { initializeGameState, sampleBoard, getUserId } from './store';
 import BottomControls from './BottomControls.svelte';
 import WordContainer from './WordContainer.svelte';
+import Stats from './Stats.svelte';
+import { saveAnalytics } from './analytics';
   
   let loading = true;
   let dictionary: Trie<string>;
@@ -36,11 +38,12 @@ import WordContainer from './WordContainer.svelte';
   const COLS = 6;
 
  
+  const showStats = false;
   let game = initializeGameState();
 
   let marquee: string;
-  let streak = 0;
-  let bestChain = 0;
+  let freqs: Freqs<string> = {};
+  let newLetters: string[] = [];
   
   let introPromises: Record<string, Promise<void>> = {};
   let introResolvers: Record<string, () => void> = {};
@@ -56,18 +59,29 @@ import WordContainer from './WordContainer.svelte';
   let latestScore: number = undefined;
   
   const handleReset = () => {
+    const date = new Date()
+    saveAnalytics({
+      gameId: game.id,
+      turns: game.turn,
+      bestStreak: game.bestStreak,
+      bestChain: game.bestChain,
+      date: date.toISOString(),
+      userId: getUserId(),
+      words: game.words.map(w => w.word.map(tile => tile.letter).join('')),
+      duration: Math.round((+date - game.startedAt) / 1000),
+      abandoned: true,
+    })
+
     const prevBoard = game.board;
     game = initializeGameState();
 
     highlighted = {};
-    streak = 0;
-    bestChain = 0;
     latestWord = undefined;
     if (!game.board.length) {
       for (let i = 0; i < COLS; i++) {
         game.board.push([]);
         for (let j = 0; j < ROWS; j++) {
-          const tile = sample([], 1);
+          const [ , tile ] = sample([], 1);
           game.board[i].push(tile);
         }
       }
@@ -92,6 +106,7 @@ import WordContainer from './WordContainer.svelte';
         game.board[i][j].multiplier = 1;
         const prevTile = prevBoard?.[i]?.[j];
         // keep reference to previous tileId for flip transition
+        // TODO consider just having a gameOver specific fallback here
         if (prevTile) {
           game.board[i][j].id = prevTile.id;
         }
@@ -175,13 +190,14 @@ import WordContainer from './WordContainer.svelte';
           penalty = 2;
         }
 
-        if (streak > 0) {
+        if (game.streak > 0) {
           penalty--;
         }
         game.remainingSwaps -= penalty;
         game = game;
         
         // gross!
+        // wait for end of swap animation
         let bbox = getBBoxJSON();
         while (selectedCoords.length) {
           await delay(50);
@@ -230,6 +246,7 @@ import WordContainer from './WordContainer.svelte';
       game.latestChain = 0;
       marquee = undefined;
     }
+    game = game;
     return game.lost;
   }
   
@@ -238,7 +255,7 @@ import WordContainer from './WordContainer.svelte';
     let words = findWords(dictionary, game.board);
     if (!words.length) {
       if (!shuffle && chain === 0) {
-        streak = 0;
+        game.streak = 0;
       }
       return await handleEndTurn();
     }
@@ -291,10 +308,10 @@ import WordContainer from './WordContainer.svelte';
   }
   
   const score = (match: Match, chain: number) => {
-    streak++;
+    game.streak++;
 
-    if (streak > game.bestStreak) {
-      game.bestStreak = streak;
+    if (game.streak > game.bestStreak) {
+      game.bestStreak = game.streak;
     }
     if (match.intersection) {
       game.shuffles++;
@@ -312,7 +329,7 @@ import WordContainer from './WordContainer.svelte';
       game.remainingSwaps++;
     }
     game.latestChain = chain;
-    bestChain = Math.max(bestChain, game.latestChain);
+    game.bestChain = Math.max(game.bestChain, game.latestChain);
     
     latestWord = match.word;
     game.intersectingTile = match.intersectingTile;
@@ -332,13 +349,20 @@ import WordContainer from './WordContainer.svelte';
         .filter(tile => tile != undefined)
     ));
     
+    let localFreqs: Freqs<string>;
+    let localLetters: string[] = [];
     for (let i = 0; i < COLS; i++) {
       for (let j = 0; j < ROWS; j++) {
         if (cleared[i][j] == undefined) {
-          cleared[i][j] = sample(cleared, 1, game.turn);
+          const [ stats, tile ] = sample(cleared, 1, game.turn);
+          cleared[i][j] = tile;
+          localFreqs = stats;
+          localLetters.push(tile.letter);
         }
       }
     }
+    freqs = localFreqs;
+    newLetters = localLetters;
 
     return cleared.map(col => col.reverse());
   }
@@ -373,7 +397,7 @@ import WordContainer from './WordContainer.svelte';
   <Title />
   <div class=status>
     <Swaps swaps={game.remainingSwaps} />
-    <Streak {streak} />
+    <Streak streak={game.streak} />
     <WordChain chain={game.latestChain} />
   </div>
   <div class=shuffle-container>
@@ -384,7 +408,7 @@ import WordContainer from './WordContainer.svelte';
       <span>
         {game.shuffles}
       </span>
-      <Shuffle slot=icon />
+      <Shuffle />
     </ActionButton>
   </div>
   <div class=score-container>
@@ -414,22 +438,27 @@ import WordContainer from './WordContainer.svelte';
     intersection={game.intersection}
     intersectingTile={game.intersectingTile}
   />
+  {#if showStats}
+    <Stats {freqs} {newLetters} />
+  {/if}
   <div class=spacer />
   <BottomControls onReset={handleReset} />
 </div>
-{#key game.id}
-  <GameOver
-    gameId={game.id}
-    lost={game.lost}
-    score={game.score}
-    onReset={handleReset}
-    bestStreak={game.bestStreak}
-    {bestChain}
-    turns={game.turn}
-    numWords={game.words.length}
-    bestWords={game.words.sort((a, b) => b.score - a.score).slice(0, 5)}
-  />
-{/key}
+{#if game.lost}
+  {#key game.id}
+    <GameOver
+      gameId={game.id}
+      score={game.score}
+      onReset={handleReset}
+      bestStreak={game.bestStreak}
+      bestChain={game.bestChain}
+      turns={game.turn}
+      words={game.words.sort((a, b) => b.score - a.score)}
+      numWords={game.words.length}
+      duration={Math.round((+new Date() - game.startedAt) / 1000)}
+    />
+  {/key}
+{/if}
 
 <style>
   .container {
@@ -442,6 +471,8 @@ import WordContainer from './WordContainer.svelte';
     -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
     -moz-box-sizing: border-box;    /* Firefox, other Gecko */
     box-sizing: border-box;         /* Opera/IE 8+ */
+    overscroll-behavior: contain;
+    overflow: hidden;
   }
   .spacer {
     flex-grow: 1;

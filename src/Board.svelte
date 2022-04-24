@@ -6,9 +6,18 @@ import { send, receive, flipDuration } from './animations';
 import type { Board, Coord, Highlighted, Tile } from './types';
 
 import BoardTile from './BoardTile.svelte';
+import Flipper from './Flipper.svelte';
 
 export let board: Board;
 export let gameId: string;
+$: prevGameId = '';
+$: {
+  // play flip animation
+  setTimeout(() => {
+    prevGameId = gameId;
+  }, 1000);
+}
+
 export let selected: number[];
 export let highlighted: Highlighted;
 export let intersection: Coord | undefined;
@@ -37,9 +46,12 @@ export let onClick: (i: number, j: number) => void;
       on:click={() => onClick(i, j)}
       class:flying={[...Object.keys(highlighted), ...selected].includes(tile.id)}
     >
-      {#key tile.id}
+      <Flipper
+        id={gameId}
+        shouldFlip={prevGameId !== gameId}
+        {i} {j}
+      >
         <BoardTile
-          {gameId}
           id={tile.id}
           letter={tile.letter}
           active={!!selected.length}
@@ -48,7 +60,7 @@ export let onClick: (i: number, j: number) => void;
           adjacent={false}
           multiplier={tile.multiplier}
         />
-      {/key}
+      </Flipper>
     </div>
   {/each}
   {#if intersectingTile}
@@ -64,7 +76,6 @@ export let onClick: (i: number, j: number) => void;
       >
         {#key tile.id}
           <BoardTile
-            {gameId}
             id={intersectingTile.id}
             letter={intersectingTile.letter}
             active={!!selected.length}
@@ -90,21 +101,21 @@ export let onClick: (i: number, j: number) => void;
     grid-template-rows: repeat(7, 1fr);
     gap: 8px;
   }
-  @media (max-width: 679px) {
+  @media (max-width: 769px) {
     .board {
       width: 100%;
     }
   }
-  @media (min-width: 679px) {
+  @media (min-width: 769px) {
     .board {
       gap: 10px;
       height: 100%;
+      font-size: 2em;
     }
   }
   .tile-container {
 		width: 100%;
     display: grid;
-    cursor: pointer;
   }
   .flying {
     z-index: 500;

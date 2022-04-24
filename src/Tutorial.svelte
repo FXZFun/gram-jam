@@ -1,28 +1,56 @@
 <script lang='ts'>
-  import Info from 'svelte-material-icons/Information.svelte';
-  import SwapHorizontal from 'svelte-material-icons/SwapHorizontal.svelte';
-  import SwapVertical from 'svelte-material-icons/SwapVertical.svelte';
-  import Autorenew from 'svelte-material-icons/Autorenew.svelte'
-  import Fire from 'svelte-material-icons/Fire.svelte'
-  import Modal from './components/Modal.svelte';
-  import ActionButton from './components/ActionButton.svelte';
-  import Close from 'svelte-material-icons/Close.svelte';
+import { shrink } from './animations';
+import { accordion } from './accordion';
+import Info from 'svelte-material-icons/Information.svelte';
+import SwapHorizontal from 'svelte-material-icons/SwapHorizontal.svelte';
+import SwapVertical from 'svelte-material-icons/SwapVertical.svelte';
+import Autorenew from 'svelte-material-icons/Autorenew.svelte'
+import Fire from 'svelte-material-icons/Fire.svelte'
+import Modal from './components/Modal.svelte';
+import ActionButton from './components/ActionButton.svelte';
+import Close from 'svelte-material-icons/Close.svelte';
 import Flash from 'svelte-material-icons/Flash.svelte';
 import Shuffle from 'svelte-material-icons/Shuffle.svelte';
+import IconButton from './components/IconButton.svelte';
+import { onMount } from 'svelte';
 
+  const VERSION = '7';
+  const duration = 500;
   let infoVisible = false;
+  let hideText = false;
+  $: tutorialViewed = false;
+  onMount(() => {
+    tutorialViewed = localStorage.getItem('version') === VERSION;
+  })
+  
+  $: {
+    if (tutorialViewed) {
+      setTimeout(() => { hideText = true }, duration);
+    }
+  }
 
   const handleClick = () => {
-    infoVisible = !infoVisible;
+    infoVisible = true;
   }
   
   const handleClose = () => {
     infoVisible = false;
+    tutorialViewed = true;
+    localStorage.setItem('version', VERSION);
   }
 </script>
 
 <ActionButton onClick={handleClick}>
-  <Info slot=icon size='1em' /> Tutorial
+  <Info size='1em' />
+  {#if !hideText}
+    <div class=text>
+      <div class=badge />
+    </div>
+    <span use:accordion={{
+      duration,
+      isOpen: !tutorialViewed,
+      axis: 'width' }}>Tutorial</span>
+  {/if}
 </ActionButton>
 <Modal open={infoVisible} onClose={handleClose}>
   <div class=container slot=title>
@@ -78,5 +106,17 @@ import Shuffle from 'svelte-material-icons/Shuffle.svelte';
   }
   .spacer {
     height: 2em;
+  }
+  .text {
+    position: relative;
+  }
+  .badge {
+    position: absolute;
+    top: -0.5em;
+    right: 0;
+    background-color: red;
+    border-radius: 50%;
+    width: 0.5em;
+    height: 0.5em;
   }
 </style>

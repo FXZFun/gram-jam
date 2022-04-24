@@ -71,7 +71,7 @@ const handleCloseReport = () => {
   </div>
   <div slot=controls>
     <ActionButton onClick={handleClose}>
-      <Close slot=icon />
+      <Close />
       Close
     </ActionButton>
   </div>

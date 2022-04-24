@@ -1,27 +1,25 @@
 <script lang='ts'>
-  import ActionButton from "../components/ActionButton.svelte";
-  import Hourglass from "../icons/Hourglass.svelte";
-  import { leaderboard } from "./leaderboard";
-  import Modal from "../components/Modal.svelte";
-  import type { LeaderboardEntry, Tile } from "../types";
-  import  { addDoc, query, getDocs, orderBy, limit, QueryDocumentSnapshot } from '@firebase/firestore';
-  import Entry from "./Entry.svelte";
-  import Leaderboard from "./Leaderboard.svelte";
+import ActionButton from "../components/ActionButton.svelte";
+import Hourglass from "../icons/Hourglass.svelte";
+import { leaderboard } from "../db";
+import Modal from "../components/Modal.svelte";
+import type { LeaderboardEntry } from "../types";
+import  { addDoc } from '@firebase/firestore';
 import Trophy from "../icons/Trophy.svelte";
 import Close from "svelte-material-icons/Close.svelte";
 import Send from "svelte-material-icons/Send.svelte";
 import { getUserId } from "../store";
 
   export let entry: LeaderboardEntry;
+  export let onSubmit: () => void;
 
   let showPostScore = false;
 
-  let name: string;
-  let showLeaderboard= false;
+  let name: string = localStorage.getItem('name') || '';
   let loading = false;
-  let snapshot: QueryDocumentSnapshot<LeaderboardEntry>[] = [];
 
   const handleSubmit = async () => {
+    localStorage.setItem('name', name);
     if (!loading) {
       loading = true;
       await addDoc(leaderboard, {
@@ -29,30 +27,19 @@ import { getUserId } from "../store";
         name,
         userId: getUserId(),
       });
-      handleLoadLeaderboard();
+      onSubmit();
+      handleClose();
     }
-  }
-  
-  const handleLoadLeaderboard = async () => {
-    const q = query(leaderboard, orderBy('score', 'desc'), limit(25))
-    const topScores = await getDocs(q);
-    showPostScore = false;
-    showLeaderboard = true;
-    snapshot = topScores.docs;
   }
   
   const handleClose = () => {
     showPostScore = false;
   }
   
-  const handleCloseLeaderboard = () => {
-    showLeaderboard = false;
-  }
-  
 </script>
 
 <ActionButton onClick={() => { showPostScore = true }}>
-  <Trophy slot=icon />
+  <Send />
   Submit Score
 </ActionButton>
 <Modal open={showPostScore} onClose={handleClose}>
@@ -83,27 +70,14 @@ import { getUserId } from "../store";
   </div>
   <div slot=controls class=controls>
     <ActionButton onClick={handleClose}>
-      <Close slot=icon />
+      <Close />
       Close
     </ActionButton>
     <div class=spacer />
     <ActionButton onClick={handleSubmit}>
-      <Send slot=icon />
+      <Send />
       Submit
     </ActionButton>
-  </div>
-</Modal>
-<Modal open={showLeaderboard} onClose={handleCloseLeaderboard}>
-  <div slot=title>
-    <h1>Global Leaderboard</h1>
-  </div>
-  <div slot=content>
-    {#each snapshot as entry, i}
-      <Entry entry={entry.data()} position={i} />
-    {/each}
-  </div>
-  <div slot=controls class=controls>
-    <ActionButton onClick={handleCloseLeaderboard}>Close</ActionButton>
   </div>
 </Modal>
 

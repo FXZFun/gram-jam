@@ -20,12 +20,14 @@ export const flipDuration = (len: number) => animationDuration * Math.sqrt(len /
 export const [ send, receive ] = crossfade({
 	duration: flipDuration,
   easing: quadOut,
-	fallback: (node, params, intro) => fly(node, {
+	fallback: (node, params, intro) => {
+    return fly(node, {
       y: intro ? -getTileSize() : 0,
       x: intro ? 0 : 100,
       duration: animationDuration,
       easing: intro ? quadIn : quadOut
     })
+  }
 });
 
 export const spin = (node: HTMLElement) => {
@@ -63,13 +65,16 @@ export const delay = async (t: number) => new Promise(resolve => setTimeout(reso
 
 export const flipOver = (node: HTMLElement, {
   delay = 0,
-	duration = 500
+	duration = 500,
+  shouldFlip = false,
 }) => {
+  if (!shouldFlip) return {};
   const style = getComputedStyle(node);
   const transform = style.transform === 'none' ? '' : style.transform;
 	return {
 		delay,
 		duration,
+    easing: quadIn,
 		css: (t: number, u: number) => `
       transform: ${transform} rotateY(${u * 90}deg);
     `
@@ -78,18 +83,32 @@ export const flipOver = (node: HTMLElement, {
 
 export const flipOut = (node: HTMLElement, {
   delay = 0,
-	duration = 500
+	duration = 500,
+  shouldFlip = false,
 }) => {
+  if (!shouldFlip) return {};
   const style = getComputedStyle(node);
   const transform = style.transform === 'none' ? '' : style.transform;
-  console.log(node);
 	return {
 		delay,
 		duration,
+    easing: quadOut,
 		css: (t: number, u: number) => `
       transform: ${transform} rotateY(${1 - (u * 90)}deg);
     `
 	};
+}
+
+export const shrink = (node: HTMLElement, {
+  duration = 2000,
+}) => {
+  console.log(node);
+  return {
+    duration,
+    css: (t: number) => `
+      transform: scaleX(${t}%);
+    `
+  }
 }
 
 export const getBBoxJSON = () => (

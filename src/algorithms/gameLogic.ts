@@ -27,6 +27,7 @@ export const findWords = (dictionary: Trie<string>, board: Board) => {
 
   const bonusWords: Match[] = [];
   const toOmit: Match[] = [];
+  let intersectingId = -1;
   for (const [i, w1] of Object.entries(words)) {
     for (const w2 of words.slice(+i + 1)) {
       const coords1 = w1.coords.map(coord => coord.join(','));
@@ -43,17 +44,18 @@ export const findWords = (dictionary: Trie<string>, board: Board) => {
           word: horiz.word.map(tile => (
               tile.id === intersectingTile.id
               // leave tile on board for next match
-                ? ({ ...tile, id: -1 })
+                ? ({ ...tile, id: intersectingId })
                 : tile
             )),
           intersection,
           intersectingTile: {
             ...intersectingTile,
-            id: -1,
+            id: intersectingId,
           },
         });
+        intersectingId--;
         bonusWords.push({ ...vert, intersection, intersectingTile });
-      } else if (w1.axis === w2.axis) {
+      } else if (w1.axis === w2.axis && intersection != undefined) {
         // prefer longer word
         if (w1.word.length < w2.word.length) {
           toOmit.push(w1);
