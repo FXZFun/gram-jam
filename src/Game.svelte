@@ -24,6 +24,7 @@ import BottomControls from './BottomControls.svelte';
 import WordContainer from './WordContainer.svelte';
 import Stats from './Stats.svelte';
 import { saveAnalytics } from './analytics';
+import type { identity } from 'svelte/internal';
   
   let loading = true;
   let dictionary: Trie<string>;
@@ -31,7 +32,7 @@ import { saveAnalytics } from './analytics';
     dictionary = await loadDictionary();
     loading = false;
     // initialize board on first load
-    handleReset();
+    handleReset(false);
   });
 
   const ROWS = 7;
@@ -41,7 +42,6 @@ import { saveAnalytics } from './analytics';
   const showStats = false;
   let game = initializeGameState();
 
-  let marquee: string;
   let freqs: Freqs<string> = {};
   let newLetters: string[] = [];
   
@@ -54,22 +54,24 @@ import { saveAnalytics } from './analytics';
   let latestWord: Tile[] = undefined;
   let latestScore: number = undefined;
   
-  const handleReset = () => {
-    const date = new Date()
-    saveAnalytics({
-      gameId: game.id,
-      turns: game.turn,
-      bestStreak: game.bestStreak,
-      bestChain: game.bestChain,
-      date: date.toISOString(),
-      userId: getUserId(),
-      words: game.words.map(w => w.word.map(tile => tile.letter).join('')),
-      duration: Math.round((+date - game.startedAt) / 1000),
-      abandoned: true,
-    })
+  const handleReset = (track = true) => {
+    if (track) {
+      const date = new Date()
+      saveAnalytics({
+        gameId: game.id,
+        turns: game.turn,
+        bestStreak: game.bestStreak,
+        bestChain: game.bestChain,
+        date: date.toISOString(),
+        userId: getUserId(),
+        words: game.words.map(w => w.word.map(tile => tile.letter).join('')),
+        duration: Math.round((+date - game.startedAt) / 1000),
+        abandoned: true,
+      })
+    }
 
     const prevBoard = game.board;
-    game = initializeGameState();
+    game = initializeGameState(sampleBoard);
 
     highlighted = {};
     latestWord = undefined;
@@ -83,17 +85,17 @@ import { saveAnalytics } from './analytics';
       }
     }
     
-    let matches = findWords(dictionary, game.board);
-    while (matches.length) {
-      for (const match of matches) {
-        const a =  match.coords[Math.floor(Math.random() * match.word.length)];
-        const b =  match.coords[Math.floor(Math.random() * match.word.length)];
+    let { words } = findWords(dictionary, game.board);
+    while (words.length) {
+      for (const word of words) {
+        const a =  word.coords[Math.floor(Math.random() * word.word.length)];
+        const b =  word.coords[Math.floor(Math.random() * word.word.length)];
 
         const tempTile = game.board[a[0]][a[1]];
         game.board[a[0]][a[1]] = game.board[b[0]][b[1]];
         game.board[b[0]][b[1]] = tempTile;
       }
-      matches = findWords(dictionary, game.board);
+      words = findWords(dictionary, game.board).words;
     }
     
     for (const [i, col] of game.board.entries()) {
@@ -230,7 +232,7 @@ import { saveAnalytics } from './analytics';
       animating = false;
       await delay(animationDuration * 3);
       game.latestChain = 0;
-      marquee = undefined;
+      game.marquee = undefined;
     }
     game = game;
     return game.lost;
@@ -238,7 +240,8 @@ import { saveAnalytics } from './analytics';
   
   // chain is incremented on subsequent recursive calls of handleScore
   const handleScore = async (chain = 0, shuffle = false) => {
-    let words = findWords(dictionary, game.board);
+
+    let { words, intersections } = findWords(dictionary, game.board);
     if (!words.length) {
       if (!shuffle && chain === 0) {
         game.streak = 0;
@@ -251,20 +254,23 @@ import { saveAnalytics } from './analytics';
 
     const word = words[0];
     let coords = word.coords;
-    if (word.intersection) {
-      game.intersectingTile = word.intersectingTile;
-      game.intersection = word.intersection.split(',').map(c => parseInt(c)) as Coord;
-      coords = word.coords.filter(coord => coord.join(',') !== word.intersection)
+    const intersectingCoords = Object.values(intersections);
+    if (intersectingCoords.length > 0) {
+      game.intersections = Object.fromEntries(Object.entries(intersections).map(([id, c]) => {
+        const coord = c.split(',').map(c => parseInt(c)) as Coord;
+        const tile = game.board[coord[0]][coord[1]];
+        return [ id, { coord, tile }];
+      }));
+      console.log(game.intersections);
+      coords = word.coords.filter(coord => !intersectingCoords.includes(coord.join(',')));
     } 
 
     // let user see match before exiting
     await delay(2 * animationDuration / 3);
     score(words[0], chain);
 
-    marquee = getMarqueeText(words[0], chain);
-
     game.board = removeLetters(game.board, coords);
-    game.intersectingTile = undefined;
+    game.intersections = {};
     game = game;
 
     await delay(animationDuration);
@@ -293,34 +299,35 @@ import { saveAnalytics } from './analytics';
     return highlighted;
   }
   
-  const score = (match: Match, chain: number) => {
+  const score = (word: Match, chain: number) => {
     game.streak++;
 
     if (game.streak > game.bestStreak) {
       game.bestStreak = game.streak;
     }
-    if (match.intersection) {
+    if (word.intersection) {
       game.shuffles++;
     }
-    if (match.word.length === COLS && match.axis === 'row') {
+    if (word.word.length === COLS && word.axis === 'row') {
       game.shuffles++;
     }
-    if (match.word.length === ROWS && match.axis === 'col') {
+    if (word.word.length === ROWS && word.axis === 'col') {
       game.shuffles++;
     }
 
     if (chain === 0) {
-      game.remainingSwaps += Math.max(match.word.length - 4, 0);
+      game.remainingSwaps += Math.max(word.word.length - 4, 0);
     } else {
       game.remainingSwaps++;
     }
     game.latestChain = chain;
     game.bestChain = Math.max(game.bestChain, game.latestChain);
     
-    latestWord = match.word;
-    game.intersectingTile = match.intersectingTile;
-    latestScore = match.score;
-    game.score += match.score;
+    console.log(word.word);
+    latestWord = word.word;
+    latestScore = word.score;
+    game.score += word.score;
+    game.marquee = getMarqueeText(word, chain);
   }
   
   const removeLetters = (board: Board, coords: Coord[]) => {
@@ -409,7 +416,7 @@ import { saveAnalytics } from './analytics';
   <WordContainer
     {latestWord}
     {latestScore}
-    {marquee}
+    marquee={game.marquee}
     onIntroStart={handleIntroStart}
     onIntroEnd={handleIntroEnd}
     onOutroStart={handleOutroStart}
@@ -421,8 +428,7 @@ import { saveAnalytics } from './analytics';
     selected={selectedTiles}
     {highlighted}
     onClick={handleClick}
-    intersection={game.intersection}
-    intersectingTile={game.intersectingTile}
+    intersections={game.intersections}
   />
   {#if showStats}
     <Stats {freqs} {newLetters} />

@@ -368,7 +368,7 @@ const sampleCDF = <T extends unknown>(cum: Array<[T, number]>) => {
   }
 }
  
-let tileId = 0;
+let tileId = 42;
 export const sample = (
   board: Board,
   sampleSize: number,

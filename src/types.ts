@@ -55,8 +55,8 @@ export type GameState = {
   score: number;
   latestChain: number;
   bestChain: number;
-  intersectingTile?: Tile;
-  intersection?: Coord;
+  intersections: Record<number, { tile: Tile, coord: Coord }>;
+  marquee?: string;
 }
 
 export type HighlightColors = 'green' | 'purple' | 'red' | 'orange';

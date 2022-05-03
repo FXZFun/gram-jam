@@ -20,10 +20,13 @@ $: {
 
 export let selected: number[];
 export let highlighted: Highlighted;
-export let intersection: Coord | undefined;
-export let intersectingTile: Tile;
+export let intersections: Record<number, { tile: Tile, coord: Coord }>;
 export let onClick: (i: number, j: number) => void;
 
+$: {
+  console.log(intersections); 
+  console.log(board);
+}
 </script>
 
 <div class=board>
@@ -63,28 +66,26 @@ export let onClick: (i: number, j: number) => void;
       </Flipper>
     </div>
   {/each}
-  {#if intersectingTile}
-    {#each [{ tile: intersectingTile, coord: intersection }] as { tile, coord } (tile.id)}
+  {#if intersections && Object.keys(intersections).length}
+    {#each Object.entries(intersections) as [ id, { tile, coord }] (+id)}
       <div
         class=tile-container
         style="grid-row: {1 + coord[1]}; grid-column: {1 + coord[0]};"
-        data-id={tile.id}
+        data-id={id}
         animate:flip={{ duration: flipDuration }}
         in:fade
-        out:send={{ key: tile.id, duration: flipDuration }}
+        out:send={{ key: +id, duration: flipDuration }}
         class:flying={true}
       >
-        {#key tile.id}
-          <BoardTile
-            id={intersectingTile.id}
-            letter={intersectingTile.letter}
-            active={!!selected.length}
-            selected={false}
-            highlighted='red'
-            adjacent={false}
-            multiplier={intersectingTile.multiplier}
-          />
-        {/key}
+        <BoardTile
+          id={+id}
+          letter={tile.letter}
+          active={!!selected.length}
+          selected={false}
+          highlighted='red'
+          adjacent={false}
+          multiplier={tile.multiplier}
+        />
       </div>
     {/each}
   {/if}

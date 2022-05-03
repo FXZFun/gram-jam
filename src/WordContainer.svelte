@@ -7,6 +7,7 @@ import type { Tile } from './types';
 
   export let marquee: string = undefined;
   export let latestWord: Tile[] = undefined;
+  console.log(latestWord);
   export let latestScore: number;
   
   export let onIntroStart: (e: any) => void = undefined;
