@@ -8,7 +8,7 @@ export type Match = {
   readonly axis: Axis,
   readonly score: number,
   readonly intersection?: string,
-  readonly intersectingTile?: Tile,
+  readonly intersectingIds: number[],
 };
 
 export type Freqs<T extends string | number> = Record<T, number>;

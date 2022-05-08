@@ -249,27 +249,21 @@ import type { identity } from 'svelte/internal';
       return await handleEndTurn();
     }
 
-    game.words = game.words.concat(words[0]);
+    const word = words[0];
+    game.words.push(word);
     highlighted = highlightTiles(words, highlighted);
 
-    const word = words[0];
-    let coords = word.coords;
-    const intersectingCoords = Object.values(intersections);
-    if (intersectingCoords.length > 0) {
-      game.intersections = Object.fromEntries(Object.entries(intersections).map(([id, c]) => {
-        const coord = c.split(',').map(c => parseInt(c)) as Coord;
-        const tile = game.board[coord[0]][coord[1]];
-        return [ id, { coord, tile }];
-      }));
-      console.log(game.intersections);
-      coords = word.coords.filter(coord => !intersectingCoords.includes(coord.join(',')));
-    } 
+    game.intersections = intersections;
+    console.log(words, game.intersections);
 
     // let user see match before exiting
     await delay(2 * animationDuration / 3);
     score(words[0], chain);
 
-    game.board = removeLetters(game.board, coords);
+    const filteredCoords = word.coords.filter((c, i) => (
+      !game.intersections[word.word[i].id]
+    ));
+    game.board = removeLetters(game.board, filteredCoords);
     game.intersections = {};
     game = game;
 
@@ -286,8 +280,10 @@ import type { identity } from 'svelte/internal';
       if ((word.axis === 'row' && word.word.length === COLS)
         || (word.axis === 'col' && word.word.length === ROWS)) {
           highlight = 'orange';
-      } else if (word.intersectingTile) {
-        highlighted[word.intersectingTile.id] = 'red';
+      } else if (word.intersectingIds.length) {
+        for (const id of word.intersectingIds) {
+          highlighted[id] = 'red';
+        }
         highlight = 'purple';
       }
       for (const tile of word.word) {
@@ -323,7 +319,6 @@ import type { identity } from 'svelte/internal';
     game.latestChain = chain;
     game.bestChain = Math.max(game.bestChain, game.latestChain);
     
-    console.log(word.word);
     latestWord = word.word;
     latestScore = word.score;
     game.score += word.score;

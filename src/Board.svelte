@@ -10,7 +10,7 @@ import Flipper from './Flipper.svelte';
 
 export let board: Board;
 export let gameId: string;
-$: prevGameId = '';
+let prevGameId = '';
 $: {
   // play flip animation
   setTimeout(() => {
@@ -23,17 +23,14 @@ export let highlighted: Highlighted;
 export let intersections: Record<number, { tile: Tile, coord: Coord }>;
 export let onClick: (i: number, j: number) => void;
 
-$: {
-  console.log(intersections); 
-  console.log(board);
-}
+$: tiles = board.flatMap((row, i) => row.map((tile, j) => ({ i, j, tile })));
 </script>
 
 <div class=board>
-  {#each board.flatMap((row, i) => row.map((tile, j) => ({ i, j, tile }))) as { tile, i, j } (tile.id)}
+  {#each tiles as { tile, i, j } (tile.id)}
     <div
       class=tile-container
-      style="grid-row: {j + 1}; grid-column: {i + 1};"
+      style='grid-row: {j + 1}; grid-column: {i + 1};'
       data-id={tile.id}
       animate:flip="{{ duration: flipDuration }}"
       in:receive="{{
@@ -66,29 +63,27 @@ $: {
       </Flipper>
     </div>
   {/each}
-  {#if intersections && Object.keys(intersections).length}
-    {#each Object.entries(intersections) as [ id, { tile, coord }] (+id)}
-      <div
-        class=tile-container
-        style="grid-row: {1 + coord[1]}; grid-column: {1 + coord[0]};"
-        data-id={id}
-        animate:flip={{ duration: flipDuration }}
-        in:fade
-        out:send={{ key: +id, duration: flipDuration }}
-        class:flying={true}
-      >
-        <BoardTile
-          id={+id}
-          letter={tile.letter}
-          active={!!selected.length}
-          selected={false}
-          highlighted='red'
-          adjacent={false}
-          multiplier={tile.multiplier}
-        />
-      </div>
-    {/each}
-  {/if}
+  {#each Object.entries(intersections) as [ id, { tile, coord }] (id)}
+    <div
+      class=tile-container
+      style="grid-row: {coord[1] + 1}; grid-column: {coord[0] + 1};"
+      data-id={id}
+      animate:flip={{ duration: flipDuration }}
+      in:fade
+      out:send={{ key: +id, duration: flipDuration }}
+      class:flying={true}
+    >
+      <BoardTile
+        id={+id}
+        letter={tile.letter}
+        active={!!selected.length}
+        selected={false}
+        highlighted='red'
+        adjacent={false}
+        multiplier={tile.multiplier}
+      />
+    </div>
+  {/each}
 </div>
 
 <style>
