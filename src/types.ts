@@ -13,12 +13,10 @@ export type Match = {
 
 export type Freqs<T extends string | number> = Record<T, number>;
 
-export type Multiplier = 1 | 2 | 3;
-
 export type Tile = {
   letter: string,
   id: number,
-  multiplier: Multiplier,
+  multiplier: number,
 }
 
 export type Board = Tile[][];
@@ -74,9 +72,12 @@ export type GameState = {
   intersections: Intersections;
   words: Match[];
   turn: number;
+  streak: number;
+  streakLevel: number;
+  streakProgress: number;
+  streakInterval: number;
   remainingSwaps: number;
   shuffles: number;
-  streak: number;
   bestStreak: number;
   lost: boolean;
   score: number;

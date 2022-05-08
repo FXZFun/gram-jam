@@ -113,3 +113,41 @@ export const shrink = (node: HTMLElement, {
 export const getBBoxJSON = () => (
   JSON.stringify(document.querySelector('.large.selected')?.getBoundingClientRect())
 );
+
+export const gaugeIn = (node: SVGCircleElement, {
+  duration = 1000,
+  delay = 0,
+  easing = quadIn,
+}) => {
+  const r = parseFloat(node.getAttribute('r'));
+
+	return {
+		delay,
+		duration,
+		easing,
+		css: (t: number, u: number) => `
+      opacity: ${t};
+    `,
+      //transform: scale(${f(u, r)}) rotate(135, ${r * f(u, r)}, ${r * f(u, r)});
+	};
+}
+
+export const gaugeOut = (node: SVGCircleElement, {
+  duration = 1000,
+  delay = 0,
+  easing = quadIn,
+}) => {
+  const r = parseFloat(node.getAttribute('r'));
+  const w = parseFloat(node.getAttribute('stroke-width'));
+
+	return {
+		delay,
+		duration,
+		easing,
+		css: (t: number, u: number) => `
+      opacity: ${t};
+      stroke-width: ${0.5 * (1 + t) * w};
+    `,
+      //transform: scale(${f(u, r)}) rotate(135, ${r * f(u, r)}, ${r * f(u, r)});
+	};
+}

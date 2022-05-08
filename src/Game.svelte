@@ -4,15 +4,10 @@ import { onMount } from 'svelte';
 
 import { fly } from 'svelte/transition';
 
-import Shuffle from 'svelte-material-icons/Shuffle.svelte';
 import { loadDictionary } from './algorithms/dictionary';
 import { DIMS, findWords, getMarqueeText, removeLetters, resetGame } from './algorithms/gameLogic';
-import type { HighlightColors, Highlighted, Match } from './types';
-import WordChain from './pills/WordChain.svelte';
-import Swaps from './Swaps.svelte';
-import Streak from './pills/Streak.svelte';
+import type { Board, Coord, Freqs, HighlightColors, Highlighted, Match, Tile } from './types';
 import GameOver from './modals/GameOver.svelte';
-import ActionButton from './components/ActionButton.svelte';
 import Title from './Title.svelte';
 import { shuffle} from './algorithms/shuffle';
 import { animationDuration, delay } from './animations';
@@ -23,8 +18,12 @@ import WordContainer from './WordContainer.svelte';
 import Stats from './Stats.svelte';
 import { saveAnalytics } from './analytics';
 import Spinner from './components/Spinner.svelte';
+import Gauge from './gauge/Gauge.svelte';
+import Score from './pills/Score.svelte';
+import Shuffle from './pills/Shuffle.svelte';
   
   let loading = true;
+  let prevProgress = $game.streak;
   onMount(async () => {
     $dictionary = await loadDictionary();
     loading = false;
@@ -42,10 +41,10 @@ import Spinner from './components/Spinner.svelte';
     $turns = []
   }
  
- 
   // const getTileId = (e) => parseInt((e.target as HTMLElement).getAttribute('data-id'));
   
   const handleEndTurn = async () => {
+    prevProgress = $game.streak;
     if ($game.remainingSwaps <= 0) {
       await delay(animationDuration * 2);
       $game.lost = true;
@@ -67,7 +66,12 @@ import Spinner from './components/Spinner.svelte';
     let { words, intersections } = findWords($dictionary, $game.board);
     if (!words.length) {
       if (!shuffle && chain === 0) {
-        $game.streak = 0;
+        if ($game.streak === 0) {
+          $game.streakLevel = Math.max($game.streakLevel - 1, 1);
+        } else {
+          $game.streak -= $game.streak % 5 || 5;
+        }
+        $game.remainingSwaps--;
       }
       return await handleEndTurn();
     }
@@ -114,34 +118,43 @@ import Spinner from './components/Spinner.svelte';
     return highlighted;
   }
   
-  const score = (word: Match, chain: number) => {
+  const score = (match: Match, chain: number) => {
     $game.streak++;
+    const threshold = $game.streakLevel * $game.streakInterval;
+    if ($game.streak >= threshold) {
+      const newStreak = $game.streak - threshold;
+      $game.streak = threshold;
+      setTimeout(() => {
+        $game.streak = newStreak;
+        $game.streakLevel++;
+      }, 750);
+    }
 
     if ($game.streak > $game.bestStreak) {
       $game.bestStreak = $game.streak;
     }
-    if (word.axis === 'row' && word.intersectingIds) {
-      $game.shuffles += word.intersectingIds.length;
+    if (match.axis === 'row' && match.intersectingIds) {
+      $game.shuffles += match.intersectingIds.length;
     }
-    if (word.word.length === DIMS.COLS && word.axis === 'row') {
+    if (match.word.length === DIMS.COLS && match.axis === 'row') {
       $game.shuffles++;
     }
-    if (word.word.length === DIMS.ROWS && word.axis === 'col') {
+    if (match.word.length === DIMS.ROWS && match.axis === 'col') {
       $game.shuffles++;
     }
 
     if (chain === 0) {
-      $game.remainingSwaps += Math.max(word.word.length - 4, 0);
+      $game.remainingSwaps += Math.max(match.word.length - 4, 0);
     } else {
-      $game.remainingSwaps++;
+      // game.remainingSwaps++;
     }
     $game.latestChain = chain;
     $game.bestChain = Math.max($game.bestChain, $game.latestChain);
     
-    $game.latestWord = word.word;
-    $game.latestScore = word.score;
-    $game.score += word.score;
-    $game.marquee = getMarqueeText(word, chain);
+    $game.latestWord = match.word;
+    $game.latestScore = match.score;
+    $game.score += match.score;
+    $game.marquee = getMarqueeText(match, chain);
   }
   
   const handleShuffle = async () => {
@@ -171,38 +184,32 @@ import Spinner from './components/Spinner.svelte';
 </script>
 
 <div class=container>
-  <Title />
-  <div class=status>
-    <Swaps swaps={$game.remainingSwaps} />
-    <Streak streak={$game.streak} />
-    <WordChain chain={$game.latestChain} />
+  <div class=top-container>
+    <Title />
+    <Score score={$game.score} />
+    <Gauge
+      radius={96}
+      swaps={$game.remainingSwaps}
+      level={$game.streakLevel}
+      prevProgress={prevProgress}
+      progress={$game.streak}
+      interval={$game.streakInterval}
+    />
+    <Shuffle
+      shuffles={$game.shuffles}
+      onShuffle={handleShuffle}
+    />
   </div>
-  <div class=shuffle-container>
-    <ActionButton
-      onClick={$game.shuffles > 0 ? handleShuffle : undefined}
-      disabled={$game.shuffles === 0}
-    >
-      <span>
-        {$game.shuffles}
-      </span>
-      <Shuffle />
-    </ActionButton>
-  </div>
-  <div class=score-container>
-    {#if loading}
-      <div class=loading>
+  {#if loading}
+    <div class=loading-dictionary>
       Loading Dictionary...
-        <br/>
-        <Spinner />
-      </div>
-    {:else}
-      {#key $game.score}
-        <div in:fly={{ y: 20 }}>{$game.score}</div>
-      {/key}
-    {/if}
-  </div>
+      <br/>
+      <Spinner />
+    </div>
+  {:else}
+    <GameBoard {handleScore} />
+  {/if}
   <WordContainer />
-  <GameBoard {handleScore} />
   {#if showStats}
     <Stats />
   {/if}
@@ -222,6 +229,7 @@ import Spinner from './components/Spinner.svelte';
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 1em;
     padding: 1.5em;
     -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
     -moz-box-sizing: border-box;    /* Firefox, other Gecko */
@@ -229,47 +237,23 @@ import Spinner from './components/Spinner.svelte';
     overscroll-behavior: contain;
     overflow: hidden;
   }
-  .loading {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+  .top-container {
+    position: relative;
+    width: 100%;
   }
   .spacer {
     flex-grow: 1;
   }
-  .score-container {
-    transition: color 0.5s ease-in-out;
-    color: black;
-    margin-top: 2em;
-    position: relative;
+  .loading-dictionary {
     display: flex;
+    flex-direction: column;
+    align-items: center;
     justify-content: center;
+    color: black;
     font-weight: bold;
     font-size: 1.75em;
   }
-  .shuffle-container {
-    position: absolute;
-    padding: 0.75em;
-    font-size: 1.25em;
-    top: 0;
-    right: 0;
-  }
-  .shuffle-container span {
-    padding: 0.25em;
-  }
-  :global(body.dark-mode) .score-container {
+  :global(body.dark-mode) .loading-dictionary {
     color: white;
-  }
-  .score-container div {
-    padding-left: 8px;
-    flex-grow: 1;
-  }
-  .status {
-    display: flex;
-    flex-direction: column;
-    position: absolute;
-    top: 0.5em;
-    left: 0.5em;
   }
 </style>

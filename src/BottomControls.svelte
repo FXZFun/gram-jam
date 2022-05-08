@@ -1,5 +1,4 @@
 <script lang="ts">
-import Restart from 'svelte-material-icons/Restart.svelte';
 import Twitter from 'svelte-material-icons/Twitter.svelte';
 
 import ActionButton from './components/ActionButton.svelte';

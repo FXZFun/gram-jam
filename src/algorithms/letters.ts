@@ -1,5 +1,5 @@
 import { bigrams } from './bigrams';
-import type { Board, Freqs, Multiplier, Tile } from "../types";
+import type { Board, Freqs, Tile } from "../types";
 
 export const dictionaryFreqs = {
   A: 8.4966,
@@ -356,7 +356,7 @@ const updateFreqs = <T extends string | number>(
   return updatedFreqs;
 }
 
-const sampleCDF = <T extends unknown>(cum: Array<[T, number]>) => {
+const sampleCDF = <T extends unknown>(cum: Array<[T, number]>): T => {
 
   const sum = cum.slice(-1)[0][1];
   const sampleWeight = Math.random() * sum;
@@ -372,7 +372,8 @@ let tileId = 42;
 export const sample = (
   board: Board,
   sampleSize: number,
-  turn = 0
+  turn = 0,
+  level = 1,
 ): [Freqs<string>, Tile] => {
 
   let freqs: Record<string, number>;
@@ -383,12 +384,17 @@ export const sample = (
     freqs = updateFreqs(letterFreqs, letterCounts);
     // console.log(Object.values(freqs).reduce((a, b) => a + b) / Object.keys(freqs).length);
     // console.log(Object.entries(freqs).sort((a, b) => +b[1] - +a[1]))
-    mFreqs = {...multFreqs}; //updateFreqs(multFreqs, multiplierCounts, 0.5);
-    if (multiplierCounts[2] > 5) {
-      mFreqs[2] = 0;
-    } if (multiplierCounts[3] > 2) {
-      mFreqs[3] = 0;
+    // mFreqs = updateFreqs(multFreqs, multiplierCounts, 0.5);
+    // mFreqs = {...multFreqs};
+    mFreqs = {
+      1: 0.95,
+      [level]: 0.05,
     }
+    // if (multiplierCounts[2] > 5) {
+    //   mFreqs[2] = 0;
+    // } if (multiplierCounts[3] > 2) {
+    //   mFreqs[3] = 0;
+    // }
   } else {
       freqs = letterFreqs;
       mFreqs = multFreqs;
@@ -402,6 +408,7 @@ export const sample = (
   }
   
   const mCDF = getCDF(mFreqs);
+  // console.log(mFreqs, mCDF);
   const sampledMult = +sampleCDF(mCDF);
 
   tileId++;
@@ -409,7 +416,7 @@ export const sample = (
   return [freqs, {
     letter: sampledLetter,
     id: tileId,
-    multiplier: sampledMult as Multiplier,
+    multiplier: sampledMult,
   }];
 }
 

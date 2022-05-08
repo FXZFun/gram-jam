@@ -5,41 +5,42 @@ import BoardTile from "./BoardTile.svelte";
 
 <div class=title>
   <div class=subtitle>
-    {#each ['G', 'R', 'A', 'M'] as letter, i}
+    <div class=subtitle-inner>
       <BoardTile
-        selected={i === 0}
-        letter={letter}
-        size='tiny'
+        selected
+        letter=G
+        size=logo
       />
-    {/each}
-  </div>
-  <div class=subtitle>
-    {#each ['J', 'A', 'M'] as letter, i}
+    </div>
+    <div class=subtitle-inner>
       <BoardTile
-        highlighted={i === 0 ? 'green' : undefined}
-        letter={letter}
-        size='tiny'
+        highlighted=green
+        letter=J
+        size=logo
       />
-    {/each}
+    </div>
   </div>
 </div>
 
-<style>
-  .subtitle {
-    display: flex;
-    flex-direction: row;
-    overflow: visible;
-    padding: 0 0.5em;
-  }
+<style lang='scss'>
   .title {
     position: absolute;
-    left: 50%;
-    width: 0;
-    overflow: visible;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+  }
+  .subtitle {
+    position: relative;
+  }
+  .subtitle-inner {
+    position: absolute;
+    &:first-of-type {
+      z-index: 2;
+      top: 0;
+      left: 0;
+    }
+    &:last-of-type {
+      z-index: 1;
+      top: 1em;
+      left: 1em;
+    }
   }
   @media (min-width: 769px) {
     .title {
