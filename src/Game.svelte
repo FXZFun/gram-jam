@@ -24,7 +24,6 @@ import BottomControls from './BottomControls.svelte';
 import WordContainer from './WordContainer.svelte';
 import Stats from './Stats.svelte';
 import { saveAnalytics } from './analytics';
-import type { identity } from 'svelte/internal';
   
   let loading = true;
   let dictionary: Trie<string>;
