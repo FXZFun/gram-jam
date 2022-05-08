@@ -8,7 +8,7 @@ export type Match = {
   readonly axis: Axis,
   readonly score: number,
   readonly intersection?: string,
-  readonly intersectingTile?: Tile,
+  readonly intersectingIds: number[],
 };
 
 export type Freqs<T extends string | number> = Record<T, number>;
@@ -55,8 +55,8 @@ export type GameState = {
   score: number;
   latestChain: number;
   bestChain: number;
-  intersectingTile?: Tile;
-  intersection?: Coord;
+  intersections: Record<number, { tile: Tile, coord: Coord }>;
+  marquee?: string;
 }
 
 export type HighlightColors = 'green' | 'purple' | 'red' | 'orange';

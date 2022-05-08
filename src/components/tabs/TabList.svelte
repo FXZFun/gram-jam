@@ -4,5 +4,6 @@
 
 <style>
 	.tab-list {
+		display: block;
 	}
 </style>

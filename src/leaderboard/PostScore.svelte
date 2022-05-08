@@ -5,7 +5,6 @@ import { leaderboard } from "../db";
 import Modal from "../components/Modal.svelte";
 import type { LeaderboardEntry } from "../types";
 import  { addDoc } from '@firebase/firestore';
-import Trophy from "../icons/Trophy.svelte";
 import Close from "svelte-material-icons/Close.svelte";
 import Send from "svelte-material-icons/Send.svelte";
 import { getUserId } from "../store";

@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { fly, fade } from 'svelte/transition';
-  import Definition from './modals/Definition.svelte';
-  import Word from './Word.svelte';
-  import { animationDuration, flyIn, getAnimationPromise, delay } from './animations';
+import { fly, fade } from 'svelte/transition';
+import Definition from './modals/Definition.svelte';
+import Word from './Word.svelte';
+import { flyIn, delay } from './animations';
 import type { Tile } from './types';
 
   export let marquee: string = undefined;

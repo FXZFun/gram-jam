@@ -2,8 +2,12 @@ import { scoreWord } from "./letters";
 import type { Trie } from "./trie";
 import type  { Board, Coord, Match, Tile } from "../types";
 
+const coordToStr = (c: Coord) => c.join(',');
+
 export const findWords = (dictionary: Trie<string>, board: Board) => {
   const words: Match[] = [];
+  const rows: Record<number, Match[]> = {};
+  const cols: Record<number, Match[]> = {};
   for (let i = 0; i < board.length; i++) {
     for (let j = 0; j < board[0].length; j++) {
       for (const axis of ['row' as const, 'col' as const]) {
@@ -14,63 +18,100 @@ export const findWords = (dictionary: Trie<string>, board: Board) => {
             i + (axis === 'col' ? 0 : offset),
             j + (axis === 'row' ? 0 : offset),
           ]);
-          words.push({
+          const match = {
             word,
             coords,
             axis,
             score: scoreWord(word),
-          });
+            intersectingIds: [],
+          };
+          words.push(match);
+          if (axis === 'row') {
+            rows[i] = (rows[i] ?? []).concat([match]);
+          } else {
+            cols[j] = (cols[j] ?? []).concat([match]);
+          }
         }
       }
     }
   }
-
-  const bonusWords: Match[] = [];
-  const toOmit: Match[] = [];
+  
+  // eliminate overlapping matches
+  removeOverlappingWords(rows);
+  removeOverlappingWords(cols);
+  
+  const rowWords = Object.values(rows).flat();
+  const colWords = Object.values(cols).flat();
+  
+  // find intersections
   let intersectingId = -1;
-  for (const [i, w1] of Object.entries(words)) {
-    for (const w2 of words.slice(+i + 1)) {
-      const coords1 = w1.coords.map(coord => coord.join(','));
-      const coords2 = new Set(w2.coords.map(coord => coord.join(',')));
-      const [ intersection ] = coords1.filter(c => coords2.has(c));
-      if (w1.axis !== w2.axis && intersection != undefined) {
-        const [ i, j ] = intersection.split(',');
-        const intersectingTile = board[i][j];
-        // we want to clear horizontal word first
-        let vert = w1.axis === 'col' ? w1 : w2;
-        let horiz = w1.axis === 'row' ? w1 : w2;
-        bonusWords.push({
-          ...horiz,
-          word: horiz.word.map(tile => (
-              tile.id === intersectingTile.id
-              // leave tile on board for next match
-                ? ({ ...tile, id: intersectingId })
-                : tile
-            )),
-          intersection,
-          intersectingTile: {
-            ...intersectingTile,
-            id: intersectingId,
-          },
-        });
-        intersectingId--;
-        bonusWords.push({ ...vert, intersection, intersectingTile });
-      } else if (w1.axis === w2.axis && intersection != undefined) {
-        // prefer longer word
-        if (w1.word.length < w2.word.length) {
-          toOmit.push(w1);
-        } else {
-          toOmit.push(w2);
+  const intersections: Record<number, { tile: Tile, coord: Coord }> = {};
+  const intersectingWords: Record<number, Match> = {};
+  // loop over cross-product of rows and columns
+  for (const [ i1, w1 ] of Object.entries(rowWords)) {
+    for (const [ i2, w2 ] of Object.entries(colWords)) {
+      const coord = getIntersection(w1, w2);
+
+      if (coord) {
+        const [ i, j ] = coord;
+        const tile = board[i][j];
+
+        intersections[intersectingId] = { tile, coord };
+        const tileIdx = w1.word.findIndex(t => t.id === tile.id);
+        w1.word[tileIdx] = {
+          ...w1.word[tileIdx],
+          id: intersectingId,
         }
+        w1.intersectingIds.push(intersectingId);
+        w2.intersectingIds.push(tile.id);
+        intersectingId--;
+        intersectingWords[i1] = w1;
       }
     }
   }
-  return [
-    ...bonusWords,
-    ...words
-      .filter(w => !toOmit.includes(w))
-      .sort((a, b) => (a.coords[0][1] - b.coords[0][1]) || (b.word.length - a.word.length)),
-  ];
+  
+  return {
+    words: rowWords.concat(colWords).sort((a, b) => {
+      if (a.intersectingIds.length && b.intersectingIds.length) {
+        return a.axis === 'row' ? -1 : 1
+      }
+      return a.coords[0][1] - b.coords[0][1];
+    }),
+    intersections,
+  }
+  
+}
+
+const getIntersection = (w1: Match, w2: Match): Coord | undefined => {
+  const c1 = w1.coords.map(coordToStr);
+  const c2 = w2.coords.map(coordToStr);
+  const [ intersection ] = c1.filter(c => c2.includes(c));
+  if (intersection) {
+    return intersection.split(',').map(x => parseInt(x)) as Coord;
+  } else {
+    return undefined;
+  }
+}
+
+const removeOverlappingWords = (
+  axis: Record<number, Match[]>
+) => {
+  // eliminate overlapping matches
+  const filteredWords: number[] = [];
+  for (const [ idx, words ] of Object.entries(axis)) {
+    for (const [ i1, w1 ] of Object.entries(words)) {
+      for (const [ i2, w2 ] of Object.entries(words).slice(+i1 + 1)) {
+        if (getIntersection(w1, w2)) {
+          if (w1.word.length > w2.word.length) {
+            filteredWords.push(+i2);
+          } else {
+            filteredWords.push(+i1);
+          }
+        }
+      }
+    }
+    axis[idx] = words.filter((w, i) => !filteredWords.includes(i));
+  }
 }
 
 const findWord = (

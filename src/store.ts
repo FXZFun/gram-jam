@@ -1,5 +1,5 @@
 import { v4 as uuid } from 'uuid';
-import { writable } from "svelte/store";
+import { Writable, writable } from "svelte/store";
 import type { Board, GameState } from './types';
 
 export const initializeGameState = (sampleBoard?: Board): GameState => ({
@@ -16,11 +16,13 @@ export const initializeGameState = (sampleBoard?: Board): GameState => ({
   score: 0,
   latestChain: 0,
   bestChain: 0,
+  intersections: {},
+  marquee: undefined,
 });
  
 export const gameState = writable(initializeGameState());
 
-export const reset = (gameState) => gameState.set(initializeGameState());
+export const reset = (gameState: Writable<GameState>) => gameState.set(initializeGameState());
 
 let id = 0;
 const makeBoardFromLetters = (letters: string[][]): Board => (
@@ -33,9 +35,9 @@ const makeBoardFromLetters = (letters: string[][]): Board => (
 
 export const sampleBoard = makeBoardFromLetters([
   ["B", "G", "V", "A", "N", "D", "E"],
-  ["A", "T", "U", "A", "O", "A", "A"],
-  ["E", "E", "D", "E", "X", "R", "R"],
-  ["A", "C", "T", "N", "S", "L", "E"],
+  ["A", "T", "C", "H", "O", "A", "A"],
+  ["E", "I", "D", "E", "X", "R", "R"],
+  ["T", "C", "T", "N", "S", "L", "E"],
   ["C", "I", "F", "E", "F", "E", "I"],
   ["P", "U", "Z", "Z", "L", "A", "O"],
 ]);
