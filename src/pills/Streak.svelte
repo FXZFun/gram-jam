@@ -1,7 +1,7 @@
 <script lang='ts'>
   import Hot from 'svelte-material-icons/Fire.svelte'
   import { schemeSpectral } from 'd3-scale-chromatic';
-  import Pill from './Pill.svelte';
+  import Pill from '../components/Pill.svelte';
   
   export let streak: number;
   $: backgroundColor = schemeSpectral[11][Math.min(Math.round(streak / 2), 10)];
@@ -10,8 +10,8 @@
 
 {#if streak > 0}
   <Pill
-    color={color}
-    backgroundColor={backgroundColor}
+    color='black'
+    backgroundColor='#FFB74D'
     value={streak}
   >
       <Hot />
