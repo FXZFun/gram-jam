@@ -4,6 +4,8 @@ import type  { Board, Coord, Match, Tile } from "../types";
 
 const coordToStr = (c: Coord) => c.join(',');
 
+let intersectingId = -1;
+
 export const findWords = (dictionary: Trie<string>, board: Board) => {
   const words: Match[] = [];
   const rows: Record<number, Match[]> = {};
@@ -44,7 +46,6 @@ export const findWords = (dictionary: Trie<string>, board: Board) => {
   const colWords = Object.values(cols).flat();
   
   // find intersections
-  let intersectingId = -1;
   const intersections: Record<number, { tile: Tile, coord: Coord }> = {};
   const intersectingWords: Record<number, Match> = {};
   // loop over cross-product of rows and columns
