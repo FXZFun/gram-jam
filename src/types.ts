@@ -23,9 +23,25 @@ export type Tile = {
 
 export type Board = Tile[][];
 
+export type Intersections = Record<number, { tile: Tile, coord: Coord }>;
+
 export type GameRecord = {
   date: string,
   score: number,
+}
+
+export type SLeaderboardEntry = {
+  id: string;
+  userId?: string;
+  gameId: string;
+  userName: string;
+  score: number;
+  bestStreak: number;
+  bestChain: number;
+  bestWord: Tile[];
+  numWords: number;
+  numTurns: number;
+  date: string;
 }
 
 export type LeaderboardEntry = {
@@ -45,6 +61,12 @@ export type GameState = {
   readonly startedAt: number,
   readonly id: string;
   board: Board;
+  latestWord?: Tile[];
+  latestScore?: number;
+  selectedCoords: string[];
+  selectedTiles: number[];
+  highlighted: Highlighted;
+  intersections: Intersections;
   words: Match[];
   turn: number;
   remainingSwaps: number;
@@ -55,7 +77,6 @@ export type GameState = {
   score: number;
   latestChain: number;
   bestChain: number;
-  intersections: Record<number, { tile: Tile, coord: Coord }>;
   marquee?: string;
 }
 
@@ -83,4 +104,11 @@ export type AnalyticsReport = {
   bestStreak: number,
   bestChain: number,
   abandoned?: boolean,
+}
+
+export type InfiniteProps = {
+  detail: {
+    loaded: () => void,
+    complete: () => void,
+  }
 }

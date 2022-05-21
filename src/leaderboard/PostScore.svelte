@@ -1,18 +1,14 @@
 <script lang='ts'>
 import ActionButton from "../components/ActionButton.svelte";
 import Hourglass from "../icons/Hourglass.svelte";
-import { leaderboard } from "../db";
 import Modal from "../components/Modal.svelte";
-import type { LeaderboardEntry } from "../types";
-import  { addDoc } from '@firebase/firestore';
 import Close from "svelte-material-icons/Close.svelte";
 import Send from "svelte-material-icons/Send.svelte";
-import { getUserId } from "../store";
+import game from "../store";
+import { openLeaderboard } from "./Leaderboard.svelte";
+import { submitScore } from "./leaderboard";
 
-  export let entry: LeaderboardEntry;
-  export let onSubmit: () => void;
-
-  let showPostScore = false;
+  let open = false;
 
   let name: string = localStorage.getItem('name') || '';
   let loading = false;
@@ -21,27 +17,25 @@ import { getUserId } from "../store";
     localStorage.setItem('name', name);
     if (!loading) {
       loading = true;
-      await addDoc(leaderboard, {
-        ...entry,
-        name,
-        userId: getUserId(),
-      });
-      onSubmit();
+      const e = await submitScore($game, { name })
+      loading = false;
+      console.log((new Date()).toISOString(), e);
+      openLeaderboard(e);
       handleClose();
     }
   }
   
   const handleClose = () => {
-    showPostScore = false;
+    open = false;
   }
   
 </script>
 
-<ActionButton onClick={() => { showPostScore = true }}>
+<ActionButton onClick={() => { open = true }}>
   <Send />
   Submit Score
 </ActionButton>
-<Modal open={showPostScore} onClose={handleClose}>
+<Modal open={open} onClose={handleClose}>
   <div slot=title>
     <h2>Submit Score</h2>
   </div>

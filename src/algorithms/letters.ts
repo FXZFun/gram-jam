@@ -417,13 +417,13 @@ export const scoreWord = (match: Tile[]) => {
   let score = 0;
   let multiplier = 1;
   for (const tile of match) {
-    score += getTilePoints(tile.letter)
+    score += scoreTile(tile.letter)
     multiplier *= tile.multiplier;
   }
   return score * multiplier;
 }
 
-export const getTilePoints = (letter: string) => {
+export const scoreTile = (letter: string) => {
   let tilePoints = 0;
   for (let i = 0; i < letter.length; i++) {
     tilePoints += points[letter.charAt(i).toUpperCase()];

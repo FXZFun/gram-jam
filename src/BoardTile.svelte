@@ -1,7 +1,7 @@
  <script lang="ts">
 
   import Close from 'svelte-material-icons/Close.svelte';
-  import { getTilePoints } from './algorithms/letters';
+  import { scoreTile } from './algorithms/letters';
   import type { HighlightColors } from './types';
   
   export let letter: string;
@@ -12,8 +12,6 @@
   export let size: 'tiny' | 'small' | 'large' = 'large';
   export let multiplier: 1 | 2 | 3 = 1;
   export let id: number = undefined;
-
-  const pts = getTilePoints(letter);
 
   const handleSwipe = (e: any) => {
     //console.log(e);
@@ -37,7 +35,7 @@
     class:large={size === 'large'}
   >
     <span>{letter}</span>
-    <span class=score>{pts}</span>
+    <span class=score>{scoreTile(letter)}</span>
     <span class=debug-id>{id}</span>
     {#if multiplier > 1}
       <span

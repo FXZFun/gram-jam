@@ -2,6 +2,9 @@
 
 	import { fly } from 'svelte/transition';
 
+  export let id: string = undefined;
+  export let fullHeight = false;
+  export let index = 1;
   export let open: boolean;
   export let onClose: () => void;
   
@@ -15,9 +18,12 @@
   >
     {#key open}
       <div
+        {id}
         in:fly={{ y: 100, duration: 250 }}
         out:fly={{ y: 100, duration: 250 }}
         class=panel
+        class:index-2={index === 2}
+        class:full-height={fullHeight}
       >
         <div class=title>
           <slot name=title/>
@@ -72,16 +78,27 @@
     display: flex;
     align-items: center;
     flex-direction: column;
+    overflow: hidden;
+  }
+  .panel.full-height {
+    height: 100%;
+    margin: 1em;
+  }
+  .panel.index-2 {
+    z-index: 3000;
   }
   .scroll-container {
     overflow: hidden;
     display: flex;
     flex-direction: column;
     width: 100%;
+    height: 100%;
   }
   .scroll-container-inner {
     height: 100%;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
     padding: 1em;
 
     background: /* Shadow covers */

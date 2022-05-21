@@ -1,14 +1,10 @@
 <script lang="ts">
 import { fly, fade } from 'svelte/transition';
 import Definition from './modals/Definition.svelte';
+import game from './store';
 import Word from './Word.svelte';
 import { flyIn, delay } from './animations';
-import type { Tile } from './types';
 
-  export let marquee: string = undefined;
-  export let latestWord: Tile[] = undefined;
-  export let latestScore: number;
-  
   export let onIntroStart: (e: any) => void = undefined;
   export let onIntroEnd: (e: any) => void = undefined;
   export let onOutroStart: (e: any) => void = undefined;
@@ -17,31 +13,31 @@ import type { Tile } from './types';
 </script>
 
   <div class=latest-word>
-    {#if latestWord !== undefined}
+    {#if $game.latestWord !== undefined}
       <div class=marquee-outer>
-        {#key marquee}
+        {#key $game.marquee}
           <span 
             class=marquee-inner
             in:fly={{ y: 20, delay: 500 }}
             out:fade={{ duration: 250 }}
           >
-            {marquee ?? 'LATEST WORD'}
+            {$game.marquee ?? 'LATEST WORD'}
           </span>
         {/key}
       </div>
       <div class=word-container>
         <div class=word-score>
-          <Definition word={latestWord.map(t => t.letter).join('')} />
+          <Definition word={$game.latestWord.map(t => t.letter).join('')} />
         </div>
         <Word
           onIntroStart={onIntroStart}
           onIntroEnd={onIntroEnd}
           onOutroStart={onOutroStart}
           onOutroEnd={onOutroEnd}
-          word={latestWord}
+          word={$game.latestWord}
         />
-        {#key latestWord}
-          <div in:flyIn={{ y: 20, delay: 500 }} class=word-score>+{latestScore}</div>
+        {#key $game.latestWord}
+          <div in:flyIn={{ y: 20, delay: 500 }} class=word-score>+{$game.latestScore}</div>
         {/key}
       </div>
     {/if}

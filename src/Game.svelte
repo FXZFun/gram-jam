@@ -7,7 +7,7 @@ import { fly } from 'svelte/transition';
 
 import Shuffle from 'svelte-material-icons/Shuffle.svelte';
 import { loadDictionary } from './algorithms/dictionary';
-import { findWords, getMarqueeText } from './algorithms/gameLogic';
+import { DIMS, findWords, getMarqueeText, resetGame } from './algorithms/gameLogic';
 import type { Board, Coord, Freqs, HighlightColors, Highlighted, Match, Tile } from './types';
 import WordChain from './pills/WordChain.svelte';
 import Swaps from './Swaps.svelte';
@@ -17,29 +17,23 @@ import ActionButton from './components/ActionButton.svelte';
 import Title from './Title.svelte';
 import { shuffle} from './algorithms/shuffle';
 import { animationDuration, getAnimationPromise, delay, getBBoxJSON } from './animations';
-import type { Trie } from './algorithms/trie';
-import GameBoard from './Board.svelte';
-import { initializeGameState, sampleBoard, getUserId } from './store';
+import GameBoard, { animating } from './Board.svelte';
+import game, { clearSelection, dictionary } from './store';
 import BottomControls from './BottomControls.svelte';
 import WordContainer from './WordContainer.svelte';
 import Stats from './Stats.svelte';
 import { saveAnalytics } from './analytics';
   
   let loading = true;
-  let dictionary: Trie<string>;
   onMount(async () => {
-    dictionary = await loadDictionary();
+    $dictionary = await loadDictionary();
     loading = false;
     // initialize board on first load
-    handleReset(false);
+    $game = resetGame($game, $dictionary);
   });
-
-  const ROWS = 7;
-  const COLS = 6;
-
  
   const showStats = false;
-  let game = initializeGameState();
+  // let game = initializeGameState();
 
   let freqs: Freqs<string> = {};
   let newLetters: string[] = [];
@@ -50,81 +44,15 @@ import { saveAnalytics } from './analytics';
   let outroPromises: Record<string, Promise<void>> = {};
   let outroResolvers: Record<string, () => void> = {};
 
-  let latestWord: Tile[] = undefined;
-  let latestScore: number = undefined;
-  
-  const handleReset = (track = true) => {
-    if (track) {
-      const date = new Date()
-      saveAnalytics({
-        gameId: game.id,
-        turns: game.turn,
-        bestStreak: game.bestStreak,
-        bestChain: game.bestChain,
-        date: date.toISOString(),
-        userId: getUserId(),
-        words: game.words.map(w => w.word.map(tile => tile.letter).join('')),
-        duration: Math.round((+date - game.startedAt) / 1000),
-        abandoned: true,
-      })
+  const handleReset = (abandoned = false) => {
+    // TODO
+    if (abandoned) {
+      saveAnalytics($game, { abandoned });
     }
-
-    const prevBoard = game.board;
-    game = initializeGameState(sampleBoard);
-
-    highlighted = {};
-    latestWord = undefined;
-    if (!game.board.length) {
-      for (let i = 0; i < COLS; i++) {
-        game.board.push([]);
-        for (let j = 0; j < ROWS; j++) {
-          const [ , tile ] = sample([], 1);
-          game.board[i].push(tile);
-        }
-      }
-    }
-    
-    let { words } = findWords(dictionary, game.board);
-    while (words.length) {
-      for (const word of words) {
-        const a =  word.coords[Math.floor(Math.random() * word.word.length)];
-        const b =  word.coords[Math.floor(Math.random() * word.word.length)];
-
-        const tempTile = game.board[a[0]][a[1]];
-        game.board[a[0]][a[1]] = game.board[b[0]][b[1]];
-        game.board[b[0]][b[1]] = tempTile;
-      }
-      words = findWords(dictionary, game.board).words;
-    }
-    
-    for (const [i, col] of game.board.entries()) {
-      for (const [j, row] of col.entries()) {
-        // reset multipliers
-        game.board[i][j].multiplier = 1;
-        const prevTile = prevBoard?.[i]?.[j];
-        // keep reference to previous tileId for flip transition
-        // TODO consider just having a gameOver specific fallback here
-        if (prevTile) {
-          game.board[i][j].id = prevTile.id;
-        }
-      }
-    }
-    
-    // start game with 3 2x multipliers
-    for (let i = 0; i < 3; i++) {
-      const col = Math.floor(Math.random() * COLS);
-      const row = Math.floor(Math.random() * ROWS);
-      game.board[col][row].multiplier = 2;
-    }
-
-    game = game;
+    $game = resetGame($game, $dictionary);
   }
  
-  let selectedCoords: string[] = [];
-  let selectedTiles: number[] = [];
-  let highlighted: Highlighted = {};
-  let animating = false;
-  
+ 
   const getTileId = (e) => parseInt((e.target as HTMLElement).getAttribute('data-id'));
   
   const handleIntroStart = (e) => {
@@ -155,129 +83,64 @@ import { saveAnalytics } from './analytics';
     delete outroResolvers[tileId];
   }
   
-  const handleClick = async (i: number, j: number) => {
-    if (!animating) {
-      animating = true;
-      const coord = [i, j].join(',');
-      const tileId = game.board[i][j].id;
-      if (selectedCoords.length === 0) {
-        selectedCoords = [coord];
-        selectedTiles = [tileId];
-      } else if (selectedTiles.length === 1 && selectedTiles[0] !== tileId) {
-        game.turn++;
-        const [ i2, j2 ] = selectedCoords[0].split(',').map(i => parseInt(i));
-
-        // the ol' switcheroo
-        const first = game.board[i][j];
-        game.board[i][j] = game.board[i2][j2];
-        game.board[i2][j2] = first;
-        game = game;
-        // clear selection after switch
-        selectedCoords = selectedCoords.concat([coord]);
-        selectedTiles = selectedTiles.concat([tileId]);
-
-        // if tiles are adjacent deduct 1 swap
-        // else deduct 2
-        const distanceX = Math.abs(i - i2);
-        const distanceY = Math.abs(j - j2);
-        let penalty = 0;
-        if (Math.max(distanceX, distanceY) === 1) {
-          penalty = 1;
-        } else {
-          penalty = 2;
-        }
-
-        if (game.streak > 0) {
-          penalty--;
-        }
-        game.remainingSwaps -= penalty;
-        game = game;
-        
-        // gross!
-        // wait for end of swap animation
-        let bbox = getBBoxJSON();
-        while (selectedCoords.length) {
-          await delay(50);
-          const bbox2 = getBBoxJSON();
-          if (bbox === bbox2) {
-            clearSelection();
-            break;
-          }
-          bbox = bbox2;
-        };
-        
-        await handleScore();
-        // check game lose conditions
-      } else {
-        // click same tile twice
-        clearSelection();
-      }
-      animating = false;
-    }
-  }
-  
-  const clearSelection = () => {
-    selectedCoords = [];
-    selectedTiles = [];
-  }
-  
+ 
   const handleEndTurn = async () => {
-    if (game.remainingSwaps <= 0) {
+    if ($game.remainingSwaps <= 0) {
       await delay(animationDuration * 2);
-      game.lost = true;
-      animating = false;
+      $game.lost = true;
+      $animating = false;
     } else {
       // re-enable input faster
-      animating = false;
+      $animating = false;
       await delay(animationDuration * 3);
-      game.latestChain = 0;
-      game.marquee = undefined;
+      $game.latestChain = 0;
+      $game.marquee = undefined;
     }
-    game = game;
-    return game.lost;
+    $game = $game;
+    return $game.lost;
   }
   
   // chain is incremented on subsequent recursive calls of handleScore
   const handleScore = async (chain = 0, shuffle = false) => {
 
-    let { words, intersections } = findWords(dictionary, game.board);
+    let { words, intersections } = findWords($dictionary, $game.board);
     if (!words.length) {
       if (!shuffle && chain === 0) {
-        game.streak = 0;
+        $game.streak = 0;
       }
       return await handleEndTurn();
     }
 
     const word = words[0];
-    game.words.push(word);
-    highlighted = highlightTiles(words, highlighted);
+    $game.words.push(word);
+    $game.highlighted = highlightTiles(words, $game.highlighted);
 
-    game.intersections = intersections;
-    console.log(words, game.intersections);
+    $game.intersections = intersections;
+    console.log(words, $game.intersections);
 
     // let user see match before exiting
     await delay(2 * animationDuration / 3);
     score(words[0], chain);
 
     const filteredCoords = word.coords.filter((c, i) => (
-      !game.intersections[word.word[i].id]
+      !$game.intersections[word.word[i].id]
     ));
-    game.board = removeLetters(game.board, filteredCoords);
-    game.intersections = {};
-    game = game;
+    $game.board = removeLetters($game.board, filteredCoords);
+    $game.intersections = {};
+    $game = $game;
 
     await delay(animationDuration);
     await handleScore(chain + 1);
     
-    game = game;
+    $game = $game;
   }
   
   const highlightTiles = (words: Match[], prevHighlighted: Highlighted) => {
     const highlighted: Highlighted = {...prevHighlighted};
     for (const word of words) {
       let highlight: HighlightColors = 'green';
-      if ((word.axis === 'row' && word.word.length === COLS)
-        || (word.axis === 'col' && word.word.length === ROWS)) {
+      if ((word.axis === 'row' && word.word.length === DIMS.COLS)
+        || (word.axis === 'col' && word.word.length === DIMS.ROWS)) {
           highlight = 'orange';
       } else if (word.intersectingIds.length) {
         for (const id of word.intersectingIds) {
@@ -295,33 +158,33 @@ import { saveAnalytics } from './analytics';
   }
   
   const score = (word: Match, chain: number) => {
-    game.streak++;
+    $game.streak++;
 
-    if (game.streak > game.bestStreak) {
-      game.bestStreak = game.streak;
+    if ($game.streak > $game.bestStreak) {
+      $game.bestStreak = $game.streak;
     }
     if (word.intersection) {
-      game.shuffles++;
+      $game.shuffles++;
     }
-    if (word.word.length === COLS && word.axis === 'row') {
-      game.shuffles++;
+    if (word.word.length === DIMS.COLS && word.axis === 'row') {
+      $game.shuffles++;
     }
-    if (word.word.length === ROWS && word.axis === 'col') {
-      game.shuffles++;
+    if (word.word.length === DIMS.ROWS && word.axis === 'col') {
+      $game.shuffles++;
     }
 
     if (chain === 0) {
-      game.remainingSwaps += Math.max(word.word.length - 4, 0);
+      $game.remainingSwaps += Math.max(word.word.length - 4, 0);
     } else {
-      game.remainingSwaps++;
+      $game.remainingSwaps++;
     }
-    game.latestChain = chain;
-    game.bestChain = Math.max(game.bestChain, game.latestChain);
+    $game.latestChain = chain;
+    $game.bestChain = Math.max($game.bestChain, $game.latestChain);
     
-    latestWord = word.word;
-    latestScore = word.score;
-    game.score += word.score;
-    game.marquee = getMarqueeText(word, chain);
+    $game.latestWord = word.word;
+    $game.latestScore = word.score;
+    $game.score += word.score;
+    $game.marquee = getMarqueeText(word, chain);
   }
   
   const removeLetters = (board: Board, coords: Coord[]) => {
@@ -338,10 +201,10 @@ import { saveAnalytics } from './analytics';
     
     let localFreqs: Freqs<string>;
     let localLetters: string[] = [];
-    for (let i = 0; i < COLS; i++) {
-      for (let j = 0; j < ROWS; j++) {
+    for (let i = 0; i < DIMS.COLS; i++) {
+      for (let j = 0; j < DIMS.ROWS; j++) {
         if (cleared[i][j] == undefined) {
-          const [ stats, tile ] = sample(cleared, 1, game.turn);
+          const [ stats, tile ] = sample(cleared, 1, $game.turn);
           cleared[i][j] = tile;
           localFreqs = stats;
           localLetters.push(tile.letter);
@@ -355,22 +218,22 @@ import { saveAnalytics } from './analytics';
   }
   
   const handleShuffle = async () => {
-    if (!animating) {
-      game.shuffles--;
-      clearSelection();
-      const coords = Array.from({ length: COLS }).flatMap((_, i) => 
-        Array.from({ length: ROWS }).map((_, j) => [i, j])
+    if (!$animating) {
+      $game.shuffles--;
+      clearSelection(game);
+      const coords = Array.from({ length: DIMS.COLS }).flatMap((_, i) => 
+        Array.from({ length: DIMS.ROWS }).map((_, j) => [i, j])
       );
       const shuffledCoords = shuffle([...coords]);
-      const tempBoard = game.board.map(col => col.map(tile => tile));
+      const tempBoard = $game.board.map(col => col.map(tile => tile));
       coords.forEach((coord, i) => {
         const newCoord = shuffledCoords[i];
         const tmp = tempBoard[coord[0]][coord[1]];
         tempBoard[coord[0]][coord[1]] = tempBoard[newCoord[0]][newCoord[1]];
         tempBoard[newCoord[0]][newCoord[1]] = tmp;
       });
-      game.board = tempBoard;
-      game = game;
+      $game.board = tempBoard;
+      $game = $game;
 
       // pause for animation
       await delay(1200);
@@ -383,17 +246,17 @@ import { saveAnalytics } from './analytics';
 <div class=container>
   <Title />
   <div class=status>
-    <Swaps swaps={game.remainingSwaps} />
-    <Streak streak={game.streak} />
-    <WordChain chain={game.latestChain} />
+    <Swaps swaps={$game.remainingSwaps} />
+    <Streak streak={$game.streak} />
+    <WordChain chain={$game.latestChain} />
   </div>
   <div class=shuffle-container>
     <ActionButton
-      onClick={game.shuffles > 0 ? handleShuffle : undefined}
-      disabled={game.shuffles === 0}
+      onClick={$game.shuffles > 0 ? handleShuffle : undefined}
+      disabled={$game.shuffles === 0}
     >
       <span>
-        {game.shuffles}
+        {$game.shuffles}
       </span>
       <Shuffle />
     </ActionButton>
@@ -402,47 +265,27 @@ import { saveAnalytics } from './analytics';
     {#if loading}
       Loading Dictionary...
     {:else}
-      {#key game.score}
-        <div in:fly={{ y: 20 }}>{game.score}</div>
+      {#key $game.score}
+        <div in:fly={{ y: 20 }}>{$game.score}</div>
       {/key}
     {/if}
   </div>
   <WordContainer
-    {latestWord}
-    {latestScore}
-    marquee={game.marquee}
     onIntroStart={handleIntroStart}
     onIntroEnd={handleIntroEnd}
     onOutroStart={handleOutroStart}
     onOutroEnd={handleOutroEnd}
   />
-  <GameBoard
-    gameId={game.id}
-    board={game.board}
-    selected={selectedTiles}
-    {highlighted}
-    onClick={handleClick}
-    intersections={game.intersections}
-  />
+  <GameBoard {handleScore} />
   {#if showStats}
     <Stats {freqs} {newLetters} />
   {/if}
   <div class=spacer />
-  <BottomControls onReset={handleReset} />
+  <BottomControls onReset={() => handleReset(true)} />
 </div>
-{#if game.lost}
-  {#key game.id}
-    <GameOver
-      gameId={game.id}
-      score={game.score}
-      onReset={handleReset}
-      bestStreak={game.bestStreak}
-      bestChain={game.bestChain}
-      turns={game.turn}
-      words={game.words.sort((a, b) => b.score - a.score)}
-      numWords={game.words.length}
-      duration={Math.round((+new Date() - game.startedAt) / 1000)}
-    />
+{#if $game.lost}
+  {#key $game.id}
+    <GameOver onReset={handleReset} />
   {/key}
 {/if}
 
