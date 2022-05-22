@@ -26,9 +26,7 @@ export const loadLeaderboard = async (
   return data ?? [];
 }
 
-export const submitScore = async (game: GameState, {
-  name: string
-}) => {
+export const submitScore = async (game: GameState) => {
   const words = game.words.sort((a, b) => b.score - a.score);
   const name = localStorage.getItem('name') || '';
   const date = new Date();

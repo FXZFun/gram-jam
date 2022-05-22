@@ -1,14 +1,13 @@
 <script lang='ts'>
 
 import { onMount } from 'svelte';
-import { sample } from './algorithms/letters';
 
 import { fly } from 'svelte/transition';
 
 import Shuffle from 'svelte-material-icons/Shuffle.svelte';
 import { loadDictionary } from './algorithms/dictionary';
-import { DIMS, findWords, getMarqueeText, resetGame } from './algorithms/gameLogic';
-import type { Board, Coord, Freqs, HighlightColors, Highlighted, Match, Tile } from './types';
+import { DIMS, findWords, getMarqueeText, removeLetters, resetGame } from './algorithms/gameLogic';
+import type { HighlightColors, Highlighted, Match } from './types';
 import WordChain from './pills/WordChain.svelte';
 import Swaps from './Swaps.svelte';
 import Streak from './pills/Streak.svelte';
@@ -16,7 +15,7 @@ import GameOver from './modals/GameOver.svelte';
 import ActionButton from './components/ActionButton.svelte';
 import Title from './Title.svelte';
 import { shuffle} from './algorithms/shuffle';
-import { animationDuration, getAnimationPromise, delay, getBBoxJSON } from './animations';
+import { animationDuration, delay } from './animations';
 import GameBoard, { animating } from './Board.svelte';
 import game, { clearSelection, dictionary } from './store';
 import BottomControls from './BottomControls.svelte';
@@ -33,16 +32,6 @@ import { saveAnalytics } from './analytics';
   });
  
   const showStats = false;
-  // let game = initializeGameState();
-
-  let freqs: Freqs<string> = {};
-  let newLetters: string[] = [];
-  
-  let introPromises: Record<string, Promise<void>> = {};
-  let introResolvers: Record<string, () => void> = {};
-  
-  let outroPromises: Record<string, Promise<void>> = {};
-  let outroResolvers: Record<string, () => void> = {};
 
   const handleReset = (abandoned = false) => {
     // TODO
@@ -53,37 +42,8 @@ import { saveAnalytics } from './analytics';
   }
  
  
-  const getTileId = (e) => parseInt((e.target as HTMLElement).getAttribute('data-id'));
+  // const getTileId = (e) => parseInt((e.target as HTMLElement).getAttribute('data-id'));
   
-  const handleIntroStart = (e) => {
-    const tileId = getTileId(e);
-    const [ introPromise, introResolve ] = getAnimationPromise();
-    introPromises[tileId] = introPromise;
-    introResolvers[tileId] = introResolve;
-  }
-  
-  const handleIntroEnd = (e) => {
-    const tileId = getTileId(e);
-    introResolvers[tileId]?.();
-    delete introPromises[tileId];
-    delete introResolvers[tileId];
-  }
-  
-  const handleOutroStart = (e) => {
-    const tileId = getTileId(e);
-    const [ outroPromise, outroResolve ] = getAnimationPromise();
-    outroPromises[tileId] = outroPromise;
-    outroResolvers[tileId] = outroResolve;
-  }
-  
-  const handleOutroEnd = (e) => {
-    const tileId = getTileId(e);
-    outroResolvers[tileId]?.();
-    delete outroPromises[tileId];
-    delete outroResolvers[tileId];
-  }
-  
- 
   const handleEndTurn = async () => {
     if ($game.remainingSwaps <= 0) {
       await delay(animationDuration * 2);
@@ -125,14 +85,11 @@ import { saveAnalytics } from './analytics';
     const filteredCoords = word.coords.filter((c, i) => (
       !$game.intersections[word.word[i].id]
     ));
-    $game.board = removeLetters($game.board, filteredCoords);
+    $game.board = removeLetters($game.board, $game.turn, filteredCoords);
     $game.intersections = {};
-    $game = $game;
 
     await delay(animationDuration);
     await handleScore(chain + 1);
-    
-    $game = $game;
   }
   
   const highlightTiles = (words: Match[], prevHighlighted: Highlighted) => {
@@ -163,8 +120,8 @@ import { saveAnalytics } from './analytics';
     if ($game.streak > $game.bestStreak) {
       $game.bestStreak = $game.streak;
     }
-    if (word.intersection) {
-      $game.shuffles++;
+    if (word.axis === 'row' && word.intersectingIds) {
+      $game.shuffles += word.intersectingIds.length;
     }
     if (word.word.length === DIMS.COLS && word.axis === 'row') {
       $game.shuffles++;
@@ -185,36 +142,6 @@ import { saveAnalytics } from './analytics';
     $game.latestScore = word.score;
     $game.score += word.score;
     $game.marquee = getMarqueeText(word, chain);
-  }
-  
-  const removeLetters = (board: Board, coords: Coord[]) => {
-
-    // clear column
-    for (const [ x, y ] of coords) {
-      board[x][y] = undefined;
-    }
-    
-    const cleared = board.map(col => (
-      col.reverse()
-        .filter(tile => tile != undefined)
-    ));
-    
-    let localFreqs: Freqs<string>;
-    let localLetters: string[] = [];
-    for (let i = 0; i < DIMS.COLS; i++) {
-      for (let j = 0; j < DIMS.ROWS; j++) {
-        if (cleared[i][j] == undefined) {
-          const [ stats, tile ] = sample(cleared, 1, $game.turn);
-          cleared[i][j] = tile;
-          localFreqs = stats;
-          localLetters.push(tile.letter);
-        }
-      }
-    }
-    freqs = localFreqs;
-    newLetters = localLetters;
-
-    return cleared.map(col => col.reverse());
   }
   
   const handleShuffle = async () => {
@@ -270,15 +197,10 @@ import { saveAnalytics } from './analytics';
       {/key}
     {/if}
   </div>
-  <WordContainer
-    onIntroStart={handleIntroStart}
-    onIntroEnd={handleIntroEnd}
-    onOutroStart={handleOutroStart}
-    onOutroEnd={handleOutroEnd}
-  />
+  <WordContainer />
   <GameBoard {handleScore} />
   {#if showStats}
-    <Stats {freqs} {newLetters} />
+    <Stats />
   {/if}
   <div class=spacer />
   <BottomControls onReset={() => handleReset(true)} />

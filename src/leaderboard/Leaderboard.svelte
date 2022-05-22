@@ -1,10 +1,12 @@
 <script lang='ts' context='module'>
 import { writable } from 'svelte/store';
+import game from '../store';
 import { loadLeaderboard, loadLocalLeaderboard } from './leaderboard';
 
   const open = writable(false);
   const gameOver = writable(false);
   const entries = writable<SLeaderboardEntry[]>([]);
+  const localEntries = writable<SLeaderboardEntry[]>([]);
   
   export const closeLeaderboard = () => {
     gameOver.set(false);
@@ -12,12 +14,10 @@ import { loadLeaderboard, loadLocalLeaderboard } from './leaderboard';
     open.set(false);
   }
   
-  export const openLeaderboard = async (
-    from: SLeaderboardEntry = undefined,
-  ) => {
+  export const openLeaderboard = async (from: SLeaderboardEntry = undefined) => {
     if (from) {
-      console.log(from);
       gameOver.set(true);
+      localEntries.set(loadLocalLeaderboard());
       entries.set([from]);
       await Promise.all([
         loadAbove(from),
@@ -45,26 +45,20 @@ import { loadLeaderboard, loadLocalLeaderboard } from './leaderboard';
     return newEntries.length;
   }
  
- 
 </script>
 
 <script lang='ts'>
 import Close from 'svelte-material-icons/Close.svelte';
 import type { InfiniteEvent } from 'svelte-infinite-loading';
 import Modal from '../components/Modal.svelte';
-import type { SLeaderboardEntry } from '../types';
 import ActionButton from '../components/ActionButton.svelte';
 import { Tabs, TabList, TabPanel, Tab } from '../components/tabs';
 import EntryList from './EntryList.svelte';
-import { onMount } from 'svelte';
-  
-  let localGames: SLeaderboardEntry[];
+import type { SLeaderboardEntry } from '../types';
+import Game from '../Game.svelte';
 
-  onMount(() => {
-    localGames = loadLocalLeaderboard();
-  })
- 
- 
+  //export let loaded = false;
+  
   const handleInfinite = async (direction: 'asc' | 'desc', e: InfiniteEvent) => {
     if (!$gameOver && direction === 'asc') {
       e.detail.complete();
@@ -104,13 +98,17 @@ import { onMount } from 'svelte';
     <div slot=content class=content>
       <TabPanel>
         <EntryList
+          currGameId={$game.id}
+          relative={$game.remainingSwaps === 0}
           entries={$entries}
           handleInfinite={handleInfinite}
         />
       </TabPanel>
       <TabPanel>
         <EntryList
-          entries={localGames}
+          currGameId={$game.id}
+          relative={false}
+          entries={$localEntries}
           handleInfinite={(dir, e) => e.detail.complete()}
         />
       </TabPanel>

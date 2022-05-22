@@ -3,12 +3,7 @@ import { fly, fade } from 'svelte/transition';
 import Definition from './modals/Definition.svelte';
 import game from './store';
 import Word from './Word.svelte';
-import { flyIn, delay } from './animations';
-
-  export let onIntroStart: (e: any) => void = undefined;
-  export let onIntroEnd: (e: any) => void = undefined;
-  export let onOutroStart: (e: any) => void = undefined;
-  export let onOutroEnd: (e: any) => void = undefined;
+import { flyIn } from './animations';
 
 </script>
 
@@ -29,13 +24,7 @@ import { flyIn, delay } from './animations';
         <div class=word-score>
           <Definition word={$game.latestWord.map(t => t.letter).join('')} />
         </div>
-        <Word
-          onIntroStart={onIntroStart}
-          onIntroEnd={onIntroEnd}
-          onOutroStart={onOutroStart}
-          onOutroEnd={onOutroEnd}
-          word={$game.latestWord}
-        />
+        <Word word={$game.latestWord} />
         {#key $game.latestWord}
           <div in:flyIn={{ y: 20, delay: 500 }} class=word-score>+{$game.latestScore}</div>
         {/key}

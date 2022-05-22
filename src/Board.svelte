@@ -14,6 +14,8 @@ import game, { clearSelection } from './store';
 
 import BoardTile from './BoardTile.svelte';
 import Flipper from './Flipper.svelte';
+import Tile from './icons/Tile.svelte';
+import { hasContext } from 'svelte';
 
   export let handleScore: () => void;
   let prevGameId = '';
@@ -32,8 +34,8 @@ import Flipper from './Flipper.svelte';
       const tileId = $game.board[i][j].id;
       if ($game.selectedCoords.length === 0) {
         $game.selectedCoords = [coord];
-        $game.selectedTiles = [tileId];
-      } else if ($game.selectedTiles.length === 1 && $game.selectedTiles[0] !== tileId) {
+        $game.selectedTiles.add(tileId);
+      } else if ($game.selectedTiles.size === 1 && !$game.selectedTiles.has(tileId)) {
         $game.turn++;
         const [ i2, j2 ] = $game.selectedCoords[0].split(',').map(i => parseInt(i));
 
@@ -44,7 +46,7 @@ import Flipper from './Flipper.svelte';
         $game = $game;
         // clear selection after switch
         $game.selectedCoords = $game.selectedCoords.concat([coord]);
-        $game.selectedTiles = $game.selectedTiles.concat([tileId]);
+        $game.selectedTiles.add(tileId);
 
         // if tiles are adjacent deduct 1 swap
         // else deduct 2
@@ -107,7 +109,10 @@ import Flipper from './Flipper.svelte';
         delay: 0,
       }}"
       on:click={() => handleClick(i, j)}
-      class:flying={[...Object.keys($game.highlighted), ...$game.selectedTiles].includes(tile.id)}
+      class:flying={
+        $game.highlighted[tile.id] ||
+        $game.selectedTiles.has(tile.id)
+      }
     >
       <Flipper
         id={$game.id}
@@ -117,8 +122,8 @@ import Flipper from './Flipper.svelte';
         <BoardTile
           id={tile.id}
           letter={tile.letter}
-          active={!!$game.selectedTiles.length}
-          selected={$game.selectedTiles.includes(tile.id)}
+          active={!!$game.selectedTiles.size}
+          selected={$game.selectedTiles.has(tile.id)}
           highlighted={$game.highlighted[tile.id]}
           adjacent={false}
           multiplier={tile.multiplier}
@@ -139,7 +144,7 @@ import Flipper from './Flipper.svelte';
       <BoardTile
         id={+id}
         letter={tile.letter}
-        active={!!$game.selectedTiles.length}
+        active={$game.selectedTiles.size > 0}
         selected={false}
         highlighted='red'
         adjacent={false}
@@ -168,8 +173,8 @@ import Flipper from './Flipper.svelte';
   @media (min-width: 769px) {
     .board {
       gap: 10px;
-      height: 100%;
-      font-size: 2em;
+      height: 60%;
+      font-size: 2.5em;
     }
   }
   .tile-container {

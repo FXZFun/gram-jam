@@ -1,11 +1,11 @@
 <script lang='ts'>
-import { accordion } from './accordion';
+import { accordion } from '../accordion';
 import Info from 'svelte-material-icons/Information.svelte';
 import SwapHorizontal from 'svelte-material-icons/SwapHorizontal.svelte';
 import Autorenew from 'svelte-material-icons/Autorenew.svelte'
 import Fire from 'svelte-material-icons/Fire.svelte'
-import Modal from './components/Modal.svelte';
-import ActionButton from './components/ActionButton.svelte';
+import Modal from '../components/Modal.svelte';
+import ActionButton from '../components/ActionButton.svelte';
 import Close from 'svelte-material-icons/Close.svelte';
 import Flash from 'svelte-material-icons/Flash.svelte';
 import Shuffle from 'svelte-material-icons/Shuffle.svelte';

@@ -1,8 +1,8 @@
 import { sample, scoreWord } from "./letters";
 import type { Trie } from "./trie";
-import type  { Board, Coord, GameState, Match, Tile } from "../types";
-import type { Writable } from "svelte/store";
-import { dictionary, initializeGameState, reset } from "../store";
+import type  { Board, Coord, Freqs, GameState, Match, Tile } from "../types";
+import game, { initializeGameState, sampleBoard } from "../store";
+// import { stats } from '../Stats.svelte';
 
 export const DIMS = {
   ROWS: 7,
@@ -14,7 +14,6 @@ export const resetGame = (game: GameState, dictionary: Trie<string>) => {
   const prevBoard = game.board;
   game = initializeGameState();
 
-  const highlighted = {};
   if (!game.board.length) {
     for (let i = 0; i < DIMS.COLS; i++) {
       game.board.push([]);
@@ -205,6 +204,34 @@ const findWord = (
   }
     
   return longestWord;
+}
+
+export const removeLetters = (board: Board, turn: number, coords: Coord[]) => {
+
+  // clear column
+  for (const [ x, y ] of coords) {
+    board[x][y] = undefined;
+  }
+  
+  const cleared = board.map(col => (
+    col.reverse()
+      .filter(tile => tile != undefined)
+  ));
+  
+  let freqs: Freqs<string>;
+  let newLetters: string[] = [];
+  for (let i = 0; i < DIMS.COLS; i++) {
+    for (let j = 0; j < DIMS.ROWS; j++) {
+      if (cleared[i][j] == undefined) {
+        const [ stats, tile ] = sample(cleared, 1, turn);
+        cleared[i][j] = tile;
+        freqs = stats;
+        newLetters.push(tile.letter);
+      }
+    }
+  }
+  // stats.set({ freqs, newLetters })
+  return cleared.map(col => col.reverse());
 }
 
 export const getMarqueeText = (match: Match, chain: number) => {

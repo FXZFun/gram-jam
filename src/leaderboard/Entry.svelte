@@ -6,20 +6,22 @@ import { scoreWord } from "../algorithms/letters";
 import Turns from "../pills/Turns.svelte";
 import Words from "../pills/Words.svelte";
 import StaticWord from "../StaticWord.svelte";
+import { onMount } from "svelte";
 
   export let entry: SLeaderboardEntry;
   export let current: boolean;
   export let position: number | undefined;
   let ref: HTMLElement;
 
-  $: {
+  onMount(() => {
+    console.log(ref, current);
     if (ref && current) {
       ref.scrollIntoView({
         behavior: 'smooth',
         block: 'center',
       });
     }
-  }
+  });
   
   const parseDate = (timestamp: string | { seconds: number }) => (
     typeof timestamp === 'string'
@@ -44,9 +46,11 @@ import StaticWord from "../StaticWord.svelte";
 >
   <div class=row>
     <div class=topline>
-      {#if position !== undefined}
-        <h2 class=rank>#{position + 1}</h2>
-      {/if}
+      <h2 class=rank>
+        {#if position !== undefined}
+          #{position + 1}
+        {/if}
+      </h2>
       <h3 class=name>{entry.userName ?? entry.name}</h3>
       <h2 class=score>{entry.score}</h2>
     </div>

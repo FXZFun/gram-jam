@@ -3,18 +3,18 @@ import { Writable, writable } from "svelte/store";
 import type { Board, GameState } from './types';
 import type { Trie } from './algorithms/trie';
 
-export const initializeGameState = (sampleBoard?: Board): GameState => ({
+export const initializeGameState = (initialBoard: Board = []): GameState => ({
   startedAt: +new Date(),
   id: uuid(),
-  board: sampleBoard ?? [],
+  board: initialBoard,
   latestWord: undefined,
   selectedCoords: [],
-  selectedTiles: [],
+  selectedTiles: new Set<number>(),
   highlighted: {},
   intersections: {},
   words: [],
   turn: 0,
-  remainingSwaps: 2,
+  remainingSwaps: 10,
   shuffles: 1,
   streak: 0,
   bestStreak: 0,
@@ -35,7 +35,7 @@ export const clearSelection = (game: Writable<GameState>) => {
   game.update(game => ({
     ...game,
     selectedCoords: [],
-    selectedTiles: [],
+    selectedTiles: new Set(),
   }));
 }
 

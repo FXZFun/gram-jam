@@ -5,7 +5,6 @@ import ContentPaste from 'svelte-material-icons/ContentPaste.svelte';
 import Restart from 'svelte-material-icons/Restart.svelte';
 
 import Modal from '../components/Modal.svelte';
-import type { LeaderboardEntry } from '../types';
 import ActionButton from '../components/ActionButton.svelte';
 import Streak from '../pills/Streak.svelte';
 import WordChain from '../pills/WordChain.svelte';
@@ -13,7 +12,7 @@ import { openLeaderboard } from '../leaderboard/Leaderboard.svelte';
 import PostScore from '../leaderboard/PostScore.svelte';
 import Turns from '../pills/Turns.svelte';
 import Words from '../pills/Words.svelte';
-import { saveAnalytics } from '../analytics';
+import { saveAnalytics, saveLocalLeaderboard, saveLocalStats } from '../analytics';
 import game from '../store';
 import StaticWord from '../StaticWord.svelte';
 import Trophy from '../icons/Trophy.svelte';
@@ -36,9 +35,8 @@ import Trophy from '../icons/Trophy.svelte';
       numWords: $game.words.length,
       date: (new Date()).toISOString(),
     }
-    const localGames: LeaderboardEntry[] = JSON.parse(localStorage.getItem('games') ?? '[]');
-    localGames.push(entry);
-    localStorage.setItem('games', JSON.stringify(localGames));
+    saveLocalStats($game);
+    saveLocalLeaderboard(entry);
     saveAnalytics($game);
   });
   

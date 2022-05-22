@@ -2,22 +2,19 @@
 import VirtualList from 'svelte-tiny-virtual-list';
 import InfiniteLoading, { InfiniteEvent } from 'svelte-infinite-loading';
 import type { SLeaderboardEntry } from '../types';
-import game from '../store';
 import Entry from './Entry.svelte';
 import { onMount } from 'svelte';
 
+  export let relative: boolean;
+  export let currGameId: string;
   export let entries: SLeaderboardEntry[];
   export let handleInfinite: (direction: 'asc' | 'desc', e: InfiniteEvent) => void = undefined;
-  let relative: boolean = false;
   let listHeight: number;
   onMount(() => {
     listHeight = document.querySelector('#leaderboard .scroll-container-inner')
       ?.getBoundingClientRect().height
       ?? 600;
   });
-  $: {
-    console.log(listHeight);
-  }
 </script>
 
 <VirtualList
@@ -42,8 +39,8 @@ import { onMount } from 'svelte';
   >
     <Entry
       entry={entries[index]}
-      current={entries[index].id === $game.id}
-      position={$game.remainingSwaps > 0 ? index : undefined}
+      current={(entries[index].id ?? entries[index].gameId) === currGameId}
+      position={relative ? undefined : index}
     />
   </div>
   <InfiniteLoading

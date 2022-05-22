@@ -57,14 +57,21 @@ export type LeaderboardEntry = {
   date: string | { seconds: number };
 }
 
+export type Stats = {
+  gamesPlayed: number;
+  totalWordsPlayed: number;
+  wordScoreFreqs: Record<number, number>;
+  wordLengths: Record<number, number>;
+}
+
 export type GameState = {
-  readonly startedAt: number,
+  readonly startedAt: number;
   readonly id: string;
   board: Board;
   latestWord?: Tile[];
   latestScore?: number;
   selectedCoords: string[];
-  selectedTiles: number[];
+  selectedTiles: Set<number>;
   highlighted: Highlighted;
   intersections: Intersections;
   words: Match[];

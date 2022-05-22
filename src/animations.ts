@@ -20,14 +20,14 @@ export const flipDuration = (len: number) => animationDuration * Math.sqrt(len /
 export const [ send, receive ] = crossfade({
 	duration: flipDuration,
   easing: quadOut,
-	fallback: (node, params, intro) => {
-    return fly(node, {
+	fallback: (node, params, intro) => (
+    fly(node, {
       y: intro ? -getTileSize() : 0,
       x: intro ? 0 : 100,
       duration: animationDuration,
       easing: intro ? quadIn : quadOut
     })
-  }
+  )
 });
 
 export const spin = (node: HTMLElement) => {

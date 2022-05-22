@@ -1,12 +1,15 @@
+<script lang="ts" context='module'>
+import { writable } from "svelte/store";
+
+export const stats = writable<{ freqs?: Freqs<string>, newLetters?: string[] }>({});
+</script>
+
 <script lang="ts">
 import type { Freqs } from "./types";
 import { flip } from 'svelte/animate';
-import { send, receive, flipDuration } from './animations';
+import { send, receive } from './animations';
 
-  export let freqs: Freqs<string>;
-  export let newLetters: string[];
-  
-  $: sorted = Object.entries(freqs).sort((a, b) => b[1] - a[1]);
+  $: sorted = Object.entries($stats.freqs).sort((a, b) => b[1] - a[1]);
   $: max = sorted?.[0]?.[1] ?? 0;
 </script>
 
@@ -20,7 +23,7 @@ import { send, receive, flipDuration } from './animations';
     >
       <div
         class=bar
-        class:sampled={newLetters.includes(letter)}
+        class:sampled={$stats.newLetters.includes(letter)}
         style='height: {100 * weight / max}%;'
       />
       <span class=letter>{letter}</span>

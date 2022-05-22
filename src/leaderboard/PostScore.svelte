@@ -17,7 +17,7 @@ import { submitScore } from "./leaderboard";
     localStorage.setItem('name', name);
     if (!loading) {
       loading = true;
-      const e = await submitScore($game, { name })
+      const e = await submitScore($game);
       loading = false;
       console.log((new Date()).toISOString(), e);
       openLeaderboard(e);
