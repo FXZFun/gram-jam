@@ -1,4 +1,6 @@
-<div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
+<div class="lds-ellipsis">
+  <div /><div /><div /><div />
+</div>
 
 <style>
 .lds-ellipsis {
@@ -13,8 +15,11 @@
   width: 13px;
   height: 13px;
   border-radius: 50%;
-  background: #fff;
+  background: #2F3640;
   animation-timing-function: cubic-bezier(0, 1, 1, 0);
+}
+:global(body.dark-mode) .lds-ellipsis div {
+  background: #fff;
 }
 .lds-ellipsis div:nth-child(1) {
   left: 8px;
