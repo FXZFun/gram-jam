@@ -1,5 +1,5 @@
 import { getUserId } from "../store";
-import type { GameState, LeaderboardEntry, SLeaderboardEntry } from "../types";
+import type { GameState, SLeaderboardEntry } from "../types";
 import { supabase } from "./supabase";
 
 export const loadLeaderboard = async (
@@ -26,6 +26,26 @@ export const loadLeaderboard = async (
   return data ?? [];
 }
 
+export const loadLocalLeaderboard = () => {
+    // load local
+    if (localStorage.getItem('updated') !== 'true') {
+      localStorage.removeItem('games');
+      localStorage.setItem('updated', 'true');
+    }
+    const games: SLeaderboardEntry[] = JSON.parse(localStorage.getItem('games')) ?? [];
+    console.log(games);
+    return games
+      .filter(g => g.score)
+      .map(g => ({
+        ...g,
+        id: g.gameId,
+        userName: g.userName ?? (g as any).name,
+        numTurns: g.numTurns ?? (g as any).turns,
+      }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 50);
+}
+ 
 export const submitScore = async (game: GameState) => {
   const words = game.words.sort((a, b) => b.score - a.score);
   const name = localStorage.getItem('name') || '';
@@ -46,18 +66,3 @@ export const submitScore = async (game: GameState) => {
     })
   return response.data[0];
 }
-
-export const loadLocalLeaderboard = () => {
-    // load local
-    if (localStorage.getItem('updated') !== 'true') {
-      localStorage.removeItem('games');
-      localStorage.setItem('updated', 'true');
-    }
-    const games: SLeaderboardEntry[] = JSON.parse(localStorage.getItem('games')) ?? [];
-    return games
-      .filter(g => g.score)
-      .map(g => ({ ...g, id: g.gameId }))
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 50);
-}
- 

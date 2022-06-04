@@ -2,7 +2,31 @@
 import { writable } from "svelte/store";
 
   export const animating = writable(false);
+  export const selected = writable<{ coords: string[], tiles: Set<number> }>({
+    coords: [],
+    tiles: new Set(),
+  });
   
+  export const turns = writable<Turn[]>([]);
+  export const prevWordPointer = writable(0);
+  export const lastTurnTimestamp = writable(+new Date());
+
+  export const clearSelection = () => {
+    selected.set({
+      coords: [],
+      tiles: new Set(),
+    });
+  }
+  
+  export const updateTurns = () => {
+
+  }
+
+  export const resetAnalytics = () => {
+    turns.set([]);
+    prevWordPointer.set(0);
+    lastTurnTimestamp.set(+new Date());
+  }
 </script>
 
 <script lang="ts">
@@ -10,14 +34,13 @@ import { flip } from 'svelte/animate';
 
 import { fade } from 'svelte/transition';
 import { send, receive, flipDuration, getBBoxJSON, delay } from './animations';
-import game, { clearSelection } from './store';
+import game from './store';
 
 import BoardTile from './BoardTile.svelte';
 import Flipper from './Flipper.svelte';
-import Tile from './icons/Tile.svelte';
-import { hasContext } from 'svelte';
+import type { Coord, Turn } from "./types";
 
-  export let handleScore: () => void;
+  export let handleScore: () => Promise<boolean>;
   let prevGameId = '';
   $: {
     // play flip animation
@@ -26,18 +49,19 @@ import { hasContext } from 'svelte';
     }, 1000);
   }
 
+  const coordStr2Int = (c: string) => c.split(',').map(i => parseInt(i));
  
   const handleClick = async (i: number, j: number) => {
     if (!$animating) {
       $animating = true;
       const coord = [i, j].join(',');
       const tileId = $game.board[i][j].id;
-      if ($game.selectedCoords.length === 0) {
-        $game.selectedCoords = [coord];
-        $game.selectedTiles.add(tileId);
-      } else if ($game.selectedTiles.size === 1 && !$game.selectedTiles.has(tileId)) {
+      if ($selected.coords.length === 0) {
+        $selected.coords = [coord];
+        $selected.tiles.add(tileId);
+      } else if ($selected.tiles.size === 1 && !$selected.tiles.has(tileId)) {
         $game.turn++;
-        const [ i2, j2 ] = $game.selectedCoords[0].split(',').map(i => parseInt(i));
+        const [ i2, j2 ] = coordStr2Int($selected.coords[0]);
 
         // the ol' switcheroo
         const first = $game.board[i][j];
@@ -45,8 +69,8 @@ import { hasContext } from 'svelte';
         $game.board[i2][j2] = first;
         $game = $game;
         // clear selection after switch
-        $game.selectedCoords = $game.selectedCoords.concat([coord]);
-        $game.selectedTiles.add(tileId);
+        $selected.coords.push(coord);
+        $selected.tiles.add(tileId);
 
         // if tiles are adjacent deduct 1 swap
         // else deduct 2
@@ -68,24 +92,34 @@ import { hasContext } from 'svelte';
         // gross!
         // wait for end of swap animation
         let bbox = getBBoxJSON();
-        while ($game.selectedCoords.length) {
+        while ($selected.coords.length) {
           await delay(50);
           const bbox2 = getBBoxJSON();
           if (bbox === bbox2) {
-            clearSelection(game);
+            clearSelection();
             break;
           }
           bbox = bbox2;
         };
         
         await handleScore();
-        // check game lose conditions
+        updateTurns([[i, j], [i2, j2]]);
       } else {
         // click same tile twice
-        clearSelection(game);
+        clearSelection();
       }
       $animating = false;
     }
+  }
+
+  const updateTurns = (coords: Coord[]) => {
+    $turns.push({
+      durationSeconds: (+(new Date()) - $lastTurnTimestamp) / 1000,
+      words: $game.words.slice($prevWordPointer),
+      coords
+    });
+    $prevWordPointer = $game.words.length;
+    $lastTurnTimestamp = +new Date();
   }
   
   $: tiles = $game.board.flatMap((row, i) => row.map((tile, j) => ({ i, j, tile })));
@@ -111,7 +145,7 @@ import { hasContext } from 'svelte';
       on:click={() => handleClick(i, j)}
       class:flying={
         $game.highlighted[tile.id] ||
-        $game.selectedTiles.has(tile.id)
+        $selected.tiles.has(tile.id)
       }
     >
       <Flipper
@@ -122,8 +156,8 @@ import { hasContext } from 'svelte';
         <BoardTile
           id={tile.id}
           letter={tile.letter}
-          active={!!$game.selectedTiles.size}
-          selected={$game.selectedTiles.has(tile.id)}
+          active={!!$selected.tiles.size}
+          selected={$selected.tiles.has(tile.id)}
           highlighted={$game.highlighted[tile.id]}
           adjacent={false}
           multiplier={tile.multiplier}
@@ -144,7 +178,7 @@ import { hasContext } from 'svelte';
       <BoardTile
         id={+id}
         letter={tile.letter}
-        active={$game.selectedTiles.size > 0}
+        active={$selected.tiles.size > 0}
         selected={false}
         highlighted='red'
         adjacent={false}

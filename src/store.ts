@@ -8,13 +8,11 @@ export const initializeGameState = (initialBoard: Board = []): GameState => ({
   id: uuid(),
   board: initialBoard,
   latestWord: undefined,
-  selectedCoords: [],
-  selectedTiles: new Set<number>(),
   highlighted: {},
   intersections: {},
   words: [],
   turn: 0,
-  remainingSwaps: 10,
+  remainingSwaps: 4,
   shuffles: 1,
   streak: 0,
   bestStreak: 0,
@@ -30,14 +28,6 @@ export const gameState = writable(initializeGameState());
 export const dictionary = writable<Trie<string>>();
 
 export const reset = (game: Writable<GameState>) => game.set(initializeGameState());
-
-export const clearSelection = (game: Writable<GameState>) => {
-  game.update(game => ({
-    ...game,
-    selectedCoords: [],
-    selectedTiles: new Set(),
-  }));
-}
 
 let id = 0;
 const makeBoardFromLetters = (letters: string[][]): Board => (
@@ -62,6 +52,15 @@ export const getUserId = () => {
   if (!userId) {
     userId = uuid();
     localStorage.setItem('userId', userId);
+  }
+  return userId;
+}
+
+export const getUserName = () => {
+  let userId = localStorage.getItem('name');
+  if (!userId) {
+    userId = uuid();
+    localStorage.setItem('name', userId);
   }
   return userId;
 }

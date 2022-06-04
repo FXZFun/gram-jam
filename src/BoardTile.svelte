@@ -143,10 +143,6 @@
     background-color: #cc9601;
     border-color: #836f00;
   }
-  .tile.adjacent {
-  }
-  .tile.non-adjacent {
-  }
   .multiplier {
     position: absolute;
     height: 1.75em;

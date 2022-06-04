@@ -15,16 +15,16 @@ import { loadLeaderboard, loadLocalLeaderboard } from './leaderboard';
   }
   
   export const openLeaderboard = async (from: SLeaderboardEntry = undefined) => {
+    open.set(true);
+    localEntries.set(loadLocalLeaderboard());
     if (from) {
       gameOver.set(true);
-      localEntries.set(loadLocalLeaderboard());
       entries.set([from]);
       await Promise.all([
         loadAbove(from),
         loadBelow(from)
       ]);
     }
-    open.set(true);
 
     // load local
     if (localStorage.getItem('updated') !== 'true') {
@@ -55,7 +55,6 @@ import ActionButton from '../components/ActionButton.svelte';
 import { Tabs, TabList, TabPanel, Tab } from '../components/tabs';
 import EntryList from './EntryList.svelte';
 import type { SLeaderboardEntry } from '../types';
-import Game from '../Game.svelte';
 
   //export let loaded = false;
   
@@ -91,12 +90,12 @@ import Game from '../Game.svelte';
     <div slot=title>
       <h1>Leaderboards</h1>
       <TabList>
-        <Tab>Global</Tab>
-        <Tab>Personal</Tab>
+        <Tab idx={0}>Global</Tab>
+        <Tab idx={1}>Personal</Tab>
       </TabList>
     </div>
     <div slot=content class=content>
-      <TabPanel>
+      <TabPanel idx={0}>
         <EntryList
           currGameId={$game.id}
           relative={$game.remainingSwaps === 0}
@@ -104,12 +103,12 @@ import Game from '../Game.svelte';
           handleInfinite={handleInfinite}
         />
       </TabPanel>
-      <TabPanel>
+      <TabPanel idx={1}>
         <EntryList
           currGameId={$game.id}
           relative={false}
           entries={$localEntries}
-          handleInfinite={(dir, e) => e.detail.complete()}
+          handleInfinite={(_, e) => e.detail.complete()}
         />
       </TabPanel>
     </div>
@@ -124,6 +123,7 @@ import Game from '../Game.svelte';
 
 <style>
   .content {
+		overflow-x: hidden;
     margin: -1em;
   }
 </style>

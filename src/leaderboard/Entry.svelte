@@ -14,7 +14,6 @@ import { onMount } from "svelte";
   let ref: HTMLElement;
 
   onMount(() => {
-    console.log(ref, current);
     if (ref && current) {
       ref.scrollIntoView({
         behavior: 'smooth',
@@ -51,13 +50,13 @@ import { onMount } from "svelte";
           #{position + 1}
         {/if}
       </h2>
-      <h3 class=name>{entry.userName ?? entry.name}</h3>
+      <h3 class=name>{entry.userName}</h3>
       <h2 class=score>{entry.score}</h2>
     </div>
   </div>
   <div class=row>
     <div class=pills>
-      <Turns turns={entry.turns ?? entry.numTurns} />
+      <Turns turns={entry.numTurns} />
       {#if entry.numWords}
         <Words numWords={entry.numWords} />
       {/if}
@@ -75,9 +74,6 @@ import { onMount } from "svelte";
 </div>
 
 <style>
-  * {
-    font-size: 16px;
-  }
   .container {
     width: calc(100% - 1em);
     display: flex;

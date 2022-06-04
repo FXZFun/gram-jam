@@ -1,5 +1,6 @@
 <script lang="ts">
 import { fly, fade } from 'svelte/transition';
+import { Confetti } from 'svelte-confetti';
 import Definition from './modals/Definition.svelte';
 import game from './store';
 import Word from './Word.svelte';
@@ -9,6 +10,13 @@ import { flyIn } from './animations';
 
   <div class=latest-word>
     {#if $game.latestWord !== undefined}
+      {#key $game.latestWord.map(t => t.letter).join()}
+        {#if $game.latestScore > 30}
+          <div class=confetti>
+            <Confetti />
+          </div>
+        {/if}
+      {/key}
       <div class=marquee-outer>
         {#key $game.marquee}
           <span 
@@ -25,7 +33,7 @@ import { flyIn } from './animations';
           <Definition word={$game.latestWord.map(t => t.letter).join('')} />
         </div>
         <Word word={$game.latestWord} />
-        {#key $game.latestWord}
+        {#key $game.latestWord.map(t => t.letter).join()}
           <div in:flyIn={{ y: 20, delay: 500 }} class=word-score>+{$game.latestScore}</div>
         {/key}
       </div>
@@ -41,6 +49,10 @@ import { flyIn } from './animations';
     align-items: center;
     justify-content: space-evenly;
     font-weight: bold;
+  }
+  .confetti {
+    height: 0;
+    overflow: visible;
   }
   .marquee-outer {
     height: 1.5em;

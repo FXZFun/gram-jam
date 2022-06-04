@@ -16,6 +16,7 @@ import { saveAnalytics, saveLocalLeaderboard, saveLocalStats } from '../analytic
 import game from '../store';
 import StaticWord from '../StaticWord.svelte';
 import Trophy from '../icons/Trophy.svelte';
+import { resetAnalytics, turns } from '../Board.svelte';
   
   export let onReset: () => void;
   const words = $game.words.sort((a, b) => b.score - a.score);
@@ -37,7 +38,8 @@ import Trophy from '../icons/Trophy.svelte';
     }
     saveLocalStats($game);
     saveLocalLeaderboard(entry);
-    saveAnalytics($game);
+    saveAnalytics($game, $turns);
+    resetAnalytics();
   });
   
   const handleShare = () => {

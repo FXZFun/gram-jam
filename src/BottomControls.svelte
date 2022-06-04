@@ -8,6 +8,7 @@ import DarkMode from './DarkMode.svelte';
 import Feedback from './modals/Feedback.svelte';
 import Leaderboard, { openLeaderboard } from './leaderboard/Leaderboard.svelte';
 import Trophy from './icons/Trophy.svelte';
+import ConfirmReset from './modals/ConfirmReset.svelte';
 
 export let onReset: () => void;
 
@@ -21,10 +22,7 @@ export let onReset: () => void;
     <Trophy />
   </ActionButton>
   <Feedback />
-  <ActionButton onClick={onReset}>
-    <Restart size=1em />
-    Reset
-  </ActionButton>
+  <ConfirmReset onReset={onReset} />
 	<Tutorial />
   <DarkMode />
 </div>

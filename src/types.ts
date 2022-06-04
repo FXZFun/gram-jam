@@ -70,8 +70,6 @@ export type GameState = {
   board: Board;
   latestWord?: Tile[];
   latestScore?: number;
-  selectedCoords: string[];
-  selectedTiles: Set<number>;
   highlighted: Highlighted;
   intersections: Intersections;
   words: Match[];
@@ -92,22 +90,30 @@ export type Highlighted = Record<number, HighlightColors>;
 
 export type Flagged = {
   word: string,
+  userId?: string,
   reason: 'insensitive' | 'obscure'
 }
 
 export type Feedback = {
   userId?: string,
   feedback: string,
-  date: Date,
+}
+
+export type Turn = {
+  durationSeconds: number,
+  words: Match[],
+  coords: Coord[],
 }
 
 export type AnalyticsReport = {
-  gameId: string,
+  id: string,
   userId: string,
-  duration: number,
+  userName?: string,
   date: string,
+  score: number,
+  durationSeconds: number,
   words: string[],
-  turns: number,
+  turns: Turn[],
   bestStreak: number,
   bestChain: number,
   abandoned?: boolean,

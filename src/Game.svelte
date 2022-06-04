@@ -16,8 +16,8 @@ import ActionButton from './components/ActionButton.svelte';
 import Title from './Title.svelte';
 import { shuffle} from './algorithms/shuffle';
 import { animationDuration, delay } from './animations';
-import GameBoard, { animating } from './Board.svelte';
-import game, { clearSelection, dictionary } from './store';
+import GameBoard, { clearSelection, animating, turns } from './Board.svelte';
+import game, { dictionary } from './store';
 import BottomControls from './BottomControls.svelte';
 import WordContainer from './WordContainer.svelte';
 import Stats from './Stats.svelte';
@@ -34,11 +34,11 @@ import { saveAnalytics } from './analytics';
   const showStats = false;
 
   const handleReset = (abandoned = false) => {
-    // TODO
     if (abandoned) {
-      saveAnalytics($game, { abandoned });
+      saveAnalytics($game, $turns, { abandoned });
     }
     $game = resetGame($game, $dictionary);
+    $turns = []
   }
  
  
@@ -147,7 +147,7 @@ import { saveAnalytics } from './analytics';
   const handleShuffle = async () => {
     if (!$animating) {
       $game.shuffles--;
-      clearSelection(game);
+      clearSelection();
       const coords = Array.from({ length: DIMS.COLS }).flatMap((_, i) => 
         Array.from({ length: DIMS.ROWS }).map((_, j) => [i, j])
       );

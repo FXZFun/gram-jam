@@ -5,9 +5,9 @@ import IconButton from "../components/IconButton.svelte";
 import ActionButton from "../components/ActionButton.svelte";
 import Modal from "../components/Modal.svelte";
 import Send from 'svelte-material-icons/Send.svelte';
-import { addDoc } from '@firebase/firestore';
-import { feedback as feedbackDb } from '../db';
+import { supabase } from '../leaderboard/supabase';
 import { getUserId } from '../store';
+import type { Feedback } from '../types';
 
 let open = false;
 let feedback: string;
@@ -23,13 +23,13 @@ const handleClose = () => {
   open = false;
 }
 
-const handleSendFeedback = () => {
+const handleSendFeedback = async () => {
 
-  addDoc(feedbackDb, {
-    userId: getUserId(),
-    feedback,
-    date: new Date(),
-  })
+  await supabase.from<Feedback>('feedback')
+    .insert({ 
+      userId: getUserId(),
+      feedback,
+    });
   feedback = undefined;
   open = false;
 }

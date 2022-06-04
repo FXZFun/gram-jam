@@ -1,7 +1,6 @@
-import { addDoc, deleteField } from "@firebase/firestore";
-import { analytics } from "./db";
-import { getUserId } from "./store";
-import type { AnalyticsReport, GameState, LeaderboardEntry, Stats } from "./types";
+import { supabase } from "./leaderboard/supabase";
+import { getUserId, getUserName } from "./store";
+import type { AnalyticsReport, GameState, LeaderboardEntry, Stats, Turn } from "./types";
 
 type AnalyticsProps = {
   abandoned: boolean;
@@ -11,20 +10,27 @@ const defaultProps = {
   abandoned: false,
 }
 
-export const saveAnalytics = async (game: GameState, props: AnalyticsProps = defaultProps) => {
+export const saveAnalytics = async (
+  game: GameState,
+  turns: Turn[],
+  props: AnalyticsProps = defaultProps
+) => {
 
   const date = new Date()
-  await addDoc(analytics, {
-    gameId: game.id,
-    turns: game.turn,
-    bestStreak: game.bestStreak,
-    bestChain: game.bestChain,
-    date: date.toISOString(),
-    userId: getUserId(),
-    words: game.words.map(w => w.word.map(tile => tile.letter).join('')),
-    duration: Math.round((+date - game.startedAt) / 1000),
-    abandoned: props.abandoned,
-  })
+  await supabase.from<AnalyticsReport>('analytics')
+    .insert({
+      id: game.id,
+      turns,
+      userId: getUserId(),
+      userName: getUserName(),
+      score: game.score,
+      bestStreak: game.bestStreak,
+      bestChain: game.bestChain,
+      date: date.toISOString(),
+      words: game.words.map(w => w.word.map(tile => tile.letter).join('')),
+      durationSeconds: Math.round((+date - game.startedAt) / 1000),
+      abandoned: props.abandoned,
+    })
 }
 
 export const saveLocalStats = (game: GameState) => {
