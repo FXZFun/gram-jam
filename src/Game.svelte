@@ -22,6 +22,7 @@ import BottomControls from './BottomControls.svelte';
 import WordContainer from './WordContainer.svelte';
 import Stats from './Stats.svelte';
 import { saveAnalytics } from './analytics';
+import Spinner from './components/Spinner.svelte';
   
   let loading = true;
   onMount(async () => {
@@ -76,7 +77,6 @@ import { saveAnalytics } from './analytics';
     $game.highlighted = highlightTiles(words, $game.highlighted);
 
     $game.intersections = intersections;
-    console.log(words, $game.intersections);
 
     // let user see match before exiting
     await delay(2 * animationDuration / 3);
@@ -190,7 +190,11 @@ import { saveAnalytics } from './analytics';
   </div>
   <div class=score-container>
     {#if loading}
+      <div class=loading>
       Loading Dictionary...
+        <br/>
+        <Spinner />
+      </div>
     {:else}
       {#key $game.score}
         <div in:fly={{ y: 20 }}>{$game.score}</div>
@@ -224,6 +228,12 @@ import { saveAnalytics } from './analytics';
     box-sizing: border-box;         /* Opera/IE 8+ */
     overscroll-behavior: contain;
     overflow: hidden;
+  }
+  .loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
   .spacer {
     flex-grow: 1;

@@ -3,7 +3,7 @@ import Restart from 'svelte-material-icons/Restart.svelte';
 import Twitter from 'svelte-material-icons/Twitter.svelte';
 
 import ActionButton from './components/ActionButton.svelte';
-import Tutorial from './tutorial/Tutorial.svelte';
+import Tutorial from './modals/Tutorial.svelte';
 import DarkMode from './DarkMode.svelte';
 import Feedback from './modals/Feedback.svelte';
 import Leaderboard, { openLeaderboard } from './leaderboard/Leaderboard.svelte';

@@ -1,3 +1,7 @@
+<script context='module' lang='ts'>
+  export const tutorialViewed = writable(false);
+</script>
+
 <script lang='ts'>
 import { accordion } from '../accordion';
 import Info from 'svelte-material-icons/Information.svelte';
@@ -10,18 +14,18 @@ import Close from 'svelte-material-icons/Close.svelte';
 import Flash from 'svelte-material-icons/Flash.svelte';
 import Shuffle from 'svelte-material-icons/Shuffle.svelte';
 import { onMount } from 'svelte';
+import { writable } from 'svelte/store';
 
   const VERSION = '7';
   const duration = 500;
   let infoVisible = false;
   let hideText = false;
-  $: tutorialViewed = false;
   onMount(() => {
-    tutorialViewed = localStorage.getItem('version') === VERSION;
+    $tutorialViewed = localStorage.getItem('version') === VERSION;
   })
   
   $: {
-    if (tutorialViewed) {
+    if ($tutorialViewed) {
       setTimeout(() => { hideText = true }, duration);
     }
   }
@@ -32,7 +36,7 @@ import { onMount } from 'svelte';
   
   const handleClose = () => {
     infoVisible = false;
-    tutorialViewed = true;
+    $tutorialViewed = true;
     localStorage.setItem('version', VERSION);
   }
 </script>
@@ -45,7 +49,7 @@ import { onMount } from 'svelte';
     </div>
     <span use:accordion={{
       duration,
-      isOpen: !tutorialViewed,
+      isOpen: !$tutorialViewed,
       axis: 'width' }}>Tutorial</span>
   {/if}
 </ActionButton>

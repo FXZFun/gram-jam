@@ -7,6 +7,7 @@ import Send from "svelte-material-icons/Send.svelte";
 import game from "../store";
 import { openLeaderboard } from "./Leaderboard.svelte";
 import { submitScore } from "./leaderboard";
+import Spinner from "../components/Spinner.svelte";
 
   let open = false;
 
@@ -19,7 +20,6 @@ import { submitScore } from "./leaderboard";
       loading = true;
       const e = await submitScore($game);
       loading = false;
-      console.log((new Date()).toISOString(), e);
       openLeaderboard(e);
       handleClose();
     }
@@ -45,19 +45,16 @@ import { submitScore } from "./leaderboard";
       on:submit|preventDefault={handleSubmit}
     >
       <div class=submit-score>
-        <div class=load-indicator />
-        <input
-          type='text'
-          placeholder="name"
-          bind:value={name}
-          required
-        />
-        <div
-          class=load-indicator
-          class:loading={loading}
-        >
-          <Hourglass />
-        </div>
+        {#if loading}
+          <Spinner />
+        {:else}
+          <input
+            type='text'
+            placeholder="name"
+            bind:value={name}
+            required
+          />
+        {/if}
       </div>
     </form>
   </div>
@@ -80,14 +77,6 @@ import { submitScore } from "./leaderboard";
     flex-direction: row;
     justify-content: center;
     align-items: center;
-  }
-  .load-indicator {
-    width: 2em;
-    opacity: 0;
-  }
-  .loading {
-    transition: all 0.25s ease-in;
-    opacity: 1;
   }
   .spacer {
     width: 0.5em;

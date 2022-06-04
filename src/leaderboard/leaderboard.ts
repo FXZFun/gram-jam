@@ -33,7 +33,6 @@ export const loadLocalLeaderboard = () => {
       localStorage.setItem('updated', 'true');
     }
     const games: SLeaderboardEntry[] = JSON.parse(localStorage.getItem('games')) ?? [];
-    console.log(games);
     return games
       .filter(g => g.score)
       .map(g => ({

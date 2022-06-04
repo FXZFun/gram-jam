@@ -4,6 +4,7 @@ import InfiniteLoading, { InfiniteEvent } from 'svelte-infinite-loading';
 import type { SLeaderboardEntry } from '../types';
 import Entry from './Entry.svelte';
 import { onMount } from 'svelte';
+import Spinner from '../components/Spinner.svelte';
 
   export let relative: boolean;
   export let currGameId: string;
@@ -15,6 +16,8 @@ import { onMount } from 'svelte';
       ?.getBoundingClientRect().height
       ?? 600;
   });
+ 
+  // const keyFn = (index: number) => entries[index].id;
 </script>
 
 <VirtualList
@@ -22,7 +25,7 @@ import { onMount } from 'svelte';
   height={listHeight}
   itemCount={entries.length}
   itemSize={180}
-  overscanCount={10}
+  overscanCount={15}
 >
   <InfiniteLoading
     slot='header'
@@ -30,6 +33,7 @@ import { onMount } from 'svelte';
     direction='top'
   >
     <div slot='noResults' />
+    <Spinner slot='spinner' />
   </InfiniteLoading>
   <div
     slot=item
@@ -49,5 +53,6 @@ import { onMount } from 'svelte';
     direction='bottom'
   >
     <div slot='noResults' />
+    <Spinner slot='spinner' />
   </InfiniteLoading>
 </VirtualList>

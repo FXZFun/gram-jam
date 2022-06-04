@@ -8,8 +8,10 @@ import Send from 'svelte-material-icons/Send.svelte';
 import { supabase } from '../leaderboard/supabase';
 import { getUserId } from '../store';
 import type { Feedback } from '../types';
+import Spinner from '../components/Spinner.svelte';
 
 let open = false;
+let loading = false;
 let feedback: string;
 let viewedFeedback: boolean = localStorage.getItem('viewedFeedback') === 'true';
 
@@ -21,15 +23,18 @@ const handleOpen = async () => {
 
 const handleClose = () => {
   open = false;
+  loading = false;
 }
 
 const handleSendFeedback = async () => {
 
+  loading = true;
   await supabase.from<Feedback>('feedback')
     .insert({ 
       userId: getUserId(),
       feedback,
     });
+  loading = false;
   feedback = undefined;
   open = false;
 }
@@ -45,7 +50,11 @@ const handleSendFeedback = async () => {
     <p>I'm still changing a lot, so tell me how to make the game better</p>
   </div>
   <div slot=content>
-    <textarea class=feedback bind:value={feedback} />
+    {#if loading}
+      <Spinner />
+    {:else}
+      <textarea class=feedback bind:value={feedback} />
+    {/if}
   </div>
   <div class=controls slot=controls>
     <ActionButton onClick={handleClose}>

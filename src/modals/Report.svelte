@@ -7,6 +7,7 @@ import Insensitive from '../icons/Insensitive.svelte';
 import { supabase } from '../leaderboard/supabase';
 import { delay } from '../animations';
 import type { Flagged } from '../types';
+import { getUserId } from '../store';
 
 export let word: string;
 export let onClose: () => void;
@@ -16,6 +17,7 @@ let success = false;
 const handleReport = async (reason: 'insensitive' | 'obscure') => {
   await supabase.from<Flagged>('flagged')
     .insert({
+      userId: getUserId(),
       word,
       reason,
     });

@@ -4,6 +4,7 @@ import game from '../store';
 import { loadLeaderboard, loadLocalLeaderboard } from './leaderboard';
 
   const open = writable(false);
+  let loaded = writable(false);
   const gameOver = writable(false);
   const entries = writable<SLeaderboardEntry[]>([]);
   const localEntries = writable<SLeaderboardEntry[]>([]);
@@ -12,6 +13,7 @@ import { loadLeaderboard, loadLocalLeaderboard } from './leaderboard';
     gameOver.set(false);
     entries.set([]);
     open.set(false);
+    loaded.set(false);
   }
   
   export const openLeaderboard = async (from: SLeaderboardEntry = undefined) => {
@@ -25,6 +27,7 @@ import { loadLeaderboard, loadLocalLeaderboard } from './leaderboard';
         loadBelow(from)
       ]);
     }
+    loaded.set(true);
 
     // load local
     if (localStorage.getItem('updated') !== 'true') {
@@ -55,9 +58,8 @@ import ActionButton from '../components/ActionButton.svelte';
 import { Tabs, TabList, TabPanel, Tab } from '../components/tabs';
 import EntryList from './EntryList.svelte';
 import type { SLeaderboardEntry } from '../types';
+import Spinner from '../components/Spinner.svelte';
 
-  //export let loaded = false;
-  
   const handleInfinite = async (direction: 'asc' | 'desc', e: InfiniteEvent) => {
     if (!$gameOver && direction === 'asc') {
       e.detail.complete();
@@ -96,12 +98,16 @@ import type { SLeaderboardEntry } from '../types';
     </div>
     <div slot=content class=content>
       <TabPanel idx={0}>
-        <EntryList
-          currGameId={$game.id}
-          relative={$game.remainingSwaps === 0}
-          entries={$entries}
-          handleInfinite={handleInfinite}
-        />
+        {#if $loaded}
+          <EntryList
+            currGameId={$game.id}
+            relative={$game.remainingSwaps === 0}
+            entries={$entries}
+            handleInfinite={handleInfinite}
+          />
+        {:else}
+          <Spinner />
+        {/if}
       </TabPanel>
       <TabPanel idx={1}>
         <EntryList
