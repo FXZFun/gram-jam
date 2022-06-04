@@ -1,81 +1,125 @@
-<script lang='ts'>
-import Close from 'svelte-material-icons/Close.svelte';
-import Modal from '../components/Modal.svelte';
-import type { LeaderboardEntry } from '../types';
-import ActionButton from '../components/ActionButton.svelte';
-import { Tabs, TabList, TabPanel, Tab } from '../components/tabs';
-import { onMount } from 'svelte';
-import { loadLeaderboard } from './leaderboard';
-import Entry from './Entry.svelte';
+<script lang='ts' context='module'>
+import { writable } from 'svelte/store';
+import game from '../store';
+import { loadLeaderboard, loadLocalLeaderboard } from './leaderboard';
+
+  const open = writable(false);
+  let loaded = writable(false);
+  const gameOver = writable(false);
+  const entries = writable<SLeaderboardEntry[]>([]);
+  const localEntries = writable<SLeaderboardEntry[]>([]);
   
-  let entries: LeaderboardEntry[] = [];
-  export let entry: LeaderboardEntry = undefined;
-  export let open: boolean;
-  export let submitted: string = undefined;
-
-  export let onClose: () => void;
-
-  let games: LeaderboardEntry[] = [];
-
-  onMount(async () => {
-    // load global
-    const leaderboard = await loadLeaderboard();
-    entries = leaderboard.docs.map(d => d.data());
-    if (!entries.find(entry => entry.gameId === entry.gameId)) {
-      entries = [...entries, entry].sort((a, b) => b.score - a.score)
+  export const closeLeaderboard = () => {
+    gameOver.set(false);
+    entries.set([]);
+    open.set(false);
+    loaded.set(false);
+  }
+  
+  export const openLeaderboard = async (from: SLeaderboardEntry = undefined) => {
+    open.set(true);
+    localEntries.set(loadLocalLeaderboard());
+    if (from) {
+      gameOver.set(true);
+      entries.set([from]);
+      await Promise.all([
+        loadAbove(from),
+        loadBelow(from)
+      ]);
     }
+    loaded.set(true);
 
     // load local
     if (localStorage.getItem('updated') !== 'true') {
       localStorage.removeItem('games');
       localStorage.setItem('updated', 'true');
     }
-    games = JSON.parse(localStorage.getItem('games')) ?? [];
-    games = games
-      .filter(g => g.score)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 10);
-  })
+  }
+ 
+  const loadAbove = async (first: SLeaderboardEntry) => {
+    const newEntries = await loadLeaderboard(first, 'asc');
+    entries.update(entries => [...newEntries.reverse(), ...entries]);
+    return newEntries.length;
+  }
 
+  const loadBelow = async (last: SLeaderboardEntry) => {
+    const newEntries = await loadLeaderboard(last, 'desc');
+    entries.update(entries => [...entries, ...newEntries]);
+    return newEntries.length;
+  }
+ 
+</script>
+
+<script lang='ts'>
+import Close from 'svelte-material-icons/Close.svelte';
+import type { InfiniteEvent } from 'svelte-infinite-loading';
+import Modal from '../components/Modal.svelte';
+import ActionButton from '../components/ActionButton.svelte';
+import { Tabs, TabList, TabPanel, Tab } from '../components/tabs';
+import EntryList from './EntryList.svelte';
+import type { SLeaderboardEntry } from '../types';
+import Spinner from '../components/Spinner.svelte';
+
+  const handleInfinite = async (direction: 'asc' | 'desc', e: InfiniteEvent) => {
+    if (!$gameOver && direction === 'asc') {
+      e.detail.complete();
+      return [];
+    }
+    let numLoaded = undefined;
+    if (direction === 'asc') {
+      numLoaded = await loadAbove($entries[0]);
+    } else {
+      numLoaded = await loadBelow($entries[$entries.length - 1]);
+    }
+
+    if (numLoaded === 10) {
+      e.detail.loaded();
+    } else {
+      e.detail.complete();
+    }
+  }
+  
 </script>  
 
 <Tabs>
-  <Modal open={open} onClose={onClose}>
+  <Modal
+    id=leaderboard
+    fullHeight
+    index={2}
+    open={$open}
+    onClose={closeLeaderboard}
+  >
     <div slot=title>
       <h1>Leaderboards</h1>
       <TabList>
-        <Tab>Global</Tab>
-        <Tab>Personal</Tab>
+        <Tab idx={0}>Global</Tab>
+        <Tab idx={1}>Personal</Tab>
       </TabList>
     </div>
-    <div slot=content>
-      <TabPanel>
-        <div class=list>
-          {#each entries as entry, i ((entry.gameId ?? i) + 'global')}
-            {#if entry.name !== 'test'}
-              <Entry
-                submitted={submitted && submitted === entry.gameId}
-                entry={entry}
-                position={i}
-              />
-            {/if}
-          {/each}
-        </div>
+    <div slot=content class=content>
+      <TabPanel idx={0}>
+        {#if $loaded}
+          <EntryList
+            currGameId={$game.id}
+            relative={$game.remainingSwaps === 0}
+            entries={$entries}
+            handleInfinite={handleInfinite}
+          />
+        {:else}
+          <Spinner />
+        {/if}
       </TabPanel>
-      <TabPanel>
-        <table>
-          {#each games as entry, i ((entry.gameId ?? i) + 'local')}
-            <Entry
-              submitted={submitted && submitted === entry.gameId}
-              entry={entry}
-              position={i}
-            />
-          {/each}
-        </table>
+      <TabPanel idx={1}>
+        <EntryList
+          currGameId={$game.id}
+          relative={false}
+          entries={$localEntries}
+          handleInfinite={(_, e) => e.detail.complete()}
+        />
       </TabPanel>
     </div>
     <div slot=controls>
-      <ActionButton onClick={onClose}>
+      <ActionButton onClick={closeLeaderboard}>
         <Close />
         Close
       </ActionButton>
@@ -84,14 +128,8 @@ import Entry from './Entry.svelte';
 </Tabs>
 
 <style>
-  table {
-    width: 100%;
-    text-align: start;
-    margin-bottom: 8px;
-  }
-  .list {
-    display: flex;
-    flex-direction: column;
-    gap: 1em;
+  .content {
+		overflow-x: hidden;
+    margin: -1em;
   }
 </style>

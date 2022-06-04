@@ -1,14 +1,18 @@
 import { v4 as uuid } from 'uuid';
 import { Writable, writable } from "svelte/store";
 import type { Board, GameState } from './types';
+import type { Trie } from './algorithms/trie';
 
-export const initializeGameState = (sampleBoard?: Board): GameState => ({
+export const initializeGameState = (initialBoard: Board = []): GameState => ({
   startedAt: +new Date(),
   id: uuid(),
-  board: sampleBoard ?? [],
+  board: initialBoard,
+  latestWord: undefined,
+  highlighted: {},
+  intersections: {},
   words: [],
   turn: 0,
-  remainingSwaps: 10,
+  remainingSwaps: 4,
   shuffles: 1,
   streak: 0,
   bestStreak: 0,
@@ -16,13 +20,14 @@ export const initializeGameState = (sampleBoard?: Board): GameState => ({
   score: 0,
   latestChain: 0,
   bestChain: 0,
-  intersections: {},
   marquee: undefined,
 });
  
 export const gameState = writable(initializeGameState());
 
-export const reset = (gameState: Writable<GameState>) => gameState.set(initializeGameState());
+export const dictionary = writable<Trie<string>>();
+
+export const reset = (game: Writable<GameState>) => game.set(initializeGameState());
 
 let id = 0;
 const makeBoardFromLetters = (letters: string[][]): Board => (
@@ -50,3 +55,14 @@ export const getUserId = () => {
   }
   return userId;
 }
+
+export const getUserName = () => {
+  let userId = localStorage.getItem('name');
+  if (!userId) {
+    userId = uuid();
+    localStorage.setItem('name', userId);
+  }
+  return userId;
+}
+
+export default gameState;

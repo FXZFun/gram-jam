@@ -1,19 +1,17 @@
  <script lang="ts">
 
   import Close from 'svelte-material-icons/Close.svelte';
-  import { getTilePoints } from './algorithms/letters';
+  import { scoreTile } from './algorithms/letters';
   import type { HighlightColors } from './types';
   
   export let letter: string;
   export let active: boolean = false;
   export let selected: boolean = false;
   export let adjacent: boolean = false;
-  export let highlighted: HighlightColors;
+  export let highlighted: HighlightColors = undefined;
   export let size: 'tiny' | 'small' | 'large' = 'large';
   export let multiplier: 1 | 2 | 3 = 1;
   export let id: number = undefined;
-
-  const pts = getTilePoints(letter);
 
   const handleSwipe = (e: any) => {
     //console.log(e);
@@ -37,7 +35,7 @@
     class:large={size === 'large'}
   >
     <span>{letter}</span>
-    <span class=score>{pts}</span>
+    <span class=score>{scoreTile(letter)}</span>
     <span class=debug-id>{id}</span>
     {#if multiplier > 1}
       <span
@@ -91,7 +89,7 @@
   }
   @media (min-width: 769px) {
     .tile.small {
-      font-size: 0.75em;
+      font-size: 1em;
     }
     .tile.large {
       font-size: 0.75em;
@@ -145,10 +143,6 @@
     background-color: #cc9601;
     border-color: #836f00;
   }
-  .tile.adjacent {
-  }
-  .tile.non-adjacent {
-  }
   .multiplier {
     position: absolute;
     height: 1.75em;
@@ -196,30 +190,4 @@
   .tile.tiny .score {
     display: none;
   }
-  
-  /* flip over animation */
-  /* Position the front and back side */
-	.flip-box-front, .flip-box-back {
-		position: absolute;
-		width: 100%;
-		height: 100%;
-		-webkit-backface-visibility: hidden; /* Safari */
-		backface-visibility: hidden;
-		box-shadow: -1px 1px 3px black;
-	}
-
-	/* Style the front side */
-	.flip-box-front {
-		background-color: #ddd;
-		color: black;
-		display: flex;
-		justify-content: center;
-	}
-	
-	/* Style the back side */
-	.flip-over {
-    transition-duration: 0.5s;
-		transform: rotateY(90deg);
-	}
-
 </style>

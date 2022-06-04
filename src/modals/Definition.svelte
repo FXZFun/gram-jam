@@ -5,18 +5,25 @@ import IconButton from "../components/IconButton.svelte";
 import ActionButton from "../components/ActionButton.svelte";
 import Dictionary from "../icons/Dictionary.svelte";
 import Modal from "../components/Modal.svelte";
-import { accordion } from '../accordion';
 import Report from "../modals/Report.svelte";
+import Spinner from '../components/Spinner.svelte';
 
 export let word = '';
 let open = false;
 let openReport = false;
 let result: any;
+let loading = false;
 
 const handleOpen = async () => {
   open = true;
+  loading = true;
   const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word.toLowerCase()}`);
+  loading = false;
   result = await response.json();
+}
+
+$: {
+  console.log(loading);
 }
 
 const handleClose = () => {
@@ -46,7 +53,9 @@ const handleCloseReport = () => {
     </div>
   </div>
   <div slot=content>
-    {#if result}
+    {#if loading}
+      <Spinner />
+    {:else if result}
       {#if result[0]}
         {#if result[0].phonetic}
           <h2>{result[0].phonetic}</h2>

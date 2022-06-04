@@ -1,24 +1,27 @@
 <script lang="ts">
-import type { LeaderboardEntry } from "../types";
+import type { SLeaderboardEntry } from "../types";
 import Streak from "../pills/Streak.svelte";
 import WordChain from "../pills/WordChain.svelte";
 import { scoreWord } from "../algorithms/letters";
 import Turns from "../pills/Turns.svelte";
 import Words from "../pills/Words.svelte";
-import { onMount } from "svelte";
 import StaticWord from "../StaticWord.svelte";
+import { onMount } from "svelte";
 
-  export let entry: LeaderboardEntry;
-  export let position: number;
-  export let submitted: boolean;
+  export let entry: SLeaderboardEntry;
+  export let current: boolean;
+  export let position: number | undefined;
   let ref: HTMLElement;
 
   onMount(() => {
-    if (submitted) {
-      ref.scrollIntoView({ behavior: 'smooth' });
+    if (ref && current) {
+      ref.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
     }
-  })
- 
+  });
+  
   const parseDate = (timestamp: string | { seconds: number }) => (
     typeof timestamp === 'string'
       ? new Date(timestamp)
@@ -36,20 +39,24 @@ import StaticWord from "../StaticWord.svelte";
 
 <div
   bind:this={ref}
-  id={entry.gameId}
+  id={entry.id}
   class=container
-  class:selected={submitted}
+  class:selected={current}
 >
   <div class=row>
     <div class=topline>
-      <h2 class=rank>#{position + 1}</h2>
-      <h3 class=name>{entry.name}</h3>
+      <h2 class=rank>
+        {#if position !== undefined}
+          #{position + 1}
+        {/if}
+      </h2>
+      <h3 class=name>{entry.userName}</h3>
       <h2 class=score>{entry.score}</h2>
     </div>
   </div>
   <div class=row>
     <div class=pills>
-      <Turns turns={entry.turns} />
+      <Turns turns={entry.numTurns} />
       {#if entry.numWords}
         <Words numWords={entry.numWords} />
       {/if}
@@ -68,7 +75,7 @@ import StaticWord from "../StaticWord.svelte";
 
 <style>
   .container {
-    width: 100%;
+    width: calc(100% - 1em);
     display: flex;
     flex-direction: column;
     align-items: center;

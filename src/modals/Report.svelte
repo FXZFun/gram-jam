@@ -4,9 +4,10 @@ import Close from 'svelte-material-icons/Close.svelte';
 import ActionButton from "../components/ActionButton.svelte";
 import Modal from "../components/Modal.svelte";
 import Insensitive from '../icons/Insensitive.svelte';
-import { flagged } from '../db';
-import { addDoc } from '@firebase/firestore';
+import { supabase } from '../leaderboard/supabase';
 import { delay } from '../animations';
+import type { Flagged } from '../types';
+import { getUserId } from '../store';
 
 export let word: string;
 export let onClose: () => void;
@@ -14,10 +15,12 @@ export let open = false;
 let success = false;
 
 const handleReport = async (reason: 'insensitive' | 'obscure') => {
-  await addDoc(flagged, {
-    word,
-    reason,
-  });
+  await supabase.from<Flagged>('flagged')
+    .insert({
+      userId: getUserId(),
+      word,
+      reason,
+    });
   success = true;
   await delay(1000);
   open = false;

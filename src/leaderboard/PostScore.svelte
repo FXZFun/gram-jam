@@ -1,18 +1,15 @@
 <script lang='ts'>
 import ActionButton from "../components/ActionButton.svelte";
 import Hourglass from "../icons/Hourglass.svelte";
-import { leaderboard } from "../db";
 import Modal from "../components/Modal.svelte";
-import type { LeaderboardEntry } from "../types";
-import  { addDoc } from '@firebase/firestore';
 import Close from "svelte-material-icons/Close.svelte";
 import Send from "svelte-material-icons/Send.svelte";
-import { getUserId } from "../store";
+import game from "../store";
+import { openLeaderboard } from "./Leaderboard.svelte";
+import { submitScore } from "./leaderboard";
+import Spinner from "../components/Spinner.svelte";
 
-  export let entry: LeaderboardEntry;
-  export let onSubmit: () => void;
-
-  let showPostScore = false;
+  let open = false;
 
   let name: string = localStorage.getItem('name') || '';
   let loading = false;
@@ -21,27 +18,24 @@ import { getUserId } from "../store";
     localStorage.setItem('name', name);
     if (!loading) {
       loading = true;
-      await addDoc(leaderboard, {
-        ...entry,
-        name,
-        userId: getUserId(),
-      });
-      onSubmit();
+      const e = await submitScore($game);
+      loading = false;
+      openLeaderboard(e);
       handleClose();
     }
   }
   
   const handleClose = () => {
-    showPostScore = false;
+    open = false;
   }
   
 </script>
 
-<ActionButton onClick={() => { showPostScore = true }}>
+<ActionButton onClick={() => { open = true }}>
   <Send />
   Submit Score
 </ActionButton>
-<Modal open={showPostScore} onClose={handleClose}>
+<Modal open={open} onClose={handleClose}>
   <div slot=title>
     <h2>Submit Score</h2>
   </div>
@@ -51,19 +45,16 @@ import { getUserId } from "../store";
       on:submit|preventDefault={handleSubmit}
     >
       <div class=submit-score>
-        <div class=load-indicator />
-        <input
-          type='text'
-          placeholder="name"
-          bind:value={name}
-          required
-        />
-        <div
-          class=load-indicator
-          class:loading={loading}
-        >
-          <Hourglass />
-        </div>
+        {#if loading}
+          <Spinner />
+        {:else}
+          <input
+            type='text'
+            placeholder="name"
+            bind:value={name}
+            required
+          />
+        {/if}
       </div>
     </form>
   </div>
@@ -86,14 +77,6 @@ import { getUserId } from "../store";
     flex-direction: row;
     justify-content: center;
     align-items: center;
-  }
-  .load-indicator {
-    width: 2em;
-    opacity: 0;
-  }
-  .loading {
-    transition: all 0.25s ease-in;
-    opacity: 1;
   }
   .spacer {
     width: 0.5em;

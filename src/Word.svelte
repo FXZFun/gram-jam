@@ -6,10 +6,6 @@
   import { send, receive, flipOut, animationDuration, flipDuration } from './animations';
 
   export let word: Tile[];
-  export let onIntroStart: (e: any) => void = undefined;
-  export let onIntroEnd: (e: any) => void = undefined;
-  export let onOutroStart: (e: any) => void = undefined;
-  export let onOutroEnd: (e: any) => void = undefined;
 </script>
 
 <div class=container>
@@ -19,10 +15,6 @@
       animate:flip="{{ duration: flipDuration }}"
       in:receive="{{ key: tile.id, duration: flipDuration }}"
       out:send="{{ key: tile.id, duration: flipDuration }}"
-      on:introstart="{onIntroStart}"
-      on:introend="{onIntroEnd}"
-      on:outrostart="{onOutroStart}"
-      on:outroend="{onOutroEnd}"
     >
       <BoardTile
         id={tile.id}

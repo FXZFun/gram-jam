@@ -1,6 +1,64 @@
-import { scoreWord } from "./letters";
+import { sample, scoreWord } from "./letters";
 import type { Trie } from "./trie";
-import type  { Board, Coord, Match, Tile } from "../types";
+import type  { Board, Coord, Freqs, GameState, Match, Tile } from "../types";
+import game, { initializeGameState, sampleBoard } from "../store";
+// import { stats } from '../Stats.svelte';
+
+export const DIMS = {
+  ROWS: 7,
+  COLS: 6,
+};
+
+export const resetGame = (game: GameState, dictionary: Trie<string>) => {
+  
+  const prevBoard = game.board;
+  game = initializeGameState();
+
+  if (!game.board.length) {
+    for (let i = 0; i < DIMS.COLS; i++) {
+      game.board.push([]);
+      for (let j = 0; j < DIMS.ROWS; j++) {
+        const [ , tile ] = sample([], 1);
+        game.board[i].push(tile);
+      }
+    }
+  }
+  
+  let { words } = findWords(dictionary, game.board);
+  while (words.length) {
+    for (const word of words) {
+      const a =  word.coords[Math.floor(Math.random() * word.word.length)];
+      const b =  word.coords[Math.floor(Math.random() * word.word.length)];
+
+      const tempTile = game.board[a[0]][a[1]];
+      game.board[a[0]][a[1]] = game.board[b[0]][b[1]];
+      game.board[b[0]][b[1]] = tempTile;
+    }
+    words = findWords(dictionary, game.board).words;
+  }
+  
+  for (const [i, col] of game.board.entries()) {
+    for (const [j, row] of col.entries()) {
+      // reset multipliers
+      game.board[i][j].multiplier = 1;
+      const prevTile = prevBoard?.[i]?.[j];
+      // keep reference to previous tileId for flip transition
+      // TODO consider just having a gameOver specific fallback here
+      if (prevTile) {
+        game.board[i][j].id = prevTile.id;
+      }
+    }
+  }
+  
+  // start game with 3 2x multipliers
+  for (let i = 0; i < 3; i++) {
+    const col = Math.floor(Math.random() * DIMS.COLS);
+    const row = Math.floor(Math.random() * DIMS.ROWS);
+    game.board[col][row].multiplier = 2;
+  }
+
+  return game;
+}
 
 const coordToStr = (c: Coord) => c.join(',');
 
@@ -29,9 +87,9 @@ export const findWords = (dictionary: Trie<string>, board: Board) => {
           };
           words.push(match);
           if (axis === 'row') {
-            rows[i] = (rows[i] ?? []).concat([match]);
+            rows[j] = (rows[j] ?? []).concat([match]);
           } else {
-            cols[j] = (cols[j] ?? []).concat([match]);
+            cols[i] = (cols[i] ?? []).concat([match]);
           }
         }
       }
@@ -146,6 +204,34 @@ const findWord = (
   }
     
   return longestWord;
+}
+
+export const removeLetters = (board: Board, turn: number, coords: Coord[]) => {
+
+  // clear column
+  for (const [ x, y ] of coords) {
+    board[x][y] = undefined;
+  }
+  
+  const cleared = board.map(col => (
+    col.reverse()
+      .filter(tile => tile != undefined)
+  ));
+  
+  let freqs: Freqs<string>;
+  let newLetters: string[] = [];
+  for (let i = 0; i < DIMS.COLS; i++) {
+    for (let j = 0; j < DIMS.ROWS; j++) {
+      if (cleared[i][j] == undefined) {
+        const [ stats, tile ] = sample(cleared, 1, turn);
+        cleared[i][j] = tile;
+        freqs = stats;
+        newLetters.push(tile.letter);
+      }
+    }
+  }
+  // stats.set({ freqs, newLetters })
+  return cleared.map(col => col.reverse());
 }
 
 export const getMarqueeText = (match: Match, chain: number) => {

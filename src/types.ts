@@ -23,9 +23,25 @@ export type Tile = {
 
 export type Board = Tile[][];
 
+export type Intersections = Record<number, { tile: Tile, coord: Coord }>;
+
 export type GameRecord = {
   date: string,
   score: number,
+}
+
+export type SLeaderboardEntry = {
+  id: string;
+  userId?: string;
+  gameId: string;
+  userName: string;
+  score: number;
+  bestStreak: number;
+  bestChain: number;
+  bestWord: Tile[];
+  numWords: number;
+  numTurns: number;
+  date: string;
 }
 
 export type LeaderboardEntry = {
@@ -41,10 +57,21 @@ export type LeaderboardEntry = {
   date: string | { seconds: number };
 }
 
+export type Stats = {
+  gamesPlayed: number;
+  totalWordsPlayed: number;
+  wordScoreFreqs: Record<number, number>;
+  wordLengths: Record<number, number>;
+}
+
 export type GameState = {
-  readonly startedAt: number,
+  readonly startedAt: number;
   readonly id: string;
   board: Board;
+  latestWord?: Tile[];
+  latestScore?: number;
+  highlighted: Highlighted;
+  intersections: Intersections;
   words: Match[];
   turn: number;
   remainingSwaps: number;
@@ -55,7 +82,6 @@ export type GameState = {
   score: number;
   latestChain: number;
   bestChain: number;
-  intersections: Record<number, { tile: Tile, coord: Coord }>;
   marquee?: string;
 }
 
@@ -64,23 +90,38 @@ export type Highlighted = Record<number, HighlightColors>;
 
 export type Flagged = {
   word: string,
+  userId?: string,
   reason: 'insensitive' | 'obscure'
 }
 
 export type Feedback = {
   userId?: string,
   feedback: string,
-  date: Date,
+}
+
+export type Turn = {
+  durationSeconds: number,
+  words: Match[],
+  coords: Coord[],
 }
 
 export type AnalyticsReport = {
-  gameId: string,
+  id: string,
   userId: string,
-  duration: number,
+  userName?: string,
   date: string,
+  score: number,
+  durationSeconds: number,
   words: string[],
-  turns: number,
+  turns: Turn[],
   bestStreak: number,
   bestChain: number,
   abandoned?: boolean,
+}
+
+export type InfiniteProps = {
+  detail: {
+    loaded: () => void,
+    complete: () => void,
+  }
 }

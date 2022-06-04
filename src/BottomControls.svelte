@@ -3,41 +3,30 @@ import Restart from 'svelte-material-icons/Restart.svelte';
 import Twitter from 'svelte-material-icons/Twitter.svelte';
 
 import ActionButton from './components/ActionButton.svelte';
-import Tutorial from './Tutorial.svelte';
+import Tutorial from './modals/Tutorial.svelte';
 import DarkMode from './DarkMode.svelte';
 import Feedback from './modals/Feedback.svelte';
-import Leaderboard from './leaderboard/Leaderboard.svelte';
+import Leaderboard, { openLeaderboard } from './leaderboard/Leaderboard.svelte';
 import Trophy from './icons/Trophy.svelte';
+import ConfirmReset from './modals/ConfirmReset.svelte';
 
 export let onReset: () => void;
 
-let leaderboardOpen = false;
-const handleToggleLeaderboard = () => {
-  leaderboardOpen = !leaderboardOpen;
-}
 </script>
 
 <div class=controls>
   <ActionButton href='https://twitter.com/GramJamGame'>
-    <Twitter size='1em' />
+    <Twitter size=1em />
   </ActionButton>
-  <ActionButton onClick={handleToggleLeaderboard}>
+  <ActionButton onClick={() => openLeaderboard()}>
     <Trophy />
   </ActionButton>
   <Feedback />
-  <ActionButton onClick={onReset}>
-    <Restart size='1em' />
-    Reset
-  </ActionButton>
+  <ConfirmReset onReset={onReset} />
 	<Tutorial />
   <DarkMode />
 </div>
-{#if leaderboardOpen}
-  <Leaderboard
-    open={leaderboardOpen}
-    onClose={handleToggleLeaderboard}
-  />
-{/if}
+<Leaderboard />
 
 <style>
   .controls {
@@ -45,6 +34,6 @@ const handleToggleLeaderboard = () => {
     width: 100%;
     display: flex;
     justify-content: center;
-    gap: 1em;
+    gap: 0.5em;
   }
 </style>
