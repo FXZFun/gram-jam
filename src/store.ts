@@ -12,7 +12,7 @@ export const initializeGameState = (initialBoard: Board = []): GameState => ({
   intersections: {},
   words: [],
   turn: 0,
-  remainingSwaps: 4,
+  remainingSwaps: 10,
   shuffles: 1,
   streak: 0,
   bestStreak: 0,
