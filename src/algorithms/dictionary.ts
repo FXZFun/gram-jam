@@ -12,5 +12,6 @@ export const loadDictionary = async () => {
     dictionary.insert(w, w);
   })
 
+  console.log(dictionary);
   return dictionary;
 };

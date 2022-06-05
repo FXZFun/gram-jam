@@ -1,6 +1,5 @@
 <script lang='ts'>
 import ActionButton from "../components/ActionButton.svelte";
-import Hourglass from "../icons/Hourglass.svelte";
 import Modal from "../components/Modal.svelte";
 import Close from "svelte-material-icons/Close.svelte";
 import Send from "svelte-material-icons/Send.svelte";

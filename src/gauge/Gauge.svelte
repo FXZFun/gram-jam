@@ -1,6 +1,6 @@
 <script lang="ts">
 // https://www.fullstacklabs.co/blog/creating-an-svg-gauge-component-from-scratch
-import { animationDuration, gaugeIn, gaugeOut } from '../animations';
+import { gaugeIn, gaugeOut } from '../animations';
 import Arc from './Arc.svelte';
 import Handle from './Handle.svelte';
 import Level from './Level.svelte';

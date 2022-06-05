@@ -67,7 +67,6 @@ import type { Coord, Turn } from "./types";
         const first = $game.board[i][j];
         $game.board[i][j] = $game.board[i2][j2];
         $game.board[i2][j2] = first;
-        $game = $game;
         // clear selection after switch
         $selected.coords.push(coord);
         $selected.tiles.add(tileId);
@@ -86,8 +85,8 @@ import type { Coord, Turn } from "./types";
         if ($game.streak > 0) {
           penalty--;
         }
-        $game.remainingSwaps -= penalty;
-        $game = $game;
+        // TODO
+        //$game.remainingSwaps -= penalty;
         
         // gross!
         // wait for end of swap animation
