@@ -1,7 +1,7 @@
 import { sample, scoreWord } from "./letters";
 import type { Trie } from "./trie";
 import type  { Board, Coord, Freqs, GameState, Match, Tile } from "../types";
-import game, { initializeGameState, sampleBoard } from "../store";
+import { getTileId, initializeGameState, sampleBoard } from "../store";
 // import { stats } from '../Stats.svelte';
 
 export const DIMS = {
@@ -62,8 +62,6 @@ export const resetGame = (game: GameState, dictionary: Trie<string>) => {
 
 const coordToStr = (c: Coord) => c.join(',');
 
-let intersectingId = -1;
-
 export const findWords = (dictionary: Trie<string>, board: Board) => {
   const words: Match[] = [];
   const rows: Record<number, Match[]> = {};
@@ -115,6 +113,7 @@ export const findWords = (dictionary: Trie<string>, board: Board) => {
         const [ i, j ] = coord;
         const tile = board[i][j];
 
+        const intersectingId = getTileId();
         intersections[intersectingId] = { tile, coord };
         const tileIdx = w1.word.findIndex(t => t.id === tile.id);
         w1.word[tileIdx] = {
@@ -123,7 +122,6 @@ export const findWords = (dictionary: Trie<string>, board: Board) => {
         }
         w1.intersectingIds.push(intersectingId);
         w2.intersectingIds.push(tile.id);
-        intersectingId--;
         intersectingWords[i1] = w1;
       }
     }

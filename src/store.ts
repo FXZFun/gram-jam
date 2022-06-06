@@ -1,7 +1,11 @@
 import { v4 as uuid } from 'uuid';
 import { Writable, writable } from "svelte/store";
-import type { Board, GameState } from './types';
+import type { Board, GameState, Turn } from './types';
 import type { Trie } from './algorithms/trie';
+import { resetGame } from './algorithms/gameLogic';
+import { turns, Turns } from './analytics';
+
+export const getTileId = () => Math.random().toString(36).slice(2);
 
 export const initializeGameState = (initialBoard: Board = []): GameState => ({
   startedAt: +new Date(),
@@ -25,15 +29,12 @@ export const initializeGameState = (initialBoard: Board = []): GameState => ({
  
 export const gameState = writable(initializeGameState());
 
-export const dictionary = writable<Trie<string>>();
-
 export const reset = (game: Writable<GameState>) => game.set(initializeGameState());
 
-let id = 0;
 const makeBoardFromLetters = (letters: string[][]): Board => (
   letters.map(row => row.map(letter => ({
     letter,
-    id: id++,
+    id: getTileId(),
     multiplier: 1,
   })))
 );
@@ -63,6 +64,29 @@ export const getUserName = () => {
     localStorage.setItem('name', userId);
   }
   return userId;
+}
+
+export const loadGame = (dictionary: Trie<string>) => {
+  const game = localStorage.getItem('currGame');
+  const prevTurns = localStorage.getItem('currTurns');
+  if (game) {
+    gameState.set(JSON.parse(game));
+  } else {
+    gameState.set(resetGame(initializeGameState(), dictionary));
+  }
+  if (prevTurns) {
+    turns.set(JSON.parse(prevTurns));
+  }
+}
+
+export const saveGame = (game: GameState, turns: Turns) => {
+  localStorage.setItem('currGame', JSON.stringify(game));
+  localStorage.setItem('currTurns', JSON.stringify(turns));
+}
+
+export const clearGame = () => {
+  localStorage.removeItem('currGame');
+  localStorage.removeItem('currTurns');
 }
 
 export default gameState;

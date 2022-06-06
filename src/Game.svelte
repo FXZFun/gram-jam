@@ -16,30 +16,33 @@ import ActionButton from './components/ActionButton.svelte';
 import Title from './Title.svelte';
 import { shuffle} from './algorithms/shuffle';
 import { animationDuration, delay } from './animations';
-import GameBoard, { clearSelection, animating, turns } from './Board.svelte';
-import game, { dictionary } from './store';
+import GameBoard, { clearSelection, animating } from './Board.svelte';
+import game, { clearGame, loadGame } from './store';
 import BottomControls from './BottomControls.svelte';
 import WordContainer from './WordContainer.svelte';
 import Stats from './Stats.svelte';
-import { saveAnalytics } from './analytics';
+import { turns, resetTurns, saveAnalytics } from './analytics';
 import Spinner from './components/Spinner.svelte';
+import type { Trie } from './algorithms/trie';
   
+  let dictionary: Trie<string>;
   let loading = true;
   onMount(async () => {
-    $dictionary = await loadDictionary();
+    dictionary = await loadDictionary();
     loading = false;
     // initialize board on first load
-    $game = resetGame($game, $dictionary);
+    loadGame(dictionary);
   });
  
   const showStats = false;
 
   const handleReset = (abandoned = false) => {
     if (abandoned) {
-      saveAnalytics($game, $turns, { abandoned });
+      saveAnalytics($game, $turns.turns, { abandoned });
     }
-    $game = resetGame($game, $dictionary);
-    $turns = []
+    $game = resetGame($game, dictionary);
+    clearGame();
+    resetTurns();
   }
  
  
@@ -57,14 +60,13 @@ import Spinner from './components/Spinner.svelte';
       $game.latestChain = 0;
       $game.marquee = undefined;
     }
-    $game = $game;
     return $game.lost;
   }
   
   // chain is incremented on subsequent recursive calls of handleScore
   const handleScore = async (chain = 0, shuffle = false) => {
 
-    let { words, intersections } = findWords($dictionary, $game.board);
+    let { words, intersections } = findWords(dictionary, $game.board);
     if (!words.length) {
       if (!shuffle && chain === 0) {
         $game.streak = 0;
@@ -160,7 +162,6 @@ import Spinner from './components/Spinner.svelte';
         tempBoard[newCoord[0]][newCoord[1]] = tmp;
       });
       $game.board = tempBoard;
-      $game = $game;
 
       // pause for animation
       await delay(1200);

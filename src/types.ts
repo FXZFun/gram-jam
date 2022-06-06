@@ -8,7 +8,7 @@ export type Match = {
   readonly axis: Axis,
   readonly score: number,
   readonly intersection?: string,
-  readonly intersectingIds: number[],
+  readonly intersectingIds: string[],
 };
 
 export type Freqs<T extends string | number> = Record<T, number>;
@@ -16,8 +16,8 @@ export type Freqs<T extends string | number> = Record<T, number>;
 export type Multiplier = 1 | 2 | 3;
 
 export type Tile = {
+  id: string,
   letter: string,
-  id: number,
   multiplier: Multiplier,
 }
 

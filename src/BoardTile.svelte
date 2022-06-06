@@ -11,7 +11,7 @@
   export let highlighted: HighlightColors = undefined;
   export let size: 'tiny' | 'small' | 'large' = 'large';
   export let multiplier: 1 | 2 | 3 = 1;
-  export let id: number = undefined;
+  export let id: string = undefined;
 
   const handleSwipe = (e: any) => {
     //console.log(e);
@@ -36,7 +36,6 @@
   >
     <span>{letter}</span>
     <span class=score>{scoreTile(letter)}</span>
-    <span class=debug-id>{id}</span>
     {#if multiplier > 1}
       <span
         class=multiplier
@@ -169,15 +168,6 @@
   }
   :global(body.dark-mode) .multiplier.three {
     background: linear-gradient(to bottom right, #b43900 0%, #b43900 50%, #ffffff00 50%, #ffffff00 100%);
-  }
-  .debug-id {
-    position: absolute;
-    opacity: 0;
-    font-size: 0.5em;
-    font-weight: normal;
-    top: 0;
-    right: 0;
-    padding: 0.2em;
   }
   .score {
     position: absolute;

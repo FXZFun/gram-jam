@@ -22,10 +22,6 @@ const handleOpen = async () => {
   result = await response.json();
 }
 
-$: {
-  console.log(loading);
-}
-
 const handleClose = () => {
   result = undefined;
   open = false;

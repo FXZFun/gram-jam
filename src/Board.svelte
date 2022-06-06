@@ -1,32 +1,22 @@
 <script lang='ts' context='module'>
 import { writable } from "svelte/store";
 
-  export const animating = writable(false);
-  export const selected = writable<{ coords: string[], tiles: Set<number> }>({
+  type Selection = {
+    coords: string[],
+    tiles: Set<string>
+  }
+
+  const initializeSelection = (): Selection => ({
     coords: [],
     tiles: new Set(),
-  });
-  
-  export const turns = writable<Turn[]>([]);
-  export const prevWordPointer = writable(0);
-  export const lastTurnTimestamp = writable(+new Date());
+  })
+  export const animating = writable(false);
+  const selected = writable<Selection>(initializeSelection());
 
   export const clearSelection = () => {
-    selected.set({
-      coords: [],
-      tiles: new Set(),
-    });
+    selected.set(initializeSelection());
   }
   
-  export const updateTurns = () => {
-
-  }
-
-  export const resetAnalytics = () => {
-    turns.set([]);
-    prevWordPointer.set(0);
-    lastTurnTimestamp.set(+new Date());
-  }
 </script>
 
 <script lang="ts">
@@ -34,11 +24,11 @@ import { flip } from 'svelte/animate';
 
 import { fade } from 'svelte/transition';
 import { send, receive, flipDuration, getBBoxJSON, delay } from './animations';
-import game from './store';
+import game, { saveGame } from './store';
 
 import BoardTile from './BoardTile.svelte';
 import Flipper from './Flipper.svelte';
-import type { Coord, Turn } from "./types";
+import { turns, updateTurns } from "./analytics";
 
   export let handleScore: () => Promise<boolean>;
   let prevGameId = '';
@@ -67,7 +57,6 @@ import type { Coord, Turn } from "./types";
         const first = $game.board[i][j];
         $game.board[i][j] = $game.board[i2][j2];
         $game.board[i2][j2] = first;
-        $game = $game;
         // clear selection after switch
         $selected.coords.push(coord);
         $selected.tiles.add(tileId);
@@ -87,7 +76,6 @@ import type { Coord, Turn } from "./types";
           penalty--;
         }
         $game.remainingSwaps -= penalty;
-        $game = $game;
         
         // gross!
         // wait for end of swap animation
@@ -103,7 +91,8 @@ import type { Coord, Turn } from "./types";
         };
         
         await handleScore();
-        updateTurns([[i, j], [i2, j2]]);
+        updateTurns([[i, j], [i2, j2]], $game.words);
+        saveGame($game, $turns);
       } else {
         // click same tile twice
         clearSelection();
@@ -112,16 +101,7 @@ import type { Coord, Turn } from "./types";
     }
   }
 
-  const updateTurns = (coords: Coord[]) => {
-    $turns.push({
-      durationSeconds: (+(new Date()) - $lastTurnTimestamp) / 1000,
-      words: $game.words.slice($prevWordPointer),
-      coords
-    });
-    $prevWordPointer = $game.words.length;
-    $lastTurnTimestamp = +new Date();
-  }
-  
+ 
   $: tiles = $game.board.flatMap((row, i) => row.map((tile, j) => ({ i, j, tile })));
 </script>
 
@@ -176,7 +156,7 @@ import type { Coord, Turn } from "./types";
       class:flying={true}
     >
       <BoardTile
-        id={+id}
+        {id}
         letter={tile.letter}
         active={$selected.tiles.size > 0}
         selected={false}
