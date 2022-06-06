@@ -12,7 +12,7 @@ export const DIMS = {
 export const resetGame = (game: GameState, dictionary: Dictionary) => {
   
   const prevBoard = game.board;
-  game = initializeGameState(sampleBoard);
+  game = initializeGameState();
 
   if (!game.board.length) {
     for (let i = 0; i < DIMS.COLS; i++) {
@@ -108,7 +108,6 @@ export const findWords = (dictionary: Dictionary, board: Board) => {
   for (const [ i1, w1 ] of Object.entries(rowWords)) {
     for (const [ i2, w2 ] of Object.entries(colWords)) {
       const coord = getIntersection(w1, w2);
-      console.log(coord);
 
       if (coord) {
         const [ i, j ] = coord;
@@ -127,8 +126,6 @@ export const findWords = (dictionary: Dictionary, board: Board) => {
       }
     }
   }
-  
-  console.log(rowWords, colWords, intersectingWords);
   
   return {
     words: rowWords.concat(colWords).sort((a, b) => {

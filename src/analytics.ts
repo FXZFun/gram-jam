@@ -22,9 +22,7 @@ const initializeTurns = () => ({
 export const turns = writable<Turns>(initializeTurns());
 
 export const updateTurns = (coords: Coord[], words: Match[]) => {
-  turns.update(prev => {
-    console.log(prev);
-    return ({
+  turns.update(prev => ({
     turns: prev.turns.concat([{
       durationSeconds: (+(new Date()) - prev.lastTurnTimestamp) / 1000,
       words: words.slice(prev.prevWordPointer),
@@ -32,8 +30,7 @@ export const updateTurns = (coords: Coord[], words: Match[]) => {
     }]),
     lastTurnTimestamp: +new Date(),
     prevWordPointer: words.length,
-  })
-});
+  }))
 }
 
 export const resetTurns = () => {
