@@ -72,7 +72,7 @@ export const loadGame = (dictionary: Trie<string>) => {
   if (game) {
     gameState.set(JSON.parse(game));
   } else {
-    gameState.set(resetGame(initializeGameState(), dictionary));
+    gameState.set(resetGame(initializeGameState(sampleBoard), dictionary));
   }
   if (prevTurns) {
     turns.set(JSON.parse(prevTurns));

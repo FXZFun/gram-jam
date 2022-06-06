@@ -1,7 +1,7 @@
 import { sample, scoreWord } from "./letters";
-import type { Trie } from "./trie";
 import type  { Board, Coord, Freqs, GameState, Match, Tile } from "../types";
 import { getTileId, initializeGameState, sampleBoard } from "../store";
+import type { Dictionary } from "./dictionary";
 // import { stats } from '../Stats.svelte';
 
 export const DIMS = {
@@ -9,10 +9,10 @@ export const DIMS = {
   COLS: 6,
 };
 
-export const resetGame = (game: GameState, dictionary: Trie<string>) => {
+export const resetGame = (game: GameState, dictionary: Dictionary) => {
   
   const prevBoard = game.board;
-  game = initializeGameState();
+  game = initializeGameState(sampleBoard);
 
   if (!game.board.length) {
     for (let i = 0; i < DIMS.COLS; i++) {
@@ -62,7 +62,7 @@ export const resetGame = (game: GameState, dictionary: Trie<string>) => {
 
 const coordToStr = (c: Coord) => c.join(',');
 
-export const findWords = (dictionary: Trie<string>, board: Board) => {
+export const findWords = (dictionary: Dictionary, board: Board) => {
   const words: Match[] = [];
   const rows: Record<number, Match[]> = {};
   const cols: Record<number, Match[]> = {};
@@ -108,6 +108,7 @@ export const findWords = (dictionary: Trie<string>, board: Board) => {
   for (const [ i1, w1 ] of Object.entries(rowWords)) {
     for (const [ i2, w2 ] of Object.entries(colWords)) {
       const coord = getIntersection(w1, w2);
+      console.log(coord);
 
       if (coord) {
         const [ i, j ] = coord;
@@ -126,6 +127,8 @@ export const findWords = (dictionary: Trie<string>, board: Board) => {
       }
     }
   }
+  
+  console.log(rowWords, colWords, intersectingWords);
   
   return {
     words: rowWords.concat(colWords).sort((a, b) => {
@@ -172,7 +175,7 @@ const removeOverlappingWords = (
 }
 
 const findWord = (
-  dictionary: Trie<string>,
+  dictionary: Dictionary,
   board: Board,
   i: number,
   j: number,

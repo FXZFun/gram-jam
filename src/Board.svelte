@@ -134,7 +134,6 @@ import { turns, updateTurns } from "./analytics";
         {i} {j}
       >
         <BoardTile
-          id={tile.id}
           letter={tile.letter}
           active={!!$selected.tiles.size}
           selected={$selected.tiles.has(tile.id)}
@@ -152,11 +151,10 @@ import { turns, updateTurns } from "./analytics";
       data-id={id}
       animate:flip={{ duration: flipDuration }}
       in:fade
-      out:send={{ key: +id, duration: flipDuration }}
+      out:send={{ key: id, duration: flipDuration }}
       class:flying={true}
     >
       <BoardTile
-        {id}
         letter={tile.letter}
         active={$selected.tiles.size > 0}
         selected={false}

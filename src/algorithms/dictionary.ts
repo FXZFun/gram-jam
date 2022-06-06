@@ -1,6 +1,6 @@
 import { Trie } from './trie';
-// import words from './words.json';
 
+export type Dictionary = Trie<string>;
 
 export const loadDictionary = async () => {
   const dictionary = new Trie<string>();

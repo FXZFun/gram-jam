@@ -1,9 +1,8 @@
 <script lang="ts">
-  import { fly } from 'svelte/transition';
   import { flip } from 'svelte/animate';
   import BoardTile from "./BoardTile.svelte";
   import type { Tile } from "./types";
-  import { send, receive, flipOut, animationDuration, flipDuration } from './animations';
+  import { send, receive, flipDuration } from './animations';
 
   export let word: Tile[];
 </script>
@@ -17,7 +16,6 @@
       out:send="{{ key: tile.id, duration: flipDuration }}"
     >
       <BoardTile
-        id={tile.id}
         active={false}
         adjacent={false}
         letter={tile.letter}

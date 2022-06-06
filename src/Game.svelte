@@ -5,7 +5,7 @@ import { onMount } from 'svelte';
 import { fly } from 'svelte/transition';
 
 import Shuffle from 'svelte-material-icons/Shuffle.svelte';
-import { loadDictionary } from './algorithms/dictionary';
+import { Dictionary, loadDictionary } from './algorithms/dictionary';
 import { DIMS, findWords, getMarqueeText, removeLetters, resetGame } from './algorithms/gameLogic';
 import type { HighlightColors, Highlighted, Match } from './types';
 import WordChain from './pills/WordChain.svelte';
@@ -23,9 +23,8 @@ import WordContainer from './WordContainer.svelte';
 import Stats from './Stats.svelte';
 import { turns, resetTurns, saveAnalytics } from './analytics';
 import Spinner from './components/Spinner.svelte';
-import type { Trie } from './algorithms/trie';
   
-  let dictionary: Trie<string>;
+  let dictionary: Dictionary;
   let loading = true;
   onMount(async () => {
     dictionary = await loadDictionary();

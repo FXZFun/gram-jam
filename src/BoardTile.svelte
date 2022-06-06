@@ -11,7 +11,6 @@
   export let highlighted: HighlightColors = undefined;
   export let size: 'tiny' | 'small' | 'large' = 'large';
   export let multiplier: 1 | 2 | 3 = 1;
-  export let id: string = undefined;
 
   const handleSwipe = (e: any) => {
     //console.log(e);
@@ -20,34 +19,32 @@
   
 </script>
 
-{#key id}
-  <div
-    class=tile
-    class:selected={selected}
-    class:adjacent={adjacent && !selected}
-    class:non-adjacent={active && !adjacent && !selected}
-    class:matched={highlighted === 'green'}
-    class:bonus={highlighted === 'purple'}
-    class:intersection={highlighted === 'red'}
-    class:long={highlighted === 'orange'}
-    class:tiny={size === 'tiny'}
-    class:small={size === 'small'}
-    class:large={size === 'large'}
-  >
-    <span>{letter}</span>
-    <span class=score>{scoreTile(letter)}</span>
-    {#if multiplier > 1}
-      <span
-        class=multiplier
-        class:two={multiplier === 2}
-        class:three={multiplier === 3}
-      >
-        {multiplier}
-        <Close size='0.625em' />
-      </span>
-    {/if}
-  </div>
-{/key}
+<div
+  class=tile
+  class:selected={selected}
+  class:adjacent={adjacent && !selected}
+  class:non-adjacent={active && !adjacent && !selected}
+  class:matched={highlighted === 'green'}
+  class:bonus={highlighted === 'purple'}
+  class:intersection={highlighted === 'red'}
+  class:long={highlighted === 'orange'}
+  class:tiny={size === 'tiny'}
+  class:small={size === 'small'}
+  class:large={size === 'large'}
+>
+  <span>{letter}</span>
+  <span class=score>{scoreTile(letter)}</span>
+  {#if multiplier > 1}
+    <span
+      class=multiplier
+      class:two={multiplier === 2}
+      class:three={multiplier === 3}
+    >
+      {multiplier}
+      <Close size='0.625em' />
+    </span>
+  {/if}
+</div>
 
 <style>
 	.tile {
