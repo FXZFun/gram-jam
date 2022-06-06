@@ -12,11 +12,10 @@ import { openLeaderboard } from '../leaderboard/Leaderboard.svelte';
 import PostScore from '../leaderboard/PostScore.svelte';
 import Turns from '../pills/Turns.svelte';
 import Words from '../pills/Words.svelte';
-import { saveAnalytics, saveLocalLeaderboard, saveLocalStats } from '../analytics';
+import { turns, saveAnalytics, resetTurns, saveLocalLeaderboard, saveLocalStats } from '../analytics';
 import game from '../store';
 import StaticWord from '../StaticWord.svelte';
 import Trophy from '../icons/Trophy.svelte';
-import { resetAnalytics, turns } from '../Board.svelte';
   
   export let onReset: () => void;
   const words = $game.words.sort((a, b) => b.score - a.score);
@@ -38,8 +37,8 @@ import { resetAnalytics, turns } from '../Board.svelte';
     }
     saveLocalStats($game);
     saveLocalLeaderboard(entry);
-    saveAnalytics($game, $turns);
-    resetAnalytics();
+    saveAnalytics($game, $turns.turns);
+    resetTurns();
   });
   
   const handleShare = () => {
