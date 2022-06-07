@@ -8,7 +8,6 @@
 <div class=container>
   {#each word as tile (tile.id)}
     <BoardTile
-      id={tile.id}
       active={false}
       adjacent={false}
       letter={tile.letter}

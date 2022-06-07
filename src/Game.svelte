@@ -47,7 +47,10 @@ import Spinner from './components/Spinner.svelte';
  
   // const getTileId = (e) => parseInt((e.target as HTMLElement).getAttribute('data-id'));
   
-  const handleEndTurn = async () => {
+  const handleEndTurn = async (chain: number, shuffle: boolean) => {
+    if (!shuffle && chain === 0) {
+      $game.streak = 0;
+    }
     if ($game.remainingSwaps <= 0) {
       await delay(animationDuration * 2);
       $game.lost = true;
@@ -67,10 +70,7 @@ import Spinner from './components/Spinner.svelte';
 
     let { words, intersections } = findWords(dictionary, $game.board);
     if (!words.length) {
-      if (!shuffle && chain === 0) {
-        $game.streak = 0;
-      }
-      return await handleEndTurn();
+      return await handleEndTurn(chain, shuffle);
     }
 
     const word = words[0];
