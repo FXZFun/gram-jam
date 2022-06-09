@@ -1,5 +1,6 @@
 import { crossfade, fade, fly } from 'svelte/transition';
-import { quintOut, quadInOut, quintInOut, quadOut, quintIn, quadIn, sineOut } from 'svelte/easing';
+import { quintOut, quadInOut, quintInOut, quadOut, quintIn, quadIn, sineOut, cubicOut } from 'svelte/easing';
+import type { AnimationConfig, FlipParams } from 'svelte/animate';
 
 const getMajorAxis = () => {
   if (document.body.clientHeight / document.body.clientWidth > 16 / 9) {
@@ -15,7 +16,7 @@ const getTileSize = (): number => {
   return tileSize;
 }
 
-export const flipDuration = (len: number) => animationDuration * Math.sqrt(len / getMajorAxis());
+export const flipDuration = (len: number) => 1 * animationDuration * Math.sqrt(len / getMajorAxis());
 
 export const [ send, receive ] = crossfade({
 	duration: flipDuration,
@@ -113,3 +114,41 @@ export const shrink = (node: HTMLElement, {
 export const getBBoxJSON = () => (
   JSON.stringify(document.querySelector('.large.selected')?.getBoundingClientRect())
 );
+
+export const flip = (node: HTMLElement, { from, to }: { from: DOMRect; to: DOMRect }, params: FlipParams = {}): AnimationConfig => {
+	const style = getComputedStyle(node);
+	const transform = style.transform === 'none' ? '' : style.transform;
+  console.log(node, transform, from, to);
+
+  // TODO figure out this shiz
+  const dims = style.transform.match(/\((.*)\)/)
+  const [px, py] = dims ? dims[1].split(', ').slice(-2).map(parseFloat) : [0, 0];
+  // const [px, py] = [0, 0];
+  console.log(px, py);
+  console.log(style.transformOrigin);
+	let [ox, oy] = style.transformOrigin.split(' ').map(parseFloat);
+	const dx = (from.left + from.width * ox / to.width) - (to.left + ox);
+	const dy = (from.top + from.height * oy / to.height) - (to.top + oy);
+  console.log(dx, dy);
+  node.style.transform = '';
+
+	const {
+		delay = 0,
+		duration = (d) => Math.sqrt(d) * 120,
+		easing = cubicOut
+	} = params;
+
+	return {
+		delay,
+		duration: flipDuration(Math.sqrt(dx * dx + dy * dy)),
+		easing,
+		css: (t, u) => {
+			const x = u * dx;
+			const y = u * dy;
+			const sx = t + u * from.width / to.width;
+			const sy = t + u * from.height / to.height;
+
+			return `transform: ${transform} translate3d(${x}px, ${y}px, 0px) scale(${sx}, ${sy});`;
+		}
+	};
+}

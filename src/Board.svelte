@@ -20,10 +20,10 @@ import { writable } from "svelte/store";
 </script>
 
 <script lang="ts">
-import { flip } from 'svelte/animate';
+// import { flip } from 'svelte/animate';
 import { draggable } from '@neodrag/svelte';
 import { fade } from 'svelte/transition';
-import { send, receive, flipDuration, getBBoxJSON, delay } from './animations';
+import { flip, send, receive, flipDuration, getBBoxJSON, delay } from './animations';
 import game, { saveGame } from './store';
 
 import BoardTile from './BoardTile.svelte';
@@ -113,22 +113,23 @@ import type { Coord } from "./types";
   const x = tweened(0, { easing: sineIn });
   const y = tweened(0, { easing: sineIn });
   
-  let draggingId: string = undefined;
+  let initialCoords: Coord = undefined;
 
   const onDragStart = async (e, id: string, i: number, j: number) => {
 
-    draggingId = id;
+    initialCoords = [e.detail.domRect.x, e.detail.domRect.y];
     $selected.tiles = new Set([id]);
     $selected.coords = [[i, j].join()];
   }
 
   const onDrag = async (e) => {
-    x.set(e.detail.offsetX, { duration: 0 });
-    y.set(e.detail.offsetY, { duration: 0 });
+    // x.set(e.detail.offsetX, { duration: 0 });
+    // y.set(e.detail.offsetY, { duration: 0 });
   }
   
   const onDragEnd = async (e, id: string, i: number, j: number) => {
-    draggingId = undefined;
+    console.log('ending');
+    console.log(e);
     const tileDim = e.detail.domRect.width + 8;
     const [i2, j2] = [
       Math.round(e.detail.offsetX / tileDim) + i,
@@ -141,10 +142,10 @@ import type { Coord } from "./types";
       // await handleClick(i, j);
     }
     $selected.tiles.add(targetId);
-    x.set(0);
-    y.set(0);
     if ($selected.coords[0] !== [i2, j2].join()) {
       await swapTiles([i, j], [i2, j2]);
+    } else {
+      // return to center of origin
     }
     clearSelection();
   }
@@ -156,10 +157,7 @@ import type { Coord } from "./types";
   {#each tiles as { tile, i, j } (tile.id)}
     <div
       class=tile-container
-      style='
-        grid-row: {j + 1}; grid-column: {i + 1};
-        transform: translate3d({$x}px, {$y}px);
-      '
+      style='grid-row: {j + 1}; grid-column: {i + 1};'
       data-id={tile.id}
       on:neodrag:start={e => onDragStart(e, tile.id, i, j)}
       on:neodrag={e => onDrag(e)}
@@ -167,9 +165,9 @@ import type { Coord } from "./types";
       use:draggable={{
         bounds: 'parent',
         defaultClassDragging: 'flying',
-        position: (draggingId === tile.id)
-          ? { x: $x, y: $y }
-          : { x: 0, y: 0 }
+        // position: (draggingId === tile.id)
+        //   ? { x: $x, y: $y }
+        //   : { x: 0, y: 0 }
       }}
       animate:flip="{{ duration: flipDuration }}"
       in:receive="{{
@@ -228,6 +226,7 @@ import type { Coord } from "./types";
 <style>
   .board {
     aspect-ratio: 6 / 7;
+    position: relative;
     margin-left: auto;
     margin-right: auto;
     display: grid;
@@ -254,6 +253,7 @@ import type { Coord } from "./types";
   }
   .flying {
     z-index: 500;
+    transform: scale(1.1);
     transition: box-shadow 0.3s ease-in;
     box-shadow: 0px 8px 24px 0px rgba(0,0,0,0.5);
   }
