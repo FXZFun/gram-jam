@@ -7,6 +7,8 @@
   export let letter: string;
   export let active: boolean = false;
   export let selected: boolean = false;
+  export let hovered: boolean = false;
+  export let dragging: boolean = false;
   export let adjacent: boolean = false;
   export let highlighted: HighlightColors = undefined;
   export let size: 'tiny' | 'small' | 'large' = 'large';
@@ -22,6 +24,8 @@
 <div
   class=tile
   class:selected={selected}
+  class:hovered={hovered}
+  class:dragging={dragging}
   class:adjacent={adjacent && !selected}
   class:non-adjacent={active && !adjacent && !selected}
   class:matched={highlighted === 'green'}
@@ -100,10 +104,21 @@
     background-color: #C4E0E3;
     border-color: #9ec1c5;
   }
+  .tile.hovered {
+    background-color: #C4E0E3;
+    border-color: #9ec1c5;
+  }
+  .tile.dragging {
+    transform: scale(1.2);
+  }
   :global(body.dark-mode) .tile {
     color: white;
   }
   :global(body.dark-mode) .tile.selected {
+    background-color: #2C47D3;
+    border-color: #122aa1;
+  }
+  :global(body.dark-mode) .tile.hovered {
     background-color: #2C47D3;
     border-color: #122aa1;
   }
