@@ -38,10 +38,10 @@ import { DIMS } from "./algorithms/gameLogic";
   let boardWidth = 0;
   let boardHeight = 0;
   const pad = 0.9;
-  // $: tileWidth = boardWidth / DIMS.COLS;
-  // $: tileHeight = boardHeight / DIMS.ROWS;
-  const tileWidth = 50;
-  const tileHeight = 50;
+  $: tileWidth = boardWidth / DIMS.COLS;
+  $: tileHeight = boardHeight / DIMS.ROWS;
+  // const tileWidth = 50;
+  // const tileHeight = 50;
   let prevGameId = '';
   $: {
     // play flip animation
