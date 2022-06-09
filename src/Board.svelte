@@ -20,10 +20,10 @@ import { writable } from "svelte/store";
 </script>
 
 <script lang="ts">
-// import { flip } from 'svelte/animate';
+import { flip } from 'svelte/animate';
 import { draggable } from '@neodrag/svelte';
 import { fade } from 'svelte/transition';
-import { flip, send, receive, flipDuration, getBBoxJSON, delay } from './animations';
+import { send, receive, flipDuration, getBBoxJSON, delay } from './animations';
 import game, { saveGame } from './store';
 
 import BoardTile from './BoardTile.svelte';
@@ -32,8 +32,16 @@ import { turns, updateTurns } from "./analytics";
 import { tweened } from 'svelte/motion';
 import { sineIn } from 'svelte/easing';
 import type { Coord } from "./types";
+import { DIMS } from "./algorithms/gameLogic";
 
   export let handleScore: () => Promise<boolean>;
+  let boardWidth = 0;
+  let boardHeight = 0;
+  const pad = 0.9;
+  // $: tileWidth = boardWidth / DIMS.COLS;
+  // $: tileHeight = boardHeight / DIMS.ROWS;
+  const tileWidth = 50;
+  const tileHeight = 50;
   let prevGameId = '';
   $: {
     // play flip animation
@@ -114,27 +122,36 @@ import type { Coord } from "./types";
   const y = tweened(0, { easing: sineIn });
   
   let initialCoords: Coord = undefined;
+  let draggingId: string = undefined;
 
   const onDragStart = async (e, id: string, i: number, j: number) => {
 
-    initialCoords = [e.detail.domRect.x, e.detail.domRect.y];
+    const style = getComputedStyle(e.target);
+    const dims = style.transform.match(/\((.*)\)/)
+    const [ox, oy] = dims ? dims[1].split(', ').slice(-2).map(parseFloat) : [0, 0];
+    console.log([ox, oy]);
+    x.set(ox, { duration: 0 });
+    y.set(oy, { duration: 0 });
+    draggingId = id;
     $selected.tiles = new Set([id]);
     $selected.coords = [[i, j].join()];
   }
 
   const onDrag = async (e) => {
-    // x.set(e.detail.offsetX, { duration: 0 });
-    // y.set(e.detail.offsetY, { duration: 0 });
+    x.set(e.detail.offsetX, { duration: 0 });
+    y.set(e.detail.offsetY, { duration: 0 });
   }
   
   const onDragEnd = async (e, id: string, i: number, j: number) => {
     console.log('ending');
-    console.log(e);
+    console.log(e.detail);
+    draggingId = undefined;
     const tileDim = e.detail.domRect.width + 8;
     const [i2, j2] = [
-      Math.round(e.detail.offsetX / tileDim) + i,
-      Math.round(e.detail.offsetY / tileDim) + j,
+      Math.round(e.detail.offsetX / tileDim),
+      Math.round(e.detail.offsetY / tileDim),
     ];
+    console.log(i2, j2);
     const targetId = $game.board[i2][j2].id;
     // click not drag
     if (e.detail.offsetX === 0 && e.detail.offsetY === 0) {
@@ -153,11 +170,12 @@ import type { Coord } from "./types";
   $: tiles = $game.board.flatMap((row, i) => row.map((tile, j) => ({ i, j, tile })));
 </script>
 
-<div class=board>
+<div class=board bind:clientWidth={boardWidth} bind:clientHeight={boardHeight}>
   {#each tiles as { tile, i, j } (tile.id)}
     <div
       class=tile-container
-      style='grid-row: {j + 1}; grid-column: {i + 1};'
+      data-coords='{i}-{j}'
+      style='position: absolute; width: {tileWidth * pad}px; height: {tileHeight * pad}px; transform: translate3d({i * tileWidth}px, {j * tileHeight}px, 0px);'
       data-id={tile.id}
       on:neodrag:start={e => onDragStart(e, tile.id, i, j)}
       on:neodrag={e => onDrag(e)}
@@ -165,9 +183,9 @@ import type { Coord } from "./types";
       use:draggable={{
         bounds: 'parent',
         defaultClassDragging: 'flying',
-        // position: (draggingId === tile.id)
-        //   ? { x: $x, y: $y }
-        //   : { x: 0, y: 0 }
+        position: (draggingId === tile.id)
+          ? { x: $x, y: $y }
+          : { x: i * tileWidth, y: j * tileHeight }
       }}
       animate:flip="{{ duration: flipDuration }}"
       in:receive="{{
@@ -201,10 +219,10 @@ import type { Coord } from "./types";
       </Flipper>
     </div>
   {/each}
-  {#each Object.entries($game.intersections) as [ id, { tile, coord }] (id)}
+  {#each Object.entries($game.intersections) as [ id, { tile, coord: [i, j] }] (id)}
     <div
       class=tile-container
-      style="grid-row: {coord[1] + 1}; grid-column: {coord[0] + 1};"
+      style='position: absolute; width: {tileWidth * pad}px; height: {tileHeight * pad}px; transform: translate3d({i * tileWidth}px, {j * tileHeight}px, 0px);'
       data-id={id}
       animate:flip={{ duration: flipDuration }}
       in:fade
@@ -229,11 +247,6 @@ import type { Coord } from "./types";
     position: relative;
     margin-left: auto;
     margin-right: auto;
-    display: grid;
-    grid-auto-flow: column;
-    grid-template-columns: repeat(6, 1fr);
-    grid-template-rows: repeat(7, 1fr);
-    gap: 8px;
   }
   @media (max-width: 769px) {
     .board {
