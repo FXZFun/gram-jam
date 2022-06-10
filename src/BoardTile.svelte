@@ -55,7 +55,7 @@
     position: relative;
     grid-column: 1/2;
     grid-row: 1/2;
-    transition: all 0.2s ease-out;
+    transition: all 0.2s ease-in-out;
     background-color: #F5F6FA;
     border: 1px solid #C4E0E3;
     border-bottom: 2px solid #C4E0E3;

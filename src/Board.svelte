@@ -23,7 +23,7 @@ import { writable } from "svelte/store";
 import { flip } from 'svelte/animate';
 import { draggable } from '@neodrag/svelte';
 import { fade } from 'svelte/transition';
-import { send, receive, flipDuration, getBBoxJSON, delay } from './animations';
+import { send, receive, flipDuration, getBBoxJSON, delay, flipOver } from './animations';
 import game, { saveGame } from './store';
 
 import BoardTile from './BoardTile.svelte';
@@ -31,7 +31,7 @@ import Flipper from './Flipper.svelte';
 import { turns, updateTurns } from "./analytics";
 import { tweened } from 'svelte/motion';
 import { sineIn } from 'svelte/easing';
-import type { Coord } from "./types";
+import type { Coord, Tile } from "./types";
 import { DIMS } from "./algorithms/gameLogic";
 import Autorenew from 'svelte-material-icons/Autorenew.svelte';
 
@@ -123,12 +123,12 @@ import Autorenew from 'svelte-material-icons/Autorenew.svelte';
   const x = tweened(0, { easing: sineIn });
   const y = tweened(0, { easing: sineIn });
   
-  let hoveredTileId: string = undefined;
   let draggingTileId: string = undefined;
-  let dragOrigin: Coord = undefined;
-  let hoverCoord: Coord = undefined;
+  let hoveredTile: Tile = undefined;
+  let dragOrig: Coord = undefined;
+  let dragDest: Coord = undefined;
 
-  const getHoveredTileId = (e) => {
+  const getHoveredTile = (e) => {
     const [i, j] = [
       Math.round(e.detail.offsetX / tileWidth),
       Math.round(e.detail.offsetY / tileHeight),
@@ -138,77 +138,105 @@ import Autorenew from 'svelte-material-icons/Autorenew.svelte';
       i, j
     }
   }
-
+  
+  let draggedTimestamp = 0;
   const onDragStart = async (e, id: string, i: number, j: number) => {
 
+    console.log('start', id, draggedTimestamp);
+    const newTimestamp = +new Date();
+    if (newTimestamp - draggedTimestamp < 100) {
+      draggedTimestamp = newTimestamp;
+      return;
+    };
     const style = getComputedStyle(e.target);
     const dims = style.transform.match(/\((.*)\)/)
     const [ox, oy] = dims ? dims[1].split(', ').slice(-2).map(parseFloat) : [0, 0];
     x.set(ox, { duration: 0 });
     y.set(oy, { duration: 0 });
     draggingTileId = id;
-    dragOrigin = [i, j];
+    dragOrig = [i, j];
     $selected.tiles = new Set([id]);
     $selected.coords = [[i, j].join()];
+    draggedTimestamp = newTimestamp;
   }
 
   const onDrag = async (e) => {
     x.set(e.detail.offsetX, { duration: 0 });
     y.set(e.detail.offsetY, { duration: 0 });
-    const { tile, i, j } = getHoveredTileId(e);
-    hoverCoord = [i, j];
-    hoveredTileId = tile.id;
+    const { tile, i, j } = getHoveredTile(e);
+    if (tile.id !== draggingTileId) {
+      dragDest = [i, j];
+      hoveredTile = tile;
+    } else {
+      dragDest = undefined;
+      hoveredTile = undefined;
+    }
   }
   
+  
   const onDragEnd = async (e, id: string, i: number, j: number) => {
-    console.log(e.detail);
-    const { i: i2, j: j2 } = getHoveredTileId(e);
-    console.log(i2, j2);
+    // debounce?
+    console.log('end', id, draggedTimestamp);
+    const newTimestamp = +new Date();
+    if (newTimestamp === draggedTimestamp) return;
+    
+    const { i: i2, j: j2 } = getHoveredTile(e);
     const targetId = $game.board[i2][j2].id;
     // click not drag
-    if (e.detail.offsetX === 0 && e.detail.offsetY === 0) {
-      console.log('clicked');
-      // await handleClick(i, j);
-    }
-    $selected.tiles.add(targetId);
-    if ($selected.coords[0] !== [i2, j2].join()) {
+    console.log(e.detail);
+
+    const coordStr = [i2, j2].join();
+    if ($selected.coords[0] !== coordStr) {
+      $selected.coords.push(coordStr);
+      $selected.tiles.add(targetId);
       draggingTileId = undefined;
-      hoveredTileId = undefined;
-      dragOrigin = undefined;
+      hoveredTile = undefined;
+      dragOrig = undefined;
       await swapTiles([i, j], [i2, j2]);
+    } else if (newTimestamp - draggedTimestamp < 100) {
+      await handleClick(i, j);
     } else {
       // return to center of origin
       await Promise.all([
         x.set(i * tileWidth, { duration: 150 }),
         y.set(j * tileHeight, { duration: 150 }),
       ]);
+      draggingTileId = undefined;
+      hoveredTile = undefined;
+      dragOrig = undefined;
+      clearSelection();
     }
-    hoveredTileId = undefined;
-    draggingTileId = undefined;
-    dragOrigin = undefined;
-    clearSelection();
+    draggedTimestamp = newTimestamp;
   }
 
   $: tiles = $game.board.flatMap((row, i) => row.map((tile, j) => ({ i, j, tile })));
 </script>
 
 <div class=board bind:clientWidth={boardWidth} bind:clientHeight={boardHeight}>
-  {#if dragOrigin && hoverCoord}
-    <div
-      class=swap-indicator
-      style='
-        width: {tileWidth * PAD}px;
-        height: {tileHeight * PAD}px;
-        transform: translate3d({dragOrigin[0] * tileWidth}px, {dragOrigin[1] * tileHeight}px, 0px);
-      '
-    >
-      <span>-{getPenalty(dragOrigin, hoverCoord ?? dragOrigin)}</span><Autorenew />
-    </div>
+  {#if hoveredTile && $selected.coords.length}
+    {#key hoveredTile.id}
+      <div
+        class=tile-container
+        style='
+          opacity: 0.5;
+          width: {tileWidth * PAD}px;
+          height: {tileHeight * PAD}px;
+          transform: translate3d({dragOrig[0] * tileWidth}px, {dragOrig[1] * tileHeight}px, 0px);
+        '
+        in:fade={{ duration: 1000, delay: 250 }}
+      >
+        <BoardTile
+          letter={hoveredTile.letter}
+          active={!!$selected.tiles.size}
+          hovered
+          multiplier={hoveredTile.multiplier}
+        />
+      </div>
+    {/key}
   {/if}
   {#each tiles as { tile, i, j } (tile.id)}
     <div
       class=tile-container
-      data-coords='{i}-{j}'
       style='
         width: {tileWidth * PAD}px;
         height: {tileHeight * PAD}px;
@@ -220,7 +248,7 @@ import Autorenew from 'svelte-material-icons/Autorenew.svelte';
       on:neodrag:end={e => onDragEnd(e, tile.id, i, j)}
       use:draggable={{
         bounds: 'parent',
-        defaultClassDragging: 'flying',
+        defaultClassDragging: 'dragging',
         position: (draggingTileId === tile.id)
           ? { x: $x, y: $y }
           : { x: i * tileWidth, y: j * tileHeight }
@@ -238,7 +266,8 @@ import Autorenew from 'svelte-material-icons/Autorenew.svelte';
       }}"
       class:flying={
         $game.highlighted[tile.id] ||
-        $selected.tiles.has(tile.id)
+        $selected.tiles.has(tile.id) ||
+        draggingTileId === tile.id
       }
     >
       <Flipper
@@ -250,7 +279,7 @@ import Autorenew from 'svelte-material-icons/Autorenew.svelte';
           letter={tile.letter}
           active={!!$selected.tiles.size}
           selected={$selected.tiles.has(tile.id)}
-          hovered={tile.id === hoveredTileId}
+          hovered={tile.id === hoveredTile?.id}
           dragging={tile.id === draggingTileId}
           highlighted={$game.highlighted[tile.id]}
           adjacent={false}
@@ -323,8 +352,16 @@ import Autorenew from 'svelte-material-icons/Autorenew.svelte';
   }
   .flying {
     z-index: 500;
-    transform: scale(1.1);
-    transition: box-shadow 0.3s ease-in;
-    box-shadow: 0px 8px 24px 0px rgba(0,0,0,0.5);
+  }
+  .flying::after {
+    box-sizing: border-box;
+    content: '';
+    position: absolute;
+    z-index: -1;
+    width: 100%;
+    height: 100%;
+    opacity: 1;
+    box-shadow: 0px 8px 24px 0px rgba(0,0,0,0.8);
+    transition: opacity 0.3s ease-in-out;
   }
 </style>
