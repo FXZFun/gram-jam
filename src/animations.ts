@@ -1,6 +1,5 @@
 import { crossfade, fade, fly } from 'svelte/transition';
 import { quintOut, quadInOut, quintInOut, quadOut, quintIn, quadIn, sineOut, cubicOut } from 'svelte/easing';
-import type { AnimationConfig, FlipParams } from 'svelte/animate';
 
 const getMajorAxis = () => {
   if (document.body.clientHeight / document.body.clientWidth > 16 / 9) {
@@ -28,6 +27,23 @@ export const [ send, receive ] = crossfade({
       duration: animationDuration,
       easing: intro ? quadIn : quadOut
     })
+  )
+});
+
+export const [ sendShadow, receiveShadow ] = crossfade({
+	duration: flipDuration,
+  easing: quadOut,
+	fallback: (node, params, intro) => (
+    fly(node, {
+      y: intro ? -getTileSize() : 0,
+      x: intro ? 0 : 100,
+      duration: animationDuration,
+      easing: intro ? quadIn : quadOut
+    })
+    // fade(node, {
+    //   duration: animationDuration,
+    //   easing: intro ? quadIn : quadOut
+    // })
   )
 });
 

@@ -1,11 +1,10 @@
 import { v4 as uuid } from 'uuid';
 import { Writable, writable } from "svelte/store";
-import type { Board, GameState, Turn } from './types';
+import type { Board, GameState } from './types';
 import type { Trie } from './algorithms/trie';
 import { resetGame } from './algorithms/gameLogic';
 import { turns, Turns } from './analytics';
-
-export const getTileId = () => Math.random().toString(36).slice(2);
+import { getTileId } from './algorithms/letters';
 
 export const initializeGameState = (initialBoard: Board = []): GameState => ({
   startedAt: +new Date(),

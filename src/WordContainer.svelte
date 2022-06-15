@@ -1,6 +1,8 @@
 <script lang="ts">
+import { flip } from 'svelte/animate';
 import { fly, fade } from 'svelte/transition';
 import { Confetti } from 'svelte-confetti';
+import { send, receive, flipDuration, receiveShadow, sendShadow } from './animations';
 import Definition from './modals/Definition.svelte';
 import game from './store';
 import Word from './Word.svelte';
@@ -32,7 +34,7 @@ import { flyIn } from './animations';
         <div class=word-score>
           <Definition word={$game.latestWord.map(t => t.letter).join('')} />
         </div>
-        <Word word={$game.latestWord} />
+        <div style='width: 50%' />
         {#key $game.latestWord.map(t => t.letter).join()}
           <div in:flyIn={{ y: 20, delay: 500 }} class=word-score>+{$game.latestScore}</div>
         {/key}
@@ -50,6 +52,17 @@ import { flyIn } from './animations';
     justify-content: space-evenly;
     font-weight: bold;
   }
+  .tile-shadow {
+    width: 2em;
+    height: 2em;
+    opacity: 1;
+    border-radius: 4px;
+    box-shadow: 0px 8px 24px 0px rgba(0,0,0,0.4);
+    transition: opacity 0.3s ease-in-out;
+  }
+  :global(body.dark-mode) .tile-shadow {
+    box-shadow: 0px 8px 24px 0px rgba(0,0,0,0.9);
+  }
   .confetti {
     height: 0;
     overflow: visible;
@@ -63,6 +76,7 @@ import { flyIn } from './animations';
     grid-row: 1/2;
   }
   .word-container {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -71,6 +85,13 @@ import { flyIn } from './animations';
   .word-score {
     width: 4em;
     overflow: visible;
+  }
+  .word-shadow {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25em;
   }
   :global(body.dark-mode) .latest-word {
     color: white;

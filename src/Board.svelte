@@ -23,7 +23,7 @@ import { writable } from "svelte/store";
 import { flip } from 'svelte/animate';
 import { draggable } from '@neodrag/svelte';
 import { fade } from 'svelte/transition';
-import { send, receive, flipDuration, getBBoxJSON, delay, flipOver } from './animations';
+import { send, receive, flipDuration, getBBoxJSON, delay, flipOver, receiveShadow, sendShadow } from './animations';
 import game, { saveGame } from './store';
 
 import BoardTile from './BoardTile.svelte';
@@ -33,12 +33,12 @@ import { tweened } from 'svelte/motion';
 import { sineIn } from 'svelte/easing';
 import type { Coord, Tile } from "./types";
 import { DIMS } from "./algorithms/gameLogic";
-import Autorenew from 'svelte-material-icons/Autorenew.svelte';
 
   export let handleScore: () => Promise<boolean>;
   let boardWidth = 0;
   let boardHeight = 0;
-  const PAD = 0.9;
+  $: PAD = boardWidth > 400 ? 0.9 : 0.85;
+  $: wordScale = boardWidth > 400 ? 1 / 2 : 2 / 3;
   $: tileWidth = boardWidth / DIMS.COLS;
   $: tileHeight = boardHeight / DIMS.ROWS;
   let prevGameId = '';
@@ -99,6 +99,7 @@ import Autorenew from 'svelte-material-icons/Autorenew.svelte';
     $game.board[i][j] = $game.board[i2][j2];
     $game.board[i2][j2] = first;
 
+    $game.turn++;
     $game.remainingSwaps -= getPenalty([i, j], [i2, j2]);
     
     // gross!
@@ -126,7 +127,6 @@ import Autorenew from 'svelte-material-icons/Autorenew.svelte';
   let draggingTileId: string = undefined;
   let hoveredTile: Tile = undefined;
   let dragOrig: Coord = undefined;
-  let dragDest: Coord = undefined;
 
   const getHoveredTile = (e) => {
     const [i, j] = [
@@ -149,7 +149,7 @@ import Autorenew from 'svelte-material-icons/Autorenew.svelte';
       return;
     };
     const style = getComputedStyle(e.target);
-    const dims = style.transform.match(/\((.*)\)/)
+    const dims = style.transform.match(/\((.*)\)/);
     const [ox, oy] = dims ? dims[1].split(', ').slice(-2).map(parseFloat) : [0, 0];
     x.set(ox, { duration: 0 });
     y.set(oy, { duration: 0 });
@@ -165,10 +165,8 @@ import Autorenew from 'svelte-material-icons/Autorenew.svelte';
     y.set(e.detail.offsetY, { duration: 0 });
     const { tile, i, j } = getHoveredTile(e);
     if (tile.id !== draggingTileId) {
-      dragDest = [i, j];
       hoveredTile = tile;
     } else {
-      dragDest = undefined;
       hoveredTile = undefined;
     }
   }
@@ -189,6 +187,8 @@ import Autorenew from 'svelte-material-icons/Autorenew.svelte';
     if ($selected.coords[0] !== coordStr) {
       $selected.coords.push(coordStr);
       $selected.tiles.add(targetId);
+      $selected = $selected
+      console.log($selected);
       draggingTileId = undefined;
       hoveredTile = undefined;
       dragOrig = undefined;
@@ -210,9 +210,60 @@ import Autorenew from 'svelte-material-icons/Autorenew.svelte';
   }
 
   $: tiles = $game.board.flatMap((row, i) => row.map((tile, j) => ({ i, j, tile })));
+  $: {
+    console.log($game.latestWord);
+  }
 </script>
 
-<div class=board bind:clientWidth={boardWidth} bind:clientHeight={boardHeight}>
+<div
+  class=board
+  bind:clientWidth={boardWidth}
+  bind:clientHeight={boardHeight}
+>
+  {#each $game.latestWord ?? [] as tile, i (tile.id)}
+    <div
+      data-id={tile.id}
+      animate:flip="{{ duration: flipDuration }}"
+      in:receive="{{ key: tile.id, duration: flipDuration }}"
+      out:send="{{ key: tile.id, duration: flipDuration }}"
+      class=tile-container
+      class:word={true}
+      style='
+        font-size: {wordScale}em;
+        width: {tileWidth * PAD * wordScale}px;
+        height: {tileHeight * PAD * wordScale}px;
+        transform: translate3d({
+          (boardWidth - ($game.latestWord.length * tileWidth * wordScale)) / 2 + (i * tileWidth * wordScale)}px,
+          {-tileHeight * wordScale / PAD}px, 0px
+        );
+      '
+    >
+      <BoardTile
+        active={false}
+        adjacent={false}
+        letter={tile.letter}
+        selected={false}
+        multiplier={tile.multiplier}
+        highlighted='green'
+      />
+    </div>
+  {/each}
+  {#each $game.latestWord ?? [] as tile, i (tile.id)}
+    <div
+      class=tile-shadow
+      animate:flip="{{ duration: flipDuration }}"
+      in:receiveShadow="{{ key: tile.id, duration: flipDuration }}"
+      out:sendShadow="{{ key: tile.id, duration: flipDuration }}"
+      style='
+        width: {tileWidth * PAD * wordScale}px;
+        height: {tileHeight * PAD * wordScale}px;
+        transform: translate3d({
+          (boardWidth - ($game.latestWord.length * tileWidth * wordScale)) / 2 + (i * tileWidth * wordScale)}px,
+          {-tileHeight * wordScale / PAD}px, 0px
+        );
+      '
+    />
+  {/each}
   {#if hoveredTile && $selected.coords.length}
     {#key hoveredTile.id}
       <div
@@ -266,9 +317,9 @@ import Autorenew from 'svelte-material-icons/Autorenew.svelte';
       }}"
       class:flying={
         $game.highlighted[tile.id] ||
-        $selected.tiles.has(tile.id) ||
-        draggingTileId === tile.id
+        $selected.tiles.has(tile.id)
       }
+      class:dragging={draggingTileId === tile.id}
     >
       <Flipper
         id={$game.id}
@@ -287,6 +338,28 @@ import Autorenew from 'svelte-material-icons/Autorenew.svelte';
         />
       </Flipper>
     </div>
+  {/each}
+  {#each tiles.filter(t => $game.highlighted[t.tile.id]) as { tile, i, j } (tile.id)}
+    <div
+      class=tile-shadow
+      style='
+        width: {tileWidth * PAD}px;
+        height: {tileHeight * PAD}px;
+        transform: translate3d({i * tileWidth}px, {j * tileHeight}px, 0px)
+      '
+      animate:flip="{{ duration: flipDuration }}"
+      in:fade
+      out:sendShadow="{{
+        key: tile.id,
+        duration: flipDuration,
+        delay: 0,
+      }}"
+      class:flying={
+        $game.highlighted[tile.id] ||
+        $selected.tiles.has(tile.id) ||
+        draggingTileId === tile.id
+      }
+    />
   {/each}
   {#each Object.entries($game.intersections) as [ id, { tile, coord: [i, j] }] (id)}
     <div
@@ -328,32 +401,37 @@ import Autorenew from 'svelte-material-icons/Autorenew.svelte';
   }
   @media (min-width: 769px) {
     .board {
-      gap: 10px;
       height: 60%;
       font-size: 2.5em;
     }
   }
   .tile-container {
-		width: 100%;
     display: grid;
     position: absolute;
   }
-  .swap-indicator {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: black;
-  }
-  :global(body.dark-mode) .swap-indicator {
-    color: white;
-  }
-  .flying {
+  .tile-container.word {
     z-index: 500;
   }
-  .flying::after {
+  .tile-shadow {
+    opacity: 1;
+    z-index: 400;
+    border-radius: 4px;
+    position: absolute;
+    box-shadow: 0px 8px 24px 0px rgba(0,0,0,0.4);
+    transition: opacity 0.3s ease-in-out;
+  }
+  :global(body.dark-mode) .tile-shadow {
+    box-shadow: 0px 8px 24px 0px rgba(0,0,0,0.9);
+  }
+  .tile-container.flying {
+    z-index: 500;
+  }
+  .tile-container::after {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    box-shadow: 0px 8px 24px 0px rgba(0,0,0,0.8);
+  }
+  .tile-container.dragging::after {
     box-sizing: border-box;
     content: '';
     position: absolute;
@@ -361,7 +439,5 @@ import Autorenew from 'svelte-material-icons/Autorenew.svelte';
     width: 100%;
     height: 100%;
     opacity: 1;
-    box-shadow: 0px 8px 24px 0px rgba(0,0,0,0.8);
-    transition: opacity 0.3s ease-in-out;
   }
 </style>

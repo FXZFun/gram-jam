@@ -1,6 +1,7 @@
 import { bigrams } from './bigrams';
 import type { Board, Freqs, Multiplier, Tile } from "../types";
-import { getTileId } from '../store';
+
+export const getTileId = () => Math.random().toString(36).slice(2);
 
 export const dictionaryFreqs = {
   A: 8.4966,

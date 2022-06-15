@@ -77,6 +77,7 @@ import Spinner from './components/Spinner.svelte';
     $game.words.push(word);
     $game.highlighted = highlightTiles(words, $game.highlighted);
 
+    // await delay(100000);
     $game.intersections = intersections;
 
     // let user see match before exiting

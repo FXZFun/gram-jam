@@ -5,6 +5,7 @@
   import type { HighlightColors } from './types';
   
   export let letter: string;
+  export let special: boolean = false;
   export let active: boolean = false;
   export let selected: boolean = false;
   export let hovered: boolean = false;
@@ -24,6 +25,7 @@
 <div
   class=tile
   class:selected={selected}
+  class:special={special}
   class:hovered={hovered}
   class:dragging={dragging}
   class:adjacent={adjacent && !selected}

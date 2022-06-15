@@ -1,6 +1,6 @@
-import { sample, scoreWord } from "./letters";
+import { sample, scoreWord, getTileId } from "./letters";
 import type  { Board, Coord, Freqs, GameState, Match, Tile } from "../types";
-import { getTileId, initializeGameState, sampleBoard } from "../store";
+import { initializeGameState, sampleBoard } from "../store";
 import type { Dictionary } from "./dictionary";
 // import { stats } from '../Stats.svelte';
 
