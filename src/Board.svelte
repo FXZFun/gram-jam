@@ -239,7 +239,7 @@ import { DIMS } from "./algorithms/gameLogic";
   {/each}
   {#each $game.latestWord ?? [] as tile, i (tile.id)}
     <div
-      class=tile-shadow
+      class='tile-shadow small'
       animate:flip="{{ duration: flipDuration }}"
       in:receiveShadow="{{ key: tile.id, duration: flipDuration }}"
       out:sendShadow="{{ key: tile.id, duration: flipDuration }}"
@@ -408,8 +408,14 @@ import { DIMS } from "./algorithms/gameLogic";
     box-shadow: 0px 8px 24px 0px rgba(0,0,0,0.4);
     transition: opacity 0.3s ease-in-out;
   }
+  .tile-shadow.small {
+    box-shadow: 0px 4px 12px 0px rgba(0,0,0,0.4);
+  }
   :global(body.dark-mode) .tile-shadow {
     box-shadow: 0px 8px 24px 0px rgba(0,0,0,0.9);
+  }
+  :global(body.dark-mode) .tile-shadow.small {
+    box-shadow: 0px 4px 12px 0px rgba(0,0,0,0.9);
   }
   .tile-container.flying {
     z-index: 500;

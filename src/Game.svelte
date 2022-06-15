@@ -134,9 +134,10 @@ import Spinner from './components/Spinner.svelte';
 
     if (chain === 0) {
       const points = {
+        4: 1,
         5: 2,
         6: 4,
-        7: 6,
+        7: 8,
       }
       $game.remainingSwaps += points[word.word.length] ?? 0;
     } else {
