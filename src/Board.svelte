@@ -53,7 +53,7 @@ import { DIMS } from "./algorithms/gameLogic";
   const coordStr2Int = (c: string) => c.split(',').map(i => parseInt(i));
  
   const handleClick = async (i: number, j: number) => {
-    console.log('click');
+    console.log($animating);
     if (!$animating) {
       $animating = true;
       const coord = [i, j].join(',');
@@ -94,7 +94,6 @@ import { DIMS } from "./algorithms/gameLogic";
   }
   
   const swapTiles = async ([i, j]: Coord, [i2, j2]: Coord) => {
-    console.log('swapping', [i, j], [i2, j2]);
     // the ol' switcheroo
     const first = $game.board[i][j];
     $game.board[i][j] = $game.board[i2][j2];
@@ -143,12 +142,9 @@ import { DIMS } from "./algorithms/gameLogic";
   let draggedTimestamp = 0;
   const onDragStart = async (e, id: string, i: number, j: number) => {
 
-    console.log('start', id, draggedTimestamp);
     const newTimestamp = +new Date();
-    if (newTimestamp - draggedTimestamp < 100) {
-      draggedTimestamp = newTimestamp;
-      return;
-    };
+    // stupid debouncing
+    if ($selected.tiles.size === 1) return;
     const style = getComputedStyle(e.target);
     const dims = style.transform.match(/\((.*)\)/);
     const [ox, oy] = dims ? dims[1].split(', ').slice(-2).map(parseFloat) : [0, 0];
@@ -175,21 +171,16 @@ import { DIMS } from "./algorithms/gameLogic";
   
   const onDragEnd = async (e, id: string, i: number, j: number) => {
     // debounce?
-    console.log('end', id, draggedTimestamp);
+    if ($selected.tiles.size === 0) return;
     const newTimestamp = +new Date();
-    if (newTimestamp === draggedTimestamp) return;
     
     const { i: i2, j: j2 } = getHoveredTile(e);
     const targetId = $game.board[i2][j2].id;
-    // click not drag
-    console.log(e.detail);
-
     const coordStr = [i2, j2].join();
-    if ($selected.coords[0] !== coordStr) {
+    if ($selected.coords.length && $selected.coords[0] !== coordStr) {
       $selected.coords.push(coordStr);
       $selected.tiles.add(targetId);
       $selected = $selected
-      console.log($selected);
       draggingTileId = undefined;
       hoveredTile = undefined;
       dragOrig = undefined;
@@ -211,9 +202,6 @@ import { DIMS } from "./algorithms/gameLogic";
   }
 
   $: tiles = $game.board.flatMap((row, i) => row.map((tile, j) => ({ i, j, tile })));
-  $: {
-    console.log($game.latestWord);
-  }
 </script>
 
 <div
