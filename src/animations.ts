@@ -128,5 +128,6 @@ export const shrink = (node: HTMLElement, {
 }
 
 export const getBBoxJSON = () => (
+  // JSON.stringify(getComputedStyle(document.querySelector('.large.selected'))?.transform)
   JSON.stringify(document.querySelector('.large.selected')?.getBoundingClientRect())
 );

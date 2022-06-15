@@ -133,7 +133,12 @@ import Spinner from './components/Spinner.svelte';
     }
 
     if (chain === 0) {
-      $game.remainingSwaps += Math.max(word.word.length - 4, 0);
+      const points = {
+        5: 2,
+        6: 4,
+        7: 6,
+      }
+      $game.remainingSwaps += points[word.word.length] ?? 0;
     } else {
       $game.remainingSwaps++;
     }

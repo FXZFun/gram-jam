@@ -38,6 +38,7 @@ import { DIMS } from "./algorithms/gameLogic";
   let boardWidth = 0;
   let boardHeight = 0;
   $: PAD = boardWidth > 400 ? 0.9 : 0.85;
+  $: SMALL_PAD = boardWidth > 400 ? 0.85 : 0.8;
   $: wordScale = boardWidth > 400 ? 1 / 2 : 2 / 3;
   $: tileWidth = boardWidth / DIMS.COLS;
   $: tileHeight = boardHeight / DIMS.ROWS;
@@ -86,9 +87,9 @@ import { DIMS } from "./algorithms/gameLogic";
     } else {
       penalty = 2;
     }
-    if ($game.streak > 0) {
-      penalty--;
-    }
+    // if ($game.streak > 0) {
+    //   penalty--;
+    // }
     return penalty
   }
   
@@ -106,7 +107,7 @@ import { DIMS } from "./algorithms/gameLogic";
     // wait for end of swap animation
     let bbox = getBBoxJSON();
     while ($selected.coords.length) {
-      await delay(0);
+      await delay(100);
       const bbox2 = getBBoxJSON();
       if (bbox === bbox2) {
         break;
@@ -230,11 +231,11 @@ import { DIMS } from "./algorithms/gameLogic";
       class:word={true}
       style='
         font-size: {wordScale}em;
-        width: {tileWidth * PAD * wordScale}px;
-        height: {tileHeight * PAD * wordScale}px;
+        width: {tileWidth * SMALL_PAD * wordScale}px;
+        height: {tileHeight * SMALL_PAD * wordScale}px;
         transform: translate3d({
           (boardWidth - ($game.latestWord.length * tileWidth * wordScale)) / 2 + (i * tileWidth * wordScale)}px,
-          {-tileHeight * wordScale / PAD}px, 0px
+          {-tileHeight * wordScale / SMALL_PAD}px, 0px
         );
       '
     >
@@ -255,11 +256,11 @@ import { DIMS } from "./algorithms/gameLogic";
       in:receiveShadow="{{ key: tile.id, duration: flipDuration }}"
       out:sendShadow="{{ key: tile.id, duration: flipDuration }}"
       style='
-        width: {tileWidth * PAD * wordScale}px;
-        height: {tileHeight * PAD * wordScale}px;
+        width: {tileWidth * SMALL_PAD * wordScale}px;
+        height: {tileHeight * SMALL_PAD * wordScale}px;
         transform: translate3d({
           (boardWidth - ($game.latestWord.length * tileWidth * wordScale)) / 2 + (i * tileWidth * wordScale)}px,
-          {-tileHeight * wordScale / PAD}px, 0px
+          {-tileHeight * wordScale / SMALL_PAD}px, 0px
         );
       '
     />
@@ -315,11 +316,11 @@ import { DIMS } from "./algorithms/gameLogic";
         duration: flipDuration,
         delay: 0,
       }}"
+      class:dragging={draggingTileId === tile.id}
       class:flying={
         $game.highlighted[tile.id] ||
         $selected.tiles.has(tile.id)
       }
-      class:dragging={draggingTileId === tile.id}
     >
       <Flipper
         id={$game.id}
@@ -352,7 +353,6 @@ import { DIMS } from "./algorithms/gameLogic";
       out:sendShadow="{{
         key: tile.id,
         duration: flipDuration,
-        delay: 0,
       }}"
       class:flying={
         $game.highlighted[tile.id] ||
